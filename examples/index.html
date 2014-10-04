@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>TypeScript HTML App</title>
+
+    
+    
+    <link rel="stylesheet" href="../lib/codemirror/codemirror.css">
+    <link rel="stylesheet" href="app.css" type="text/css" />
+
+    <script src="../lib/codemirror/codemirror.js"></script>
+    <script src="../dist/FirstOrderPredicateLogic.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <h2>First Order Predicate Logic</h2>
+
+    <textarea id="code">
+Axiom A1
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assertion:
+        |- phi -> (psi -> phi)
+}
+
+Axiom A2
+{
+    Symbols:
+        Let phi, psi, chi be formulas.
+
+    Assertion:
+        |- (phi -> (psi -> chi)) -> ((phi -> psi) -> (phi -> chi))
+}
+
+Axiom A3
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assertion:
+        |- (!phi -> !psi) -> (psi -> phi)
+}  
+
+Rule MP
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assumptions:
+        |- phi
+        |- phi -> psi
+
+    Conclusion:
+        |- psi
+}
+
+            
+Theorem T18
+{
+    Symbols:
+        Let phi be a formula.
+
+    Proof:
+        # 1. A2(phi, phi, phi)
+        # 2. A1(phi, phi)
+        # 3. MP(@2, @1)
+}
+</textarea>
+</body>
+</html>

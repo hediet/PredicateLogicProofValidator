@@ -1,0 +1,20 @@
+{
+  "name": "NodejsConsoleAppXton",
+  "version": "0.0.0",
+  "description": "NodejsConsoleAppXton",
+  "main": "app.js",
+  "directories": {
+    "example": "examples"
+  },
+  "devDependencies": {
+    "grunt": "*",
+    "grunt-bower-task": "*",
+    "grunt-contrib-connect": "*",
+    "grunt-contrib-watch": "*",
+    "grunt-typescript": "*",
+    "typescript": "*"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

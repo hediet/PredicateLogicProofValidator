@@ -1,0 +1,421 @@
+﻿
+
+Axiom A1
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		|- phi -> (psi -> phi)
+}
+
+Axiom A2
+{
+	Symbols:
+		Let phi, psi, chi be formulas.
+
+	Assertion:
+		|- (phi -> (psi -> chi)) -> ((phi -> psi) -> (phi -> chi))
+}
+
+Axiom A3
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		|- (!phi -> !psi) -> (psi -> phi)
+}
+
+Axiom A4
+{
+	Symbols:
+		Let xi be a variable.
+		Let phi be a formula.
+		Let sigma be a term.
+
+	Condition:
+		(phi[xi <- sigma]) is collision free.
+
+	Assertion:
+		|- forall xi: phi -> phi[xi <- sigma]
+}
+
+Axiom A5
+{
+	Symbols:
+		Let xi be a variable.
+		Let phi, psi be formulas.
+
+	Condition:
+		(xi) is not free in (phi).
+
+	Assertion:
+		|- forall xi: (phi -> psi) -> (phi -> forall xi: psi)
+}
+
+Axiom A6
+{
+	Symbols:
+		Let xi be a variable.
+
+	Assertion:
+		|- xi = xi
+}
+
+Axiom A7
+{
+	Symbols:
+		Let xi, zeta be a variable.
+		Let phi be a formula.
+
+	Condition:
+		(phi[zeta <- xi]) is collision free.
+
+	Assertion:
+		|- xi = zeta -> (phi[zeta <- xi] -> phi)
+}
+
+
+Rule MP
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assumptions:
+		|- phi
+		|- phi -> psi
+
+	Conclusion:
+		|- psi
+}
+
+
+Rule G
+{
+	Symbols:
+		Let xi be a variable.
+		Let phi be a formula.
+
+	Assumption:
+		|- phi
+
+	Conclusion:
+		|- forall xi: phi
+}
+
+
+
+Theorem T16
+{
+	Symbols:
+		Let a, b be variables. Let phi be a formula. 
+
+	Assertion:
+		|- forall a: forall b: phi -> forall b: forall a: phi
+
+	Proof:
+		1. { forall a: forall b: phi } |- forall a: forall b: phi	# Assumption (forall a: forall b: phi)
+		2. |- forall a: forall b: phi -> forall b: phi				# A4 (a, a, forall b: phi)
+		3. { forall a: forall b: phi } |- forall b: phi				# MP (1., 2.)
+		4. |- forall b: phi -> phi									# A4 (b, b, phi)
+		5. { forall a: forall b: phi } |- phi						# MP (4., 5.)
+		6. { forall a: forall b: phi } |- forall a: phi				# G (a, 5.)
+		7. { forall a: forall b: phi } |- forall b: forall a: phi	# G (b, 6.)
+		8. |- forall a: forall b: phi -> forall b: forall a: phi	# Deduction (forall a: forall b: phi)
+}
+
+Theorem T18
+{
+	Symbols:
+		Let xi, zeta be variables.
+		Let phi be a formula.
+
+	Assertion:
+		|- forall xi: forall zeta: phi -> forall xi: phi[zeta <- xi]
+
+	Proof:
+		1. { forall xi: forall zeta: phi } |- forall xi: forall zeta: phi	# Assumption (forall xi: forall zeta: phi)
+		2. |- forall xi: forall zeta: phi -> forall zeta: phi				# A4 (xi, xi, forall zeta: phi)
+		3. { forall xi: forall zeta: phi } |- forall zeta: phi				# MP (1., 2.)
+		4. |- forall zeta: phi -> phi[zeta <- xi]							# A4 (zeta, xi, phi)
+		5. { forall xi: forall zeta: phi } |- phi[zeta <- xi]				# MP (3., 4.)
+		6. { forall xi: forall zeta: phi } |- forall xi: phi[zeta <- xi]	# G (xi, 5.)
+		7. |- forall xi: forall zeta: phi -> forall xi: phi[zeta <- xi]		# Deduction (forall xi: forall zeta: phi)
+}
+
+
+|- forall xi: forall zeta: phi -> forall zeta: phi[xi <- zeta]
+
+
+
+
+Proof
+{
+	Symbols:
+		Let P, Q be Predicates.
+
+	Assumption:
+		|- forall x: forall y: (P(x, y) -> (Q(x, y) -> P(x, y)))
+
+	Proof:
+		1. |- forall x: forall y: (P(x, y) -> (Q(x, y) -> P(x, y))) 	# Assumption
+		2. |- forall x: forall y: (P(x, y) -> (Q(x, y) -> P(x, y)))
+			-> forall y: forall x: (P(x, y) -> (Q(x, y) -> P(x, y))) 	# T16 (x, y, P(x, y) -> (Q(x, y) -> P(x, y)))
+		3. |- forall y: forall x: (P(x, y) -> (Q(x, y) -> P(x, y)))		# MP(1., 2.)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Proof TPhiImpPhi
+{
+	Symbols:
+		Let phi be a formula.
+
+	Assertion
+		phi -> phi
+}
+
+Theorem TDoubleNeg1
+{
+	Symbols:
+		Let phi be a formula.
+
+	Assertion
+		phi -> !!phi
+}
+
+Theorem TDoubleNeg2
+{
+	Symbols:
+		Let phi be a formula.
+
+	Assertion
+		!!phi -> phi
+}
+
+Theorem MB
+{
+	Symbols:
+		Let phi, psi, chi be formulas.
+
+	Assumption:
+		|- phi -> psi
+		|- psi -> chi
+
+	Assertion:
+		|- phi -> chi
+
+	Proof:
+		{ phi -> psi } |- phi -> psi
+		{ phi } |- phi
+		{ phi -> psi, phi } |- psi
+		{ psi -> chi } |- psi -> chi
+		{ phi -> psi, phi, psi -> chi } |- chi
+		{ phi -> psi, psi -> chi } |- phi -> chi
+}
+
+Theorem TDoubleNegImpl1
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		(phi -> psi) -> (phi -> !!psi)
+
+	Proof:
+		1. (phi -> psi) -> (phi -> psi) 	# TPhiImpPhi
+		2. { phi -> psi } -> phi -> psi		# Induction
+		3. { phi -> psi, phi } -> psi		# Induction
+		3. { phi -> psi, phi } -> !!psi		# TDoubleNeg1
+		4. { phi -> psi } -> phi -> !!psi	# Deduction
+		5. (phi -> psi) -> (phi -> !!psi)	# Deduction
+}
+
+Theorem TDoubleNegImpl2
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		(phi -> psi) -> (!!phi -> psi)
+
+	Proof:
+		1. (phi -> psi) -> (phi -> psi) 	# TPhiImpPhi
+		2. { phi -> psi } |- phi -> psi
+		3. |- !!phi -> phi 					# TDoubleNeg2
+		4. { phi -> psi } |- !!phi -> psi	# MB
+		5. (phi -> psi) -> !!phi -> psi
+}
+
+
+Theorem TDoubleNegImpl3
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		(phi -> psi) -> (!!phi -> !!psi)
+
+	Proof:
+		1. (phi -> psi) -> (!!phi -> psi)		# TDoubleNegImpl1
+		2. (!!phi -> psi) -> (!!phi -> !!psi)	# TDoubleNegImpl2
+		3. { phi -> psi } |- phi -> psi			# Assumption
+		4. { phi -> psi } |- !!phi -> psi		# MP (1., 3.)
+		5. { phi -> psi } |- !!phi -> !!psi		# MP (2., 4.)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Axiom DefEquiv1
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		|- (phi <-> psi) -> !((phi -> psi) -> !(psi -> phi))
+}
+
+Axiom DefEquiv2
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		|- !((phi -> psi) -> !(psi -> phi)) -> (phi <-> psi)
+}
+
+
+Proof
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		|- (phi <-> psi) -> (psi <-> phi)
+
+	Proof:
+
+
+}
+
+
+
+
+
+Proof
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		|- !((phi -> psi) -> !(psi -> phi)) -> !((psi -> phi) -> !(phi -> psi))
+
+	Proof:
+
+		a1. { phi <-> psi } |- phi <-> psi
+		a2. |- (phi <-> psi) -> !((phi -> psi) -> !(psi -> phi))
+		a3. { phi <-> psi } |- !((phi -> psi) -> !(psi -> phi))
+
+		1. |-  ((psi -> phi) -> !(phi -> psi)) -> ((psi -> phi) -> !(phi -> psi))	# TPhiImpPhi ((psi -> phi) -> !(phi -> psi))
+		2. { (psi -> phi) -> !(phi -> psi) } |- (psi -> phi) -> !(phi -> psi)		# Assumption ((psi -> phi) -> !(phi -> psi))
+		3. |- (!!(phi -> psi) -> !(psi -> phi)) -> (psi -> phi) -> !(phi -> psi)	# A3 (psi -> phi, !(phi -> psi))
+
+
+		|- ((psi -> phi) -> !(phi -> psi)) -> (!!(phi -> psi) -> !(psi -> phi))			# A3 
+		{ (psi -> phi) -> !(phi -> psi) } |- !!(phi -> psi) -> !(psi -> phi)			
+		|- (!!(phi -> psi) -> !(psi -> phi)) -> ((phi -> psi) -> !(psi -> phi))			# TDoubleNegImpl2
+		{ (psi -> phi) -> !(phi -> psi) } |- (phi -> psi) -> !(psi -> phi)				# MP
+		|- ((psi -> phi) -> !(phi -> psi)) -> ((phi -> psi) -> !(psi -> phi))			# Deduction
+		|- ((psi -> phi) -> !(phi -> psi)) -> ((phi -> psi) -> !(psi -> phi))
+			->  !!((psi -> phi) -> !(phi -> psi)) -> !!((phi -> psi) -> !(psi -> phi)) 	# TDoubleNegImpl3
+		|- !!((psi -> phi) -> !(phi -> psi)) -> !!((phi -> psi) -> !(psi -> phi))		# MP
+		|- !!((psi -> phi) -> !(phi -> psi)) -> !!((phi -> psi) -> !(psi -> phi)) 
+			-> !((phi -> psi) -> !(psi -> phi)) -> !((psi -> phi) -> !(phi -> psi))		# A3 (!((phi -> psi) -> !(psi -> phi)), !((psi -> phi) -> !(phi -> psi)))
+		|- !((phi -> psi) -> !(psi -> phi)) -> !((psi -> phi) -> !(phi -> psi))			# MP
+
+
+		a4. { phi <-> psi } |- !((psi -> phi) -> !(phi -> psi))
+		a5. |- !((psi -> phi) -> !(phi -> psi)) -> (psi <-> phi)
+		a6. { phi <-> psi } |- psi <-> phi
+		a7. |- (phi <-> psi) -> (psi <-> phi)
+}
+
+
+
+
+Axiom DefOr
+{
+	Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+		|- (phi | psi) <-> (!phi => psi)
+}
+

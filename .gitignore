@@ -1,0 +1,12 @@
+**/*.js
+**/*.map
+dist/
+*.suo
+bin/
+obj/
+*~
+node_modules/
+bower_components/
+lib/
+*.user
+/FirstOrderPredicateLogic.sln.ide/

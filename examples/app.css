@@ -1,0 +1,16 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.CodeMirror {
+  height: auto;
+  border: 1px solid black; font-size: 13px;
+}
+.CodeMirror-scroll {
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+
+
+.proof-step-formula {  color: gray; padding: 2px 5px 3px;  }
+    
