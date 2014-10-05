@@ -71,10 +71,21 @@
     <TypeScriptCompile Include="src\Proof\Arguments.ts" />
     <TypeScriptCompile Include="src\Proof\Document.ts" />
     <TypeScriptCompile Include="src\Proof\Proof.ts" />
-    <TypeScriptCompile Include="src\Syntax\Formulas.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\AllQuantor.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\Formula.ts" />
     <TypeScriptCompile Include="src\Helper\Helper.ts" />
-    <TypeScriptCompile Include="src\Syntax\OperationFormulas.ts" />
-    <TypeScriptCompile Include="src\Syntax\Terms.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\AppliedSubstitution.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\Substitution.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\FormulaRef.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\PredicateRef.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\Operation.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\OperationFactory.ts" />
+    <TypeScriptCompile Include="src\Syntax\Declarations.ts" />
+    <TypeScriptCompile Include="src\Syntax\Terms\VariableRef.ts" />
+    <TypeScriptCompile Include="src\Syntax\Terms\FunctionRef.ts" />
+    <TypeScriptCompile Include="Template.ts" />
+    <TypeScriptCompile Include="src\Syntax\Formulas\SpecificOperations.ts" />
+    <TypeScriptCompile Include="src\Syntax\Terms\Terms.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="examples\app.css" />
@@ -87,5 +98,6 @@
     <Content Include="bower.json" />
     <Content Include="package.json" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets')" />
 </Project>

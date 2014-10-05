@@ -1,61 +1,18 @@
 ﻿
 
 
-
-
 var s = FirstOrderPredicateLogic.Syntax;
 var p = FirstOrderPredicateLogic.Parser;
 var pr = FirstOrderPredicateLogic.Proof;
 
 var termParser = new p.TermParser();
-var parsedTerm = termParser.parseTerm(
-    new p.Tokenizer("g(a, h(b), c)"),
-    new p.ParserContext([new s.FunctionDeclaration("g", 3), new s.FunctionDeclaration("h", 1)]));
-
-//console.log(parsedTerm.toString());
-
-
 var formulaParser = new p.FormulaParser(termParser, [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
-var c = new p.ParserContext(
-    [
-        new s.FunctionDeclaration("g", 3), new s.FunctionDeclaration("h", 1),
-        new s.PredicateDeclaration("A", 3), new s.PredicateDeclaration("B", 3), new s.PredicateDeclaration("C", 3),
-        new s.FormulaDeclaration("phi")
-    ]);
-var parseF = (s: string, c: FirstOrderPredicateLogic.Parser.IParserContext)
-    => formulaParser.parseFormula(new p.Tokenizer(s), c);
 
-var parsedFormula = parseF("(A -> forall a: (B -> C(a,b)) -> phi)[a <- h(a)]", c);
-
-
-console.log(parsedFormula.substitute(
-    [
-        new s.VariableWithVariableSubstition(
-            c.getVariableDeclaration("a"),
-            c.getVariableDeclaration("b"))
-    ]));
-
-
-var placeholders = [new s.FormulaDeclaration("phi"), new s.FormulaDeclaration("psi")];
-var c1 = new p.ParserContext(placeholders);
-
-var axiom1 = new pr.Axiom("A1", pr.Parameter.fromDeclarations(placeholders),
-    parseF("phi -> (psi -> phi)", c1));
-
-var axiomStep = new pr.ProofableFormulaBuilderStep(axiom1,
-    pr.Argument.fromValues(axiom1.getParameters(), [parseF("phi -> phi", c), parseF("A", c)]));
-
-console.log(axiomStep.getDeductedFormula().toString());
-
-
-var documentParser = new p.DocumentParser(formulaParser,  termParser);
-
-
-
+var documentParser = new p.DocumentParser(formulaParser, termParser);
 
 declare var CodeMirror: any;
 window.onload = () => {
-    
+
     var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
         lineNumbers: true,
         styleActiveLine: true,
@@ -65,7 +22,7 @@ window.onload = () => {
 
     editor.on("renderLine", function (cm, line, elt) {
         console.log({ l: line, e: elt });
-        
+
     });
 
     var widgets = [];
@@ -105,7 +62,7 @@ window.onload = () => {
 
                     var td = <FirstOrderPredicateLogic.Proof.TheoremDescription>d;
                     td.getProofSteps().forEach(step => {
-                        
+
                         var newStep: FirstOrderPredicateLogic.Proof.Step = null;
 
                         ax = formulaBuilders[step.getOperation()];
@@ -141,7 +98,9 @@ window.onload = () => {
 
                         steps[step.getStepIdentifier()] = newStep;
 
-                        var text = "|- " + newStep.getDeductedFormula().toString();
+                        var text = "⊢ " + newStep.getDeductedFormula().toString({
+                            forceParenthesis: false, parentOperatorPriority: 0, useUnicode: true
+                        });
                         var pos = p.TextRegion.getRegionOf(step);
                         var line = pos.getStartLine() - 1;
                         var msg = document.createElement("div");
@@ -152,7 +111,10 @@ window.onload = () => {
                         msg.innerHTML = "<pre>  " + space + text + "</pre>";
 
                         msg.className = "proof-step-formula";
-                        widgets.push(editor.addLineWidget(line, msg, { coverGutter: false, noHScroll: true }));
+
+
+                        var widget = editor.addLineWidget(line, msg, { coverGutter: false, noHScroll: true });
+                        widgets.push(widget);
 
                     });
                 }

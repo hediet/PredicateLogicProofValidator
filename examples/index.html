@@ -58,16 +58,17 @@ Rule MP
         |- psi
 }
 
-            
-Theorem T18
+Theorem T1
 {
     Symbols:
         Let phi be a formula.
-
+	
     Proof:
-        # 1. A2(phi, phi, phi)
-        # 2. A1(phi, phi)
+        # 1. A2(phi, phi -> phi, phi)
+        # 2. A1(phi, phi -> phi)
         # 3. MP(@2, @1)
+        # 4. A1(phi, phi)
+        # 5. MP(@4, @3)
 }
 </textarea>
 </body>

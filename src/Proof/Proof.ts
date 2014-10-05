@@ -57,28 +57,16 @@ module FirstOrderPredicateLogic.Proof {
 
         public getNecessaryParameters(): Parameter[] {
 
-            var usedFormulas: { [id: string]: Syntax.FormulaDeclaration } = {};
+            var usedDeclarations: { [id: string]: Syntax.FormulaDeclaration } = {};
             this.assumptions.forEach((a: Syntax.Formula) => {
-                a.getFormulaRefs().forEach(r => usedFormulas[r.getName()] = r);
+                a.getDeclarations().forEach(r => usedDeclarations[r.getName()] = r);
             });
 
-            var usedVariables: { [id: string]: Syntax.VariableDeclaration } = {};
-            this.assumptions.forEach((a: Syntax.Formula) => {
-                a.getVariables().forEach(r => usedVariables[r.getName()] = r);
-            });
-
-            return this.getParameters().filter(p => {
-                if (p instanceof FormulaParameter) {
-                    return !usedFormulas.hasOwnProperty(p.getName());
-                }
-                else if (p instanceof VariableParameter) {
-                    return !usedVariables.hasOwnProperty(p.getName());
-                }
-            });
+            return this.getParameters().filter(p => !usedDeclarations.hasOwnProperty(p.getName()));
         }
     }
 
-
+    
 
     export class Step {
         public getDeductedFormula(): Syntax.Formula {
@@ -111,12 +99,12 @@ module FirstOrderPredicateLogic.Proof {
                 this.args.map(a => {
                     if (a instanceof VariableArgument) {
                         var va = <VariableArgument>a;
-                        return <Syntax.Substition>new Syntax.VariableWithVariableSubstition(
+                        return <Syntax.Substition>new Syntax.VariableSubstition(
                             va.getParameter().getSourceVariable(), va.getArgument());
                     }
                     if (a instanceof FormulaArgument) {
                         var fa = <FormulaArgument>a;
-                        return new Syntax.FormulaRefWithFormulaSubstitution(
+                        return new Syntax.FormulaSubstitution(
                             fa.getParameter().getSourceFormulaDeclaration(), fa.getArgument());
                     }
                 });
@@ -140,7 +128,7 @@ module FirstOrderPredicateLogic.Proof {
 
             //check assumptions and infer arguments
 
-            var substService = new ResubstitutionService();
+            var substService = new SubstitutionCollector();
 
             rule.getAssumptions().forEach((a: Syntax.Formula, idx) => {
                 var providedAssumption = assumptions[idx];
@@ -164,16 +152,16 @@ module FirstOrderPredicateLogic.Proof {
 
                 var argument: Argument = null;
 
-                if (subst instanceof Syntax.VariableWithVariableSubstition) {
-                    var vvsubst = <Syntax.VariableWithVariableSubstition>subst;
+                if (subst instanceof Syntax.VariableSubstition) {
+                    var vvsubst = <Syntax.VariableSubstition>subst;
 
-                    var param = parameters[vvsubst.getVariableToSubstitute().getName()];
+                    var param = parameters[vvsubst.getDeclarationToSubstitute().getName()];
                     argument = new VariableArgument(<VariableParameter>param, vvsubst.getVariableToInsert());
                 }
-                else if (subst instanceof Syntax.FormulaRefWithFormulaSubstitution) {
-                    var ffsubst = <Syntax.FormulaRefWithFormulaSubstitution>subst;
+                else if (subst instanceof Syntax.FormulaSubstitution) {
+                    var ffsubst = <Syntax.FormulaSubstitution>subst;
 
-                    var param = parameters[ffsubst.getFormulaToSubstitute().getName()];
+                    var param = parameters[ffsubst.getDeclarationToSubstitute().getName()];
                     argument = new FormulaArgument(<FormulaParameter>param, ffsubst.getFormulaToInsert());
                 }
 
@@ -210,12 +198,12 @@ module FirstOrderPredicateLogic.Proof {
                 this.args.map(a => {
                     if (a instanceof VariableArgument) {
                         var va = <VariableArgument>a;
-                        return <Syntax.Substition>new Syntax.VariableWithVariableSubstition(
+                        return <Syntax.Substition>new Syntax.VariableSubstition(
                             va.getParameter().getSourceVariable(), va.getArgument());
                     }
                     if (a instanceof FormulaArgument) {
                         var fa = <FormulaArgument>a;
-                        return new Syntax.FormulaRefWithFormulaSubstitution(
+                        return new Syntax.FormulaSubstitution(
                             fa.getParameter().getSourceFormulaDeclaration(), fa.getArgument());
                     }
                 });
@@ -226,7 +214,7 @@ module FirstOrderPredicateLogic.Proof {
     }
 
 
-    class ResubstitutionService implements Syntax.IResubstitutionService {
+    class SubstitutionCollector implements Syntax.ISubstitutionCollector {
 
         private error: boolean;
         private substitutions: { [id: string]: Syntax.Substition } = {};
@@ -248,51 +236,15 @@ module FirstOrderPredicateLogic.Proof {
 
         public addSubstitution(substitution: Syntax.Substition) {
 
-            if (substitution instanceof Syntax.VariableWithVariableSubstition) {
-                var s = <Syntax.VariableWithVariableSubstition>substitution;
-                var name = s.getVariableToSubstitute().getName();
+            var name = substitution.getDeclarationToSubstitute().getName();
+            var oldSubst = this.substitutions[name];
 
-                var oldSubst = this.substitutions[name];
-                if (typeof oldSubst === "undefined") {
-                    this.substitutions[name] = s;
-                } else {
-
-                    if (!(oldSubst instanceof Syntax.VariableWithVariableSubstition))
-                        this.error = true;
-                    else {
-
-                        var varToInsertName = (<Syntax.VariableWithVariableSubstition>oldSubst).getVariableToInsert().getName();
-
-                        if (s.getVariableToInsert().getName() !== varToInsertName) {
-                            this.error = true;
-                        }
-                    }
-                }
+            if (typeof oldSubst === "undefined") {
+                this.substitutions[name] = substitution;
+            } else {
+                if (!substitution.equals(oldSubst))
+                    this.error = true;
             }
-
-
-            if (substitution instanceof Syntax.FormulaRefWithFormulaSubstitution) {
-                var s2 = <Syntax.FormulaRefWithFormulaSubstitution>substitution;
-                var name = s2.getFormulaToSubstitute().getName();
-
-                var oldSubst = this.substitutions[name];
-                if (typeof oldSubst === "undefined") {
-                    this.substitutions[name] = s2;
-                } else {
-
-                    if (!(oldSubst instanceof Syntax.FormulaRefWithFormulaSubstitution))
-                        this.error = true;
-                    else {
-
-                        var formulaToInsert = (<Syntax.FormulaRefWithFormulaSubstitution>oldSubst).getFormulaToInsert();
-
-                        if (s2.getFormulaToInsert() !== formulaToInsert) { //TODO
-                            //this.error = true;
-                        }
-                    }
-                }
-            }
-
         }
 
         public addIncompatibleNodes(genericFormula: Syntax.Formula, specialFormula: Syntax.Formula) {
