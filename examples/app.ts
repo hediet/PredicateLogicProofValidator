@@ -1,14 +1,17 @@
 ﻿
 
 
-var s = FirstOrderPredicateLogic.Syntax;
-var p = FirstOrderPredicateLogic.Parser;
-var pr = FirstOrderPredicateLogic.Proof;
+/*
+import s = FirstOrderPredicateLogic.Syntax;
+import p = FirstOrderPredicateLogic.Parser;
+import pr = FirstOrderPredicateLogic.Proof;
 
 var termParser = new p.TermParser();
 var formulaParser = new p.FormulaParser(termParser, [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
 
 var documentParser = new p.DocumentParser(formulaParser, termParser);
+
+
 
 declare var CodeMirror: any;
 window.onload = () => {
@@ -37,33 +40,32 @@ window.onload = () => {
 
             var result = documentParser.parseStr(editor.getValue());
 
-            var formulaBuilders: { [id: string]: FirstOrderPredicateLogic.Proof.ProofableFormulaBuilder } = {};
-            var rules: { [id: string]: FirstOrderPredicateLogic.Proof.Rule } = {};
+            var formulaBuilders: { [id: string]: pr.ProofableFormulaBuilder } = {};
+            var rules: { [id: string]: pr.Rule } = {};
 
             result.getDescriptions().forEach(d => {
 
-                if (d instanceof FirstOrderPredicateLogic.Proof.AxiomDescription) {
+                if (d instanceof pr.AxiomDescription) {
 
-                    var ad = <FirstOrderPredicateLogic.Proof.AxiomDescription>d;
-                    var ax = new pr.Axiom(ad.getName(), pr.Parameter.fromDeclarations(ad.getSymbols()), ad.getAssertion());
+                    var ad = <pr.AxiomDescription>d;
+                    var ax = new pr.Axiom(ad.getName(), ad.getSymbols(), ad.getAssertion());
                     formulaBuilders[ax.getName()] = ax;
 
                 }
-                else if (d instanceof FirstOrderPredicateLogic.Proof.RuleDescription) {
+                else if (d instanceof pr.RuleDescription) {
 
-                    var rd = <FirstOrderPredicateLogic.Proof.RuleDescription>d;
-                    var parameters = pr.Parameter.fromDeclarations(rd.getSymbols());
-                    var rule = new pr.Rule(rd.getName(), parameters, rd.getConclusion(), rd.getAssumptions());
+                    var rd = <pr.RuleDescription>d;
+                    var rule = new pr.Rule(rd.getName(), rd.getSymbols(), rd.getConclusion(), rd.getAssumptions());
                     rules[rule.getName()] = rule;
 
-                } else if (d instanceof FirstOrderPredicateLogic.Proof.TheoremDescription) {
+                } else if (d instanceof pr.TheoremDescription) {
 
-                    var steps: { [id: string]: FirstOrderPredicateLogic.Proof.Step } = {};
+                    var steps: { [id: string]: pr.Step } = {};
 
-                    var td = <FirstOrderPredicateLogic.Proof.TheoremDescription>d;
+                    var td = <pr.TheoremDescription>d;
                     td.getProofSteps().forEach(step => {
 
-                        var newStep: FirstOrderPredicateLogic.Proof.Step = null;
+                        var newStep: pr.Step = null;
 
                         ax = formulaBuilders[step.getOperation()];
 
@@ -73,19 +75,18 @@ window.onload = () => {
 
                             var args = step.getArguments().map(a => {
                                 if (a instanceof pr.StepRef) {
-                                    var referencedStepName = (<FirstOrderPredicateLogic.Proof.StepRef>a).getReferencedStep();
+                                    var referencedStepName = (<pr.StepRef>a).getReferencedStep();
                                     return steps[referencedStepName].getDeductedFormula();
                                 }
                                 return a;
                             });
 
-                            newStep = new pr.ProofableFormulaBuilderStep(ax, pr.Argument.fromValues(
-                                ax.getParameters(), args));
+                            newStep = new pr.ProofableFormulaBuilderStep(ax, s.Substition.fromValues(ax.getParameters(), args));
                         } else {
 
                             var stepArgs = step.getArguments().slice(0);
                             var rule = rules[step.getOperation()];
-                            var providedAssumptions: FirstOrderPredicateLogic.Proof.StepRef[] = [];
+                            var providedAssumptions: pr.StepRef[] = [];
                             rule.getAssumptions().forEach(a => {
                                 providedAssumptions.push(stepArgs.shift());
                             });
@@ -133,3 +134,4 @@ window.onload = () => {
     });
 }
 
+*/

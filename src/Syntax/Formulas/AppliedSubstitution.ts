@@ -4,46 +4,37 @@ module FirstOrderPredicateLogic.Syntax {
     export class AppliedSubstitution extends Formula {
 
         private formulaToSubstitute: Formula;
-        private variableToSubstitute: VariableDeclaration;
-        private termToInsert: Term;
+        private substitution: VariableWithTermSubstitution;
 
         private substitutedFormula: Formula = null;
 
-        constructor(formulaToSubstitute: Formula, variableToSubstitute: VariableDeclaration, termToInsert: Term) {
+        constructor(formulaToSubstitute: Formula, substitution: VariableWithTermSubstitution) {
             super();
 
             this.formulaToSubstitute = formulaToSubstitute;
-            this.variableToSubstitute = variableToSubstitute;
-            this.termToInsert = termToInsert;
+            this.substitution = substitution;
         }
 
         public getFormulaToSubstitute(): Formula {
             return this.formulaToSubstitute;
         }
 
-        public getVariableToSubstitute(): VariableDeclaration {
-            return this.variableToSubstitute;
-        }
-
-        public getTermToInsert(): Term {
-            return this.termToInsert;
+        public getSubstitution(): VariableWithTermSubstitution {
+            return this.substitution;
         }
 
         public isCollisionFree(): boolean {
-            return this.formulaToSubstitute.isSubstitutionCollisionFree(
-                new VariableWithTermSubstitution(this.variableToSubstitute, this.termToInsert));
+            return this.formulaToSubstitute.isSubstitutionCollisionFree(this.substitution);
         }
 
         public getSubstitutedFormula(): Formula {
 
             if (this.substitutedFormula === null) {
-                this.substitutedFormula = this.formulaToSubstitute.substituteUnboundVariables(
-                    [new VariableWithTermSubstitution(this.variableToSubstitute, this.termToInsert)]);
+                this.substitutedFormula = this.formulaToSubstitute.substituteUnboundVariables([this.substitution]);
             }
 
             return this.substitutedFormula;
         }
-
 
 
 
@@ -57,32 +48,45 @@ module FirstOrderPredicateLogic.Syntax {
 
         public substitute(substitutions: Substition[]): Formula {
 
-            var newVariableToSubstitute = this.variableToSubstitute;
+            var newVariableToSubstitute = this.substitution.getVariableToSubstitute();
 
-            substitutions.forEach(s => {
+            substitutions.some(s => {
                 if (s instanceof VariableSubstition) {
                     var s1 = <VariableSubstition>s;
-                    if (s1.getDeclarationToSubstitute().equals(this.variableToSubstitute)) {
-                        newVariableToSubstitute = s1.getVariableToInsert();
+                    if (s1.getDeclarationToSubstitute().equals(this.substitution.getVariableToSubstitute())) {
+                        newVariableToSubstitute = s1.getElementToInsert();
                     }
+                    return true;
                 }
+                return false;
             });
 
-            var subs = substitutions.filter(s => s instanceof VariableSubstition).map(s =>
+            var termSubstitutions = substitutions.filter(s => s instanceof VariableSubstition).map(s =>
                 new VariableWithTermSubstitution((<VariableSubstition>s).getDeclarationToSubstitute(),
-                    new VariableRef((<VariableSubstition>s).getVariableToInsert())));
+                    new VariableRef((<VariableSubstition>s).getElementToInsert())));
+            var newTermToInsert = this.substitution.getTermToInsert().substitute(termSubstitutions);
 
-            var newTermToInsert = this.termToInsert.substitute(subs);
             var newFormulaToSubstitute = this.formulaToSubstitute.substitute(substitutions);
 
-            return new AppliedSubstitution(newFormulaToSubstitute, newVariableToSubstitute, newTermToInsert);
+            return new AppliedSubstitution(newFormulaToSubstitute,
+                new VariableWithTermSubstitution(newVariableToSubstitute, newTermToInsert));
         }
 
         public applySubstitutions(): Formula {
-            return this.getSubstitutedFormula();
+            return this.getSubstitutedFormula().applySubstitutions();
         }
 
-        public getUnboundVariables(): VariableDeclaration[] {
+        public getUnboundVariables(): VariableDeclaration[]{
+
+            /*
+
+            this.formulaToSubstitute.getUnboundVariables().filter(v => {
+                if (v.equals(this.substitution.getVariableToSubstitute())) {
+
+                } else return true;
+
+            })
+*/
             return [];
         }
 
@@ -90,8 +94,9 @@ module FirstOrderPredicateLogic.Syntax {
             return []; //TODO
         }
 
-        public getFormulaRefs(): FormulaDeclaration[] {
-            return []; //TODO
+        public getDeclarations(): Declaration[]{
+            //TODO
+            return this.formulaToSubstitute.getDeclarations();
         }
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
@@ -102,8 +107,7 @@ module FirstOrderPredicateLogic.Syntax {
                 useUnicode: args.useUnicode
             };
 
-            return "(" + this.formulaToSubstitute.toString(subArgs) + ")"
-                + "[" + this.variableToSubstitute.getName() + " <- " + this.termToInsert.toString() + "]";
+            return "(" + this.formulaToSubstitute.toString(subArgs) + ")" + this.substitution.toString(args.useUnicode);
         }
     }
 }

@@ -13,4 +13,6 @@ module FirstOrderPredicateLogic.Helper {
                 return objs.indexOf(i) >= 0 ? false : (objs.push(i) >= 0);
         });
     }
+
+
 }

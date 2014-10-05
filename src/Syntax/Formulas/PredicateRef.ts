@@ -34,7 +34,7 @@ module FirstOrderPredicateLogic.Syntax {
 
             var subs = substitutions.filter(s => s instanceof VariableSubstition).map(s =>
                 new VariableWithTermSubstitution((<VariableSubstition>s).getDeclarationToSubstitute(),
-                    new VariableRef((<VariableSubstition>s).getVariableToInsert())));
+                    new VariableRef((<VariableSubstition>s).getElementToInsert())));
 
             var newArgs = this.args.map(a => a.substitute(subs));
             return new PredicateRef(this.f, newArgs);

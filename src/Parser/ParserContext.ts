@@ -9,6 +9,7 @@
         getPredicateDeclaration(predicateName: string): Syntax.PredicateDeclaration;
         getFormulaDeclaration(formulaName: string): Syntax.FormulaDeclaration;
         getVariableDeclaration(variableName: string): Syntax.VariableDeclaration;
+        getTermDeclaration(termName: string): Syntax.TermDeclaration;
     }
 
 
@@ -18,6 +19,7 @@
         private declaredPredicates: { [id: string]: Syntax.PredicateDeclaration } = {};
         private declaredFormulas: { [id: string]: Syntax.FormulaDeclaration } = {};
         private declaredVariables: { [id: string]: Syntax.VariableDeclaration } = {};
+        private declaredTerms: { [id: string]: Syntax.TermDeclaration } = {};
 
         constructor(declarations: Syntax.Declaration[]) {
 
@@ -30,6 +32,8 @@
                     this.declaredFormulas[d.getName()] = <Syntax.FormulaDeclaration>d;
                 if (d instanceof Syntax.VariableDeclaration)
                     this.declaredVariables[d.getName()] = <Syntax.VariableDeclaration>d;
+                if (d instanceof Syntax.TermDeclaration)
+                    this.declaredTerms[d.getName()] = <Syntax.TermDeclaration>d;
             });
         }
 
@@ -65,6 +69,14 @@
             }
 
             return new Syntax.VariableDeclaration(variableName);
+        }
+
+        public getTermDeclaration(termName: string): Syntax.TermDeclaration {
+            if (typeof this.declaredTerms[termName] !== "undefined") {
+                return this.declaredTerms[termName];
+            }
+
+            return new Syntax.TermDeclaration(termName);
         }
     }
 }

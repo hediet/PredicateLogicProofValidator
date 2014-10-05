@@ -20,10 +20,15 @@
         public getTermToInsert(): Term {
             return this.termToInsert;
         }
+
+        public toString(useUnicode: boolean = false): string {
+
+            return "[" + this.variableToSubstitute.getName() + (useUnicode ? " ⇦ " : " <- ") + this.termToInsert.toString() + "]";
+        }
     }
 
 
-    export class Term {
+    export class Term implements IEquatable<Term> {
         public getContainingVariables(): VariableDeclaration[] {
             throw "This method is abstract";
         }
@@ -35,6 +40,13 @@
         public substitute(substitutions: VariableWithTermSubstitution[]): Term {
             throw "This method is abstract";
         }
-    }
 
+        public equals(other: Term): boolean {
+            throw "abstract";
+        }
+
+        public toString(): string {
+            throw "abstract";
+        }
+    }
 }

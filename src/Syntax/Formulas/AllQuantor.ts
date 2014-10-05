@@ -7,22 +7,22 @@ module FirstOrderPredicateLogic.Syntax {
             return 1000;
         }
 
-        private formula: Formula;
+        private quantifiedFormula: Formula;
         private boundVariable: VariableDeclaration;
 
-        constructor(boundVariable: VariableDeclaration, formula: Formula) {
+        constructor(boundVariable: VariableDeclaration, quantifiedFormula: Formula) {
             super();
 
             this.boundVariable = boundVariable;
-            this.formula = formula;
+            this.quantifiedFormula = quantifiedFormula;
         }
 
         public getBoundVariable(): VariableDeclaration {
             return this.boundVariable;
         }
 
-        public getFormula(): Formula {
-            return this.formula;
+        public getQuantifiedFormula(): Formula {
+            return this.quantifiedFormula;
         }
 
         public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
@@ -34,17 +34,24 @@ module FirstOrderPredicateLogic.Syntax {
             //The substitution is not collision free, if the variable bound by this qualifier appears
             //unbound in 'termToInsert'.
             if (substitution.getTermToInsert().containsVariable(this.boundVariable)
-                && this.formula.containsUnboundVariable(substitution.getVariableToSubstitute()))
+                && this.quantifiedFormula.containsUnboundVariable(substitution.getVariableToSubstitute()))
                 return false;
 
-            return this.formula.isSubstitutionCollisionFree(substitution);
+            return this.quantifiedFormula.isSubstitutionCollisionFree(substitution);
         }
+
+        private clone(newBoundVariable: VariableDeclaration, newQuantifiedFormula: Formula): AllQuantor {
+            if (this.boundVariable !== newBoundVariable || this.quantifiedFormula !== newQuantifiedFormula)
+                return new AllQuantor(newBoundVariable, newQuantifiedFormula);
+            else
+                return this;
+        }
+
 
         public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
 
             var subs = substitutions.filter(s => !s.getVariableToSubstitute().equals(this.boundVariable));
-
-            return new AllQuantor(this.boundVariable, this.formula.substituteUnboundVariables(subs));
+            return this.clone(this.boundVariable, this.quantifiedFormula.substituteUnboundVariables(subs));
         }
 
         public substitute(substitutions: Substition[]): Formula {
@@ -55,14 +62,14 @@ module FirstOrderPredicateLogic.Syntax {
                 if (s instanceof VariableSubstition) {
                     var sub = <VariableSubstition>s;
                     if (sub.getDeclarationToSubstitute().equals(this.boundVariable)) {
-                        newBoundVariable = sub.getVariableToInsert();
+                        newBoundVariable = sub.getElementToInsert();
                         return true;
                     }
                 }
                 return false;
             });
 
-            return new AllQuantor(newBoundVariable, this.formula.substitute(substitutions));
+            return this.clone(newBoundVariable, this.quantifiedFormula.substitute(substitutions));
         }
 
         public resubstitute(instance: Formula, substService: ISubstitutionCollector) {
@@ -76,16 +83,16 @@ module FirstOrderPredicateLogic.Syntax {
             var boundVariable = a.getBoundVariable();
 
             substService.addSubstitution(new VariableSubstition(boundVariable, a.getBoundVariable()));
-            this.formula.resubstitute(a.getFormula(), substService);
+            this.quantifiedFormula.resubstitute(a.getQuantifiedFormula(), substService);
         }
 
         public applySubstitutions(): Formula {
-            return new AllQuantor(this.boundVariable, this.formula.applySubstitutions());
+            return this.clone(this.boundVariable, this.quantifiedFormula.applySubstitutions());
         }
 
         public getDeclarations(): Declaration[] {
 
-            var result: Declaration[] = this.formula.getDeclarations();
+            var result: Declaration[] = this.quantifiedFormula.getDeclarations();
             result.push(this.boundVariable);
             result = Helper.unique(result, r => r.getName());
 
@@ -93,7 +100,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public getUnboundVariables(): VariableDeclaration[] {
-            var result = this.formula.getUnboundVariables();
+            var result = this.quantifiedFormula.getUnboundVariables();
             result = result.filter(t => !t.equals(this.boundVariable));
 
             return result;
@@ -101,7 +108,7 @@ module FirstOrderPredicateLogic.Syntax {
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
 
-            var result = (args.useUnicode ? "∀" : "forall ") + this.boundVariable.getName() + ": " + this.formula.toString(
+            var result = (args.useUnicode ? "∀" : "forall ") + this.boundVariable.getName() + ": " + this.quantifiedFormula.toString(
             {
                 forceParenthesis: args.forceParenthesis,
                 parentOperatorPriority: AllQuantor.getPriority(),

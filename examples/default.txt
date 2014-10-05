@@ -1,0 +1,75 @@
+﻿
+Axiom A1
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assertion:
+        |- phi -> (psi -> phi)
+}
+
+Axiom A2
+{
+    Symbols:
+        Let phi, psi, chi be formulas.
+
+    Assertion:
+        |- (phi -> (psi -> chi)) -> ((phi -> psi) -> (phi -> chi))
+}
+
+Axiom A3
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assertion:
+        |- (!phi -> !psi) -> (psi -> phi)
+}  
+
+Axiom A4
+{
+	Symbols:
+		Let xi be a variable.
+		Let phi be a formula.
+		Let sigma be a term.
+
+	Assertion:
+		|- forall xi: phi -> phi[xi <- sigma]
+}
+
+
+Rule MP
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assumptions:
+        |- phi
+        |- phi -> psi
+
+    Conclusion:
+        |- psi
+}
+        
+Theorem Foo
+{
+	Symbols:
+		Let P be a predicate.
+		Let f be a function.
+
+	Proof:
+		# 1. A4([xi], P(xi), [f(xi)])
+}
+
+Theorem T1
+{
+    Symbols:
+        Let phi be a formula.
+	
+    Proof:
+        # 1. A2(phi, phi -> phi, phi)
+        # 2. A1(phi, phi -> phi)
+        # 3. MP(@2, @1)
+        # 4. A1(phi, phi)
+        # 5. MP(@4, @3)
+}

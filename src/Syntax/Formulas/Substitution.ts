@@ -1,87 +1,95 @@
 ﻿
 module FirstOrderPredicateLogic.Syntax {
 
-    export class Substition {
-
-        private declarationToSubstitute: VariableDeclaration;
-
-        constructor(declarationToSubstitute: VariableDeclaration) {
-            this.declarationToSubstitute = declarationToSubstitute;
-        }
+    export class Substition implements IEquatable<Substition> {
 
         public isIdentity(): boolean {
             throw "abstract";
         }
 
-        public getDeclarationToSubstitute(): FormulaDeclaration {
+        public getDeclarationToSubstitute(): Declaration {
+            throw "abstract";
+        }
+
+        public getElementToInsert(): any {
+            throw "abstract";
+        }
+
+        public equals(other: Substition): boolean {
+            throw "abstract";
+        }
+
+        public static fromValues(declarations: Declaration[], elementsToInsert: any[]): Substition[] {
+            return declarations.map((d, idx) => d.createSubstitution(elementsToInsert[idx]));
+        }
+    }
+
+    export class SpecificSubstitution<TDeclaration extends Declaration, TElementToInsert extends IEquatable<any>> extends Substition {
+        
+        private declarationToSubstitute: TDeclaration;
+        private elementToInsert: TElementToInsert;
+
+        constructor(declarationToSubstitute: TDeclaration, elementToInsert: TElementToInsert) {
+            super();
+
+            this.declarationToSubstitute = declarationToSubstitute;
+            this.elementToInsert = elementToInsert;
+        }
+
+        public getDeclarationToSubstitute(): TDeclaration {
             return this.declarationToSubstitute;
         }
 
+        public getElementToInsert(): TElementToInsert {
+            return this.elementToInsert;
+        }
+
         public equals(other: Substition): boolean {
+
             if (!(typeof this === typeof other))
                 return false;
 
-            return this.declarationToSubstitute.equals(other.declarationToSubstitute);
-        }
-    }
-
-    export class VariableSubstition extends Substition {
-
-        
-        private variableToInsert: VariableDeclaration;
-
-        constructor(variableToSubstitute: VariableDeclaration, variableToInsert: VariableDeclaration) {
-
-            Helper.ArgumentExceptionHelper.ensureTypeOf(variableToSubstitute, VariableDeclaration, "variableToSubstitute");
-            Helper.ArgumentExceptionHelper.ensureTypeOf(variableToInsert, VariableDeclaration, "variableToInsert");
-
-            super(variableToSubstitute);
-            this.variableToInsert = variableToInsert;
-        }
-
-        public getVariableToInsert(): VariableDeclaration {
-            return this.variableToInsert;
-        }
-
-        public isIdentity(): boolean {
-            return this.getDeclarationToSubstitute().equals(this.variableToInsert);
-        }
-
-        public equals(other: Substition): boolean {
-            return super.equals(other)
-                && this.variableToInsert.equals((<VariableSubstition>other).variableToInsert);
-        }
-    }
-
-    export class FormulaSubstitution extends Substition {
-
-        private formulaToInsert: Formula;
-
-        constructor(formulaToSubstitute: FormulaDeclaration, formulaToInsert: Formula) {
-
-            Helper.ArgumentExceptionHelper.ensureTypeOf(formulaToSubstitute, FormulaDeclaration, "formulaToSubstitute");
-            Helper.ArgumentExceptionHelper.ensureTypeOf(formulaToInsert, Formula, "formulaToInsert");
-
-            super(formulaToSubstitute);
-            this.formulaToInsert = formulaToInsert;
-        }
-
-        public getFormulaToInsert(): Formula {
-            return this.formulaToInsert;
-        }
-        
-        public isIdentity(): boolean {
-
-            if (!(this.formulaToInsert instanceof FormulaRef)) 
+            if (!this.declarationToSubstitute.equals(other.getDeclarationToSubstitute()))
                 return false;
 
-            var formulaRefToInsert = <FormulaRef>this.formulaToInsert;
-            return formulaRefToInsert.getFormula().equals(this.getDeclarationToSubstitute());
+            return this.getElementToInsert().equals(other.getElementToInsert());
         }
+    }
 
-        public equals(other: Substition): boolean {
-            return super.equals(other)
-                && this.formulaToInsert.equals((<FormulaSubstitution>other).formulaToInsert);
+    export class SimpleSubstitution<T extends Declaration> extends SpecificSubstitution<T, T> {
+        public isIdentity(): boolean {
+            return this.getDeclarationToSubstitute().equals(this.getElementToInsert());
+        }
+    }
+
+    export class VariableSubstition extends SimpleSubstitution<VariableDeclaration> { }
+
+    export class FunctionSubstitution extends SimpleSubstitution<FunctionDeclaration> { }
+
+    export class TermSubstitution extends SpecificSubstitution<TermDeclaration, Term> {
+
+        public isIdentity(): boolean {
+
+            if (!(this.getElementToInsert() instanceof TermRef))
+                return false;
+
+            var termRefToInsert = <TermRef>this.getElementToInsert();
+            return termRefToInsert.getDeclaration().equals(this.getDeclarationToSubstitute());
+        }
+    }
+
+
+    export class PredicateSubstitution extends SimpleSubstitution<PredicateDeclaration> { }
+
+    export class FormulaSubstitution extends SpecificSubstitution<FormulaDeclaration, Formula> {
+
+        public isIdentity(): boolean {
+
+            if (!(this.getElementToInsert() instanceof FormulaRef))
+                return false;
+
+            var formulaRefToInsert = <FormulaRef>this.getElementToInsert();
+            return formulaRefToInsert.getDeclaration().equals(this.getDeclarationToSubstitute());
         }
     }
 }

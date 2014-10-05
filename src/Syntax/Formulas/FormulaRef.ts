@@ -3,19 +3,19 @@ module FirstOrderPredicateLogic.Syntax {
 
     export class FormulaRef extends Formula {
 
-        private fd: FormulaDeclaration;
+        private declaration: FormulaDeclaration;
 
         constructor(fd: FormulaDeclaration) {
             super();
-            this.fd = fd;
+            this.declaration = fd;
         }
 
-        public getFormula(): FormulaDeclaration {
-            return this.fd;
+        public getDeclaration(): FormulaDeclaration {
+            return this.declaration;
         }
-
 
         public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
+            //todo
             return true;
         }
 
@@ -23,7 +23,7 @@ module FirstOrderPredicateLogic.Syntax {
 
             var result: Formula = this;
             substitutions.forEach(s => {
-                result = new AppliedSubstitution(result, s.getVariableToSubstitute(), s.getTermToInsert());
+                result = new AppliedSubstitution(result, s);
             });
 
             return result;
@@ -35,8 +35,8 @@ module FirstOrderPredicateLogic.Syntax {
             substitutions.some(s => {
                 if (s instanceof FormulaSubstitution) {
                     var sub = <FormulaSubstitution>s;
-                    if (sub.getDeclarationToSubstitute().equals(this.getFormula())) {
-                        result = sub.getFormulaToInsert();
+                    if (sub.getDeclarationToSubstitute().equals(this.getDeclaration())) {
+                        result = sub.getElementToInsert();
                         return true;
                     }
                 }
@@ -47,7 +47,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public resubstitute(instance: Formula, substService: ISubstitutionCollector) {
-            substService.addSubstitution(new FormulaSubstitution(this.fd, instance));
+            substService.addSubstitution(new FormulaSubstitution(this.declaration, instance));
         }
 
         public applySubstitutions(): Formula {
@@ -63,14 +63,11 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public getFormulaRefs(): FormulaDeclaration[] {
-            return [this.getFormula()];
+            return [this.getDeclaration()];
         }
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
-            return this.fd.getName();
+            return this.declaration.getName();
         }
     }
-
-
-
 }

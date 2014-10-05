@@ -5,10 +5,10 @@ module FirstOrderPredicateLogic.Proof {
     export class FormulaBuilder {
 
         private name: string;
-        private parameters: Parameter[];
+        private parameters: Syntax.Declaration[];
         private formulaTemplate: Syntax.Formula;
 
-        constructor(name: string, placeholders: Parameter[], formulaTemplate: Syntax.Formula) {
+        constructor(name: string, placeholders: Syntax.Declaration[], formulaTemplate: Syntax.Formula) {
             this.name = name;
             this.parameters = placeholders;
             this.formulaTemplate = formulaTemplate;
@@ -18,7 +18,7 @@ module FirstOrderPredicateLogic.Proof {
             return this.name;
         }
 
-        public getParameters(): Parameter[] {
+        public getParameters(): Syntax.Declaration[] {
             return this.parameters;
         }
 
@@ -44,7 +44,7 @@ module FirstOrderPredicateLogic.Proof {
 
         private assumptions: Syntax.Formula[];
 
-        constructor(name: string, parameters: Parameter[],
+        constructor(name: string, parameters: Syntax.Declaration[],
             formulaTemplate: Syntax.Formula, assumptions: Syntax.Formula[]) {
 
             super(name, parameters, formulaTemplate);
@@ -55,10 +55,10 @@ module FirstOrderPredicateLogic.Proof {
             return this.assumptions;
         }
 
-        public getNecessaryParameters(): Parameter[] {
+        public getNecessaryParameters(): Syntax.Declaration[] {
 
-            var usedDeclarations: { [id: string]: Syntax.FormulaDeclaration } = {};
-            this.assumptions.forEach((a: Syntax.Formula) => {
+            var usedDeclarations: { [id: string]: Syntax.Declaration } = {};
+            this.assumptions.forEach(a => {
                 a.getDeclarations().forEach(r => usedDeclarations[r.getName()] = r);
             });
 
@@ -77,15 +77,15 @@ module FirstOrderPredicateLogic.Proof {
     export class ProofableFormulaBuilderStep extends Step {
 
         private pfb: ProofableFormulaBuilder;
-        private args: Argument[];
+        private args: Syntax.Substition[];
 
-        constructor(pfb: ProofableFormulaBuilder, args: Argument[]) {
+        constructor(pfb: ProofableFormulaBuilder, args: Syntax.Substition[]) {
             super();
             this.pfb = pfb;
             this.args = args;
         }
 
-        public getArguments(): Argument[] {
+        public getArguments(): Syntax.Substition[] {
             return this.args;
         }
 
@@ -95,21 +95,7 @@ module FirstOrderPredicateLogic.Proof {
 
         public getDeductedFormula(): Syntax.Formula {
 
-            var substs: Syntax.Substition[] =
-                this.args.map(a => {
-                    if (a instanceof VariableArgument) {
-                        var va = <VariableArgument>a;
-                        return <Syntax.Substition>new Syntax.VariableSubstition(
-                            va.getParameter().getSourceVariable(), va.getArgument());
-                    }
-                    if (a instanceof FormulaArgument) {
-                        var fa = <FormulaArgument>a;
-                        return new Syntax.FormulaSubstitution(
-                            fa.getParameter().getSourceFormulaDeclaration(), fa.getArgument());
-                    }
-                });
-
-            return this.pfb.getFormulaTemplate().substitute(substs);
+            return this.pfb.getFormulaTemplate().substitute(this.args);
         }
 
     }
@@ -117,10 +103,10 @@ module FirstOrderPredicateLogic.Proof {
     export class RuleStep extends Step {
 
         private rule: Rule;
-        private args: Argument[];
+        private args: Syntax.Substition[];
         private assumptions: Step[];
 
-        constructor(rule: Rule, assumptions: Step[], args: Argument[]) {
+        constructor(rule: Rule, assumptions: Step[], args: Syntax.Substition[]) {
             super();
             this.rule = rule;
             this.assumptions = assumptions;
@@ -138,10 +124,10 @@ module FirstOrderPredicateLogic.Proof {
             if (substService.getIsError())
                 throw "substitution error!";
 
-            var newArgs: Argument[] = [];
-            var indexedArgs: { [id: string]: Argument } = {};
+            var newArgs: Syntax.Substition[] = [];
+            var indexedArgs: { [id: string]: Syntax.Substition } = {};
 
-            var parameters: { [id: string]: Parameter } = {};
+            var parameters: { [id: string]: Syntax.Declaration } = {};
 
             rule.getParameters().forEach(p => {
                 parameters[p.getName()] = p;
@@ -149,33 +135,19 @@ module FirstOrderPredicateLogic.Proof {
 
             //check against provided arguments
             substService.getSubstitutions().forEach(subst => {
-
-                var argument: Argument = null;
-
-                if (subst instanceof Syntax.VariableSubstition) {
-                    var vvsubst = <Syntax.VariableSubstition>subst;
-
-                    var param = parameters[vvsubst.getDeclarationToSubstitute().getName()];
-                    argument = new VariableArgument(<VariableParameter>param, vvsubst.getVariableToInsert());
-                }
-                else if (subst instanceof Syntax.FormulaSubstitution) {
-                    var ffsubst = <Syntax.FormulaSubstitution>subst;
-
-                    var param = parameters[ffsubst.getDeclarationToSubstitute().getName()];
-                    argument = new FormulaArgument(<FormulaParameter>param, ffsubst.getFormulaToInsert());
-                }
-
-                newArgs.push(argument);
-                indexedArgs[argument.getParameter().getName()] = argument;
+                newArgs.push(subst);
+                indexedArgs[subst.getDeclarationToSubstitute().getName()] = subst;
             });
 
 
-            args.forEach((arg: Argument) => {
+            args.forEach(arg => {
 
-                if (indexedArgs.hasOwnProperty(arg.getParameter().getName())) {
-                    //todo check wether the arguments are equal
+                var name = arg.getDeclarationToSubstitute().getName();
+
+                if (indexedArgs.hasOwnProperty(arg.getDeclarationToSubstitute().getName())) {
+                    if (!indexedArgs[name].equals(arg))
+                        throw "substitution error";
                 } else {
-
                     newArgs.push(arg);
                 }
 
@@ -194,22 +166,7 @@ module FirstOrderPredicateLogic.Proof {
 
         public getDeductedFormula(): Syntax.Formula {
 
-            var substs: Syntax.Substition[] =
-                this.args.map(a => {
-                    if (a instanceof VariableArgument) {
-                        var va = <VariableArgument>a;
-                        return <Syntax.Substition>new Syntax.VariableSubstition(
-                            va.getParameter().getSourceVariable(), va.getArgument());
-                    }
-                    if (a instanceof FormulaArgument) {
-                        var fa = <FormulaArgument>a;
-                        return new Syntax.FormulaSubstitution(
-                            fa.getParameter().getSourceFormulaDeclaration(), fa.getArgument());
-                    }
-                });
-
-            return this.rule.getFormulaTemplate().substitute(substs);
-
+            return this.rule.getFormulaTemplate().substitute(this.args);
         }
     }
 

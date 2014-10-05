@@ -144,7 +144,8 @@
 
             tokenizer.tryRead("]");
 
-            return new Syntax.AppliedSubstitution(formulaToSubstitute, varToSubstitute, replacement);
+            return new Syntax.AppliedSubstitution(formulaToSubstitute,
+                new Syntax.VariableWithTermSubstitution(varToSubstitute, replacement));
         }
 
         private parsePredicate(predicateDeclaration: Syntax.PredicateDeclaration,

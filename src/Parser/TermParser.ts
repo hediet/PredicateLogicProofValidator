@@ -17,12 +17,20 @@
 
              var funcDecl = context.getFunctionDeclaration(identifier);
 
-             if (funcDecl == null) { // the identifier is a variable
+             if (funcDecl == null) { // the identifier is a variable or a term
+
+                 var termDecl = context.getTermDeclaration(identifier);
+
+                 if (termDecl !== null) {
+                     return new Syntax.TermRef(termDecl);
+                 }
 
                  var decl = context.getVariableDeclaration(identifier);
 
                  return new Syntax.VariableRef(decl);
              }
+
+
 
              parserHelper.parseWhitespace(t);
 

@@ -1,7 +1,7 @@
 ﻿
 module FirstOrderPredicateLogic.Syntax {
 
-    export class Declaration {
+    export class Declaration implements IEquatable<Declaration> {
         private name: string;
 
         constructor(name: string) {
@@ -19,11 +19,19 @@ module FirstOrderPredicateLogic.Syntax {
 
             return this.name === other.getName();
         }
+
+        public createSubstitution(elementToInsert: any): Substition {
+            throw "abstract";
+        }
     }
 
     export class VariableDeclaration extends Declaration {
         public toString() {
             return "Variable declaration of " + this.getName();
+        }
+
+        public createSubstitution(elementToInsert: any) {
+            return new VariableSubstition(this, <VariableDeclaration>elementToInsert);
         }
     }
 
@@ -45,6 +53,10 @@ module FirstOrderPredicateLogic.Syntax {
 
         public equals(other: Declaration): boolean {
             return super.equals(other) && (<FunctionDeclaration>other).arity == this.arity;
+        }
+
+        public createSubstitution(elementToInsert: any) {
+            return new FunctionSubstitution(this, <FunctionDeclaration>elementToInsert);
         }
     }
 
@@ -68,6 +80,10 @@ module FirstOrderPredicateLogic.Syntax {
         public equals(other: Declaration): boolean {
             return super.equals(other) && (<PredicateDeclaration>other).arity == this.arity;
         }
+
+        public createSubstitution(elementToInsert: any) {
+            return new PredicateSubstitution(this, <PredicateDeclaration>elementToInsert);
+        }
     }
 
 
@@ -75,12 +91,20 @@ module FirstOrderPredicateLogic.Syntax {
         public toString() {
             return "Term declaration of " + this.getName();
         }
+
+        public createSubstitution(elementToInsert: any) {
+            return new TermSubstitution(this, <Term>elementToInsert);
+        }
     }
 
     export class FormulaDeclaration extends Declaration {
 
         public toString(): string {
             return "Formula declaration of " + this.getName();
+        }
+
+        public createSubstitution(elementToInsert: any) {
+            return new FormulaSubstitution(this, <Formula>elementToInsert);
         }
     }
 }

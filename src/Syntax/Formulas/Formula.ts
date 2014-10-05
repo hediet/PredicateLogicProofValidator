@@ -53,7 +53,6 @@ module FirstOrderPredicateLogic.Syntax {
         public containsUnboundVariable(variable: VariableDeclaration): boolean {
             return this.getUnboundVariables().map(v => v.getName()).indexOf(variable.getName()) !== -1;
         }
-
         
         public substitute(substitutions: Substition[]): Formula {
             throw "This method is abstract";

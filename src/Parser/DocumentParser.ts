@@ -340,6 +340,12 @@
                     symbols.forEach(s => result.push(new Syntax.FormulaDeclaration(s)));
                 else if (identifier === "variable")
                     symbols.forEach(s => result.push(new Syntax.VariableDeclaration(s)));
+                else if (identifier === "function")
+                    symbols.forEach(s => result.push(new Syntax.FunctionDeclaration(s, 0)));
+                else if (identifier === "predicate")
+                    symbols.forEach(s => result.push(new Syntax.PredicateDeclaration(s, 0)));
+                else if (identifier === "term")
+                    symbols.forEach(s => result.push(new Syntax.TermDeclaration(s)));
 
                 parserHelper.parseWhitespace(tokenizer);
                 tokenizer.tryRead(".");

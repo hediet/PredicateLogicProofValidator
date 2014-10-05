@@ -65,12 +65,10 @@ module FirstOrderPredicateLogic.Syntax {
 
         public getDeclarations(): Declaration[] {
 
-            var result: VariableDeclaration[] = [];
+            var result: Declaration[] = [];
             this.args.forEach(arg => result = Helper.unique(result.concat(arg.getDeclarations()), r => r.getName()));
 
             return result;
         }
-
     }
-
 }

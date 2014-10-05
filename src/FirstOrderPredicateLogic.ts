@@ -1,4 +1,5 @@
 
+///<reference path="Helper/IEquatable.ts"/>
 ///<reference path="Helper/Helper.ts"/>
 ///<reference path="Helper/ArgumentExceptionHelper.ts"/>
 
@@ -7,6 +8,7 @@
 ///<reference path="Syntax/Terms/Terms.ts"/>
 ///<reference path="Syntax/Terms/FunctionRef.ts"/>
 ///<reference path="Syntax/Terms/VariableRef.ts"/>
+///<reference path="Syntax/Terms/TermRef.ts"/>
 
 ///<reference path="Syntax/Formulas/Formula.ts"/>
 ///<reference path="Syntax/Formulas/AllQuantor.ts"/>
@@ -19,7 +21,6 @@
 ///<reference path="Syntax/Formulas/SpecificOperations.ts"/>
 
 
-///<reference path="Proof/Arguments.ts"/>
 ///<reference path="Proof/Proof.ts"/>
 ///<reference path="Proof/Document.ts"/>
 
