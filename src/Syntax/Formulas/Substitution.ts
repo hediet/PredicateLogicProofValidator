@@ -1,7 +1,7 @@
 ﻿
 module FirstOrderPredicateLogic.Syntax {
 
-    export class Substition implements IEquatable<Substition> {
+    export class Substitution implements IEquatable<Substitution> {
 
         public isIdentity(): boolean {
             throw "abstract";
@@ -15,16 +15,16 @@ module FirstOrderPredicateLogic.Syntax {
             throw "abstract";
         }
 
-        public equals(other: Substition): boolean {
+        public equals(other: Substitution): boolean {
             throw "abstract";
         }
 
-        public static fromValues(declarations: Declaration[], elementsToInsert: any[]): Substition[] {
+        public static fromValues(declarations: Declaration[], elementsToInsert: any[]): Substitution[] {
             return declarations.map((d, idx) => d.createSubstitution(elementsToInsert[idx]));
         }
     }
 
-    export class SpecificSubstitution<TDeclaration extends Declaration, TElementToInsert extends IEquatable<any>> extends Substition {
+    export class SpecificSubstitution<TDeclaration extends Declaration, TElementToInsert extends IEquatable<any>> extends Substitution {
         
         private declarationToSubstitute: TDeclaration;
         private elementToInsert: TElementToInsert;
@@ -44,7 +44,7 @@ module FirstOrderPredicateLogic.Syntax {
             return this.elementToInsert;
         }
 
-        public equals(other: Substition): boolean {
+        public equals(other: Substitution): boolean {
 
             if (!(typeof this === typeof other))
                 return false;
@@ -62,11 +62,32 @@ module FirstOrderPredicateLogic.Syntax {
         }
     }
 
-    export class VariableSubstition extends SimpleSubstitution<VariableDeclaration> { }
+    export class VariableSubstition extends SimpleSubstitution<VariableDeclaration> {
+        constructor(declarationToSubstitute: VariableDeclaration, elementToInsert: VariableDeclaration) {
+            Helper.ArgumentExceptionHelper.ensureTypeOf(declarationToSubstitute, VariableDeclaration, "declarationToSubstitute");
+            Helper.ArgumentExceptionHelper.ensureTypeOf(elementToInsert, VariableDeclaration, "elementToInsert");
 
-    export class FunctionSubstitution extends SimpleSubstitution<FunctionDeclaration> { }
+            super(declarationToSubstitute, elementToInsert);
+        }
+    }
+
+    export class FunctionSubstitution extends SimpleSubstitution<FunctionDeclaration> {
+        constructor(declarationToSubstitute: FunctionDeclaration, elementToInsert: FunctionDeclaration) {
+            Helper.ArgumentExceptionHelper.ensureTypeOf(declarationToSubstitute, FunctionDeclaration, "declarationToSubstitute");
+            Helper.ArgumentExceptionHelper.ensureTypeOf(elementToInsert, FunctionDeclaration, "elementToInsert");
+
+            super(declarationToSubstitute, elementToInsert);
+        }
+    }
 
     export class TermSubstitution extends SpecificSubstitution<TermDeclaration, Term> {
+
+        constructor(declarationToSubstitute: TermDeclaration, elementToInsert: Term) {
+            Helper.ArgumentExceptionHelper.ensureTypeOf(declarationToSubstitute, TermDeclaration, "declarationToSubstitute");
+            Helper.ArgumentExceptionHelper.ensureTypeOf(elementToInsert, Term, "elementToInsert");
+
+            super(declarationToSubstitute, elementToInsert);
+        }
 
         public isIdentity(): boolean {
 
@@ -79,9 +100,23 @@ module FirstOrderPredicateLogic.Syntax {
     }
 
 
-    export class PredicateSubstitution extends SimpleSubstitution<PredicateDeclaration> { }
+    export class PredicateSubstitution extends SimpleSubstitution<PredicateDeclaration> {
+        constructor(declarationToSubstitute: PredicateDeclaration, elementToInsert: PredicateDeclaration) {
+            Helper.ArgumentExceptionHelper.ensureTypeOf(declarationToSubstitute, PredicateDeclaration, "declarationToSubstitute");
+            Helper.ArgumentExceptionHelper.ensureTypeOf(elementToInsert, PredicateDeclaration, "elementToInsert");
+
+            super(declarationToSubstitute, elementToInsert);
+        }
+    }
 
     export class FormulaSubstitution extends SpecificSubstitution<FormulaDeclaration, Formula> {
+
+        constructor(declarationToSubstitute: FormulaDeclaration, elementToInsert: Formula) {
+            Helper.ArgumentExceptionHelper.ensureTypeOf(declarationToSubstitute, FormulaDeclaration, "declarationToSubstitute");
+            Helper.ArgumentExceptionHelper.ensureTypeOf(elementToInsert, Formula, "elementToInsert");
+
+            super(declarationToSubstitute, elementToInsert);
+        }
 
         public isIdentity(): boolean {
 

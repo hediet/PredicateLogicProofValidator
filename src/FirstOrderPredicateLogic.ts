@@ -3,9 +3,11 @@
 ///<reference path="Helper/Helper.ts"/>
 ///<reference path="Helper/ArgumentExceptionHelper.ts"/>
 
+///<reference path="Syntax/Node.ts"/>
 
 ///<reference path="Syntax/Declarations.ts"/>
-///<reference path="Syntax/Terms/Terms.ts"/>
+///<reference path="Syntax/Terms/VariableWithTermSubstitution.ts"/>
+///<reference path="Syntax/Terms/Term.ts"/>
 ///<reference path="Syntax/Terms/FunctionRef.ts"/>
 ///<reference path="Syntax/Terms/VariableRef.ts"/>
 ///<reference path="Syntax/Terms/TermRef.ts"/>

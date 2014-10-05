@@ -59,6 +59,7 @@
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="examples\app.ts" />
+    <TypeScriptCompile Include="examples\definitions.d.ts" />
     <TypeScriptCompile Include="src\Helper\ArgumentExceptionHelper.ts" />
     <TypeScriptCompile Include="src\FirstOrderPredicateLogic.ts" />
     <TypeScriptCompile Include="src\Helper\IEquatable.ts" />
@@ -75,6 +76,7 @@
     <TypeScriptCompile Include="src\Syntax\Formulas\Formula.ts" />
     <TypeScriptCompile Include="src\Helper\Helper.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\AppliedSubstitution.ts" />
+    <TypeScriptCompile Include="src\Syntax\Node.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\Substitution.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\FormulaRef.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\PredicateRef.ts" />
@@ -84,12 +86,14 @@
     <TypeScriptCompile Include="src\Syntax\Terms\TermRef.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\VariableRef.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\FunctionRef.ts" />
+    <TypeScriptCompile Include="src\Syntax\Terms\VariableWithTermSubstitution.ts" />
     <TypeScriptCompile Include="Template.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\SpecificOperations.ts" />
-    <TypeScriptCompile Include="src\Syntax\Terms\Terms.ts" />
+    <TypeScriptCompile Include="src\Syntax\Terms\Term.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="examples\app.css" />
+    <Content Include="examples\startup.js" />
     <Content Include="examples\index.html" />
     <Content Include="examples\proof-mode.js" />
     <Content Include="examples\default.txt" />

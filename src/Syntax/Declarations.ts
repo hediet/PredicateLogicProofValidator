@@ -20,7 +20,7 @@ module FirstOrderPredicateLogic.Syntax {
             return this.name === other.getName();
         }
 
-        public createSubstitution(elementToInsert: any): Substition {
+        public createSubstitution(elementToInsert: any): Substitution {
             throw "abstract";
         }
     }
@@ -31,6 +31,10 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public createSubstitution(elementToInsert: any) {
+
+            if (elementToInsert instanceof VariableRef)
+                elementToInsert = (<VariableRef>elementToInsert).getDeclaration();
+
             return new VariableSubstition(this, <VariableDeclaration>elementToInsert);
         }
     }

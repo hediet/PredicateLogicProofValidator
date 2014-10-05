@@ -77,15 +77,15 @@ module FirstOrderPredicateLogic.Proof {
     export class ProofableFormulaBuilderStep extends Step {
 
         private pfb: ProofableFormulaBuilder;
-        private args: Syntax.Substition[];
+        private args: Syntax.Substitution[];
 
-        constructor(pfb: ProofableFormulaBuilder, args: Syntax.Substition[]) {
+        constructor(pfb: ProofableFormulaBuilder, args: Syntax.Substitution[]) {
             super();
             this.pfb = pfb;
             this.args = args;
         }
 
-        public getArguments(): Syntax.Substition[] {
+        public getArguments(): Syntax.Substitution[] {
             return this.args;
         }
 
@@ -95,7 +95,7 @@ module FirstOrderPredicateLogic.Proof {
 
         public getDeductedFormula(): Syntax.Formula {
 
-            return this.pfb.getFormulaTemplate().substitute(this.args);
+            return this.pfb.getFormulaTemplate().substitute(this.args).applySubstitutions();
         }
 
     }
@@ -103,10 +103,10 @@ module FirstOrderPredicateLogic.Proof {
     export class RuleStep extends Step {
 
         private rule: Rule;
-        private args: Syntax.Substition[];
+        private args: Syntax.Substitution[];
         private assumptions: Step[];
 
-        constructor(rule: Rule, assumptions: Step[], args: Syntax.Substition[]) {
+        constructor(rule: Rule, assumptions: Step[], args: Syntax.Substitution[]) {
             super();
             this.rule = rule;
             this.assumptions = assumptions;
@@ -124,8 +124,8 @@ module FirstOrderPredicateLogic.Proof {
             if (substService.getIsError())
                 throw "substitution error!";
 
-            var newArgs: Syntax.Substition[] = [];
-            var indexedArgs: { [id: string]: Syntax.Substition } = {};
+            var newArgs: Syntax.Substitution[] = [];
+            var indexedArgs: { [id: string]: Syntax.Substitution } = {};
 
             var parameters: { [id: string]: Syntax.Declaration } = {};
 
@@ -174,15 +174,15 @@ module FirstOrderPredicateLogic.Proof {
     class SubstitutionCollector implements Syntax.ISubstitutionCollector {
 
         private error: boolean;
-        private substitutions: { [id: string]: Syntax.Substition } = {};
+        private substitutions: { [id: string]: Syntax.Substitution } = {};
 
         public getIsError(): boolean {
             return this.error;
         }
 
-        public getSubstitutions(): Syntax.Substition[] {
+        public getSubstitutions(): Syntax.Substitution[] {
 
-            var result: Syntax.Substition[] = [];
+            var result: Syntax.Substitution[] = [];
 
             for (var propt in this.substitutions) {
                 result.push(this.substitutions[propt]);
@@ -191,7 +191,7 @@ module FirstOrderPredicateLogic.Proof {
             return result;
         }
 
-        public addSubstitution(substitution: Syntax.Substition) {
+        public addSubstitution(substitution: Syntax.Substitution) {
 
             var name = substitution.getDeclarationToSubstitute().getName();
             var oldSubst = this.substitutions[name];

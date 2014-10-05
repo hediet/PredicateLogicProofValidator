@@ -106,6 +106,35 @@ Rule G
 
 
 
+GlobalSymbols
+{
+	Let sigma be a term.
+	Let +(2) be a function.
+	Let 0(0) be a function.
+	Let s(1) be a function.
+	Let = be a predicate.
+}
+
+
+Axiom S5
+{
+	Parameters: 
+		sigma
+
+	Assertion:
+		sigma + 0 = sigma
+}
+
+Theorem Foo
+{
+    Symbols:
+        Let phi be a formula.
+	
+    Proof:
+        # 
+}
+
+
 Theorem T16
 {
 	Symbols:

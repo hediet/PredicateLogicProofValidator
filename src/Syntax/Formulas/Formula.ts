@@ -10,8 +10,8 @@ module FirstOrderPredicateLogic.Syntax {
     export var defaultFormulaToStringArgs: IFormulaToStringArgs = { forceParenthesis: false, parentOperatorPriority: 0, useUnicode: false };
 
     export interface ISubstitutionCollector {
-        addSubstitution(substitution: Substition): void;
-        addIncompatibleNodes(genericFormula: Formula, specialFormula: Formula): void;
+        addSubstitution(substitution: Substitution): void;
+        addIncompatibleNodes(genericFormula: Node, specialFormula: Node): void;
     }
 
 
@@ -22,7 +22,7 @@ module FirstOrderPredicateLogic.Syntax {
             return this.areEqual;
         }
 
-        public addSubstitution(substitution: Substition): void {
+        public addSubstitution(substitution: Substitution): void {
             if (!substitution.isIdentity())
                 this.areEqual = false;
         }
@@ -32,7 +32,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
     }
 
-    export class Formula {
+    export class Formula extends Node {
 
         public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
             throw "This method is abstract";
@@ -50,19 +50,19 @@ module FirstOrderPredicateLogic.Syntax {
             throw "This method is abstract";
         }
 
-        public containsUnboundVariable(variable: VariableDeclaration): boolean {
-            return this.getUnboundVariables().map(v => v.getName()).indexOf(variable.getName()) !== -1;
-        }
-        
-        public substitute(substitutions: Substition[]): Formula {
+        public substitute(substitutions: Substitution[]): Formula {
             throw "This method is abstract";
         }
-        
+
         /**
          * Collects the substitutions so that this.substitute(substitutions) equals specialFormula.
          */
-        public resubstitute(specialFormula: Formula, substService: ISubstitutionCollector) {
+        public resubstitute(specialFormula: Formula, substService: ISubstitutionCollector): void {
             throw "This method is abstract";
+        }
+
+        public containsUnboundVariable(variable: VariableDeclaration): boolean {
+            return this.getUnboundVariables().map(v => v.getName()).indexOf(variable.getName()) !== -1;
         }
 
         public equals(other: Formula) {

@@ -26,27 +26,4 @@
             return "[" + this.variableToSubstitute.getName() + (useUnicode ? " ⇦ " : " <- ") + this.termToInsert.toString() + "]";
         }
     }
-
-
-    export class Term implements IEquatable<Term> {
-        public getContainingVariables(): VariableDeclaration[] {
-            throw "This method is abstract";
-        }
-
-        public containsVariable(variable: VariableDeclaration): boolean {
-            throw "This method is abstract";
-        }
-
-        public substitute(substitutions: VariableWithTermSubstitution[]): Term {
-            throw "This method is abstract";
-        }
-
-        public equals(other: Term): boolean {
-            throw "abstract";
-        }
-
-        public toString(): string {
-            throw "abstract";
-        }
-    }
-}
+} 

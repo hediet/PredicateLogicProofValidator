@@ -28,15 +28,24 @@ Axiom A3
 
 Axiom A4
 {
-	Symbols:
-		Let xi be a variable.
-		Let phi be a formula.
-		Let sigma be a term.
+    Symbols:
+        Let xi be a variable.
+        Let phi be a formula.
+        Let sigma be a term.
 
-	Assertion:
-		|- forall xi: phi -> phi[xi <- sigma]
+    Assertion:
+        |- forall xi: phi -> phi[xi <- sigma]
 }
 
+Axiom A5
+{
+    Symbols:
+        Let xi be a variable.
+        Let phi, psi be a formulas.
+
+    Assertion:
+        |- forall xi: (phi -> psi) -> (phi -> forall xi: psi)
+}
 
 Rule MP
 {
@@ -53,19 +62,24 @@ Rule MP
         
 Theorem Foo
 {
-	Symbols:
-		Let P be a predicate.
-		Let f be a function.
+    Symbols:
+        Let P be a predicate.
+        Let f be a function.
+        Let xi be a variable.
+		Let phi be formula.
 
-	Proof:
-		# 1. A4([xi], P(xi), [f(xi)])
+    Proof:
+        # 1. A4([xi], P(xi) -> phi, [f(xi)])
 }
 
 Theorem T1
 {
     Symbols:
         Let phi be a formula.
-	
+    
+	Assertion:
+		|- phi -> phi
+
     Proof:
         # 1. A2(phi, phi -> phi, phi)
         # 2. A1(phi, phi -> phi)

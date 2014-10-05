@@ -30,7 +30,7 @@ module FirstOrderPredicateLogic.Syntax {
             return this.operationFactory.createInstance(this.args.map(arg => arg.substituteUnboundVariables(substitutions)));
         }
 
-        public substitute(substitutions: Substition[]): Formula {
+        public substitute(substitutions: Substitution[]): Formula {
             return this.operationFactory.createInstance(this.args.map(arg => arg.substitute(substitutions)));
         }
 

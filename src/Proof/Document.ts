@@ -1,6 +1,40 @@
 ﻿
 module FirstOrderPredicateLogic.Proof {
 
+    /*
+    export interface ICondition {
+        getName(): string;
+        check(formula: Syntax.Formula): boolean;
+    }
+
+    export class IsCollisionFreeCondition implements ICondition {
+        
+        public getName(): string {
+            return "IsCollisionFree";
+        }
+
+        public check(formula: Syntax.Formula): boolean {
+            
+            if (!(formula instanceof Syntax.AppliedSubstitution)) {
+                throw "invalid formula";
+            }
+
+            return (<Syntax.AppliedSubstitution>formula).isCollisionFree();
+        }
+    }
+
+    export class AppliedCondition {
+        
+        public getCondition(): ICondition {
+            
+        }
+
+        public getFormulaTemplate(): Syntax.Formula {
+            
+        }
+
+    }*/
+
     export class Document {
 
         private descriptions: Description[];

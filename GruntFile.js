@@ -31,7 +31,8 @@ module.exports = function (grunt) {
             example: {
                 src: ["dist/FirstOrderPredicateLogic.d.ts", 'examples/*.ts'],
                 options: {
-                    sourceMap: true
+                    sourceMap: true,
+                    module: "amd"
                 }
             }
         },

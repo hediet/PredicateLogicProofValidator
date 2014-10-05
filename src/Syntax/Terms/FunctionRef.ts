@@ -21,10 +21,10 @@ module FirstOrderPredicateLogic.Syntax {
             return this.args;
         }
 
-        public getContainingVariables(): VariableDeclaration[] {
-            var result: VariableDeclaration[] = [];
+        public getDeclarations(): Declaration[] {
+            var result: Declaration[] = [];
             this.args.forEach(item => {
-                result = result.concat(item.getContainingVariables());
+                result = result.concat(item.getDeclarations());
             });
 
             result = Helper.unique(result, r => r.getName());
@@ -32,7 +32,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public containsVariable(variable: VariableDeclaration): boolean {
-            var result: boolean = false;
+            var result = false;
             this.args.forEach(item => {
                 if (item.containsVariable(variable))
                     result = true;
@@ -40,9 +40,40 @@ module FirstOrderPredicateLogic.Syntax {
             return result;
         }
 
-        public substitute(substitutions: VariableWithTermSubstitution[]): Term {
-            var newArgs = this.args.map(a => a.substitute(substitutions));
+        public substituteVariables(substitutions: VariableWithTermSubstitution[]): Term {
+            var newArgs = this.args.map(a => a.substituteVariables(substitutions));
             return new FunctionRef(this.f, newArgs);
+        }
+
+        public substitute(substitutions: Substitution[]): Term {
+
+            var newFunctionRef = this.f;
+            substitutions.some(subst => {
+                if (subst.getDeclarationToSubstitute().equals(this.f)) {
+                    newFunctionRef = subst.getElementToInsert();
+                    return true;
+                }
+                return false;
+            });
+
+            var newArgs = this.args.map(a => a.substitute(substitutions));
+            return new FunctionRef(newFunctionRef, newArgs);
+        }
+
+        public resubstitute(specialFormula: Term, substService: ISubstitutionCollector) {
+
+            if (!(specialFormula instanceof FunctionRef))
+                substService.addIncompatibleNodes(this, specialFormula);
+            
+            var fr = <FunctionRef>specialFormula;
+
+            if (this.getFunction().getArity() !== fr.getFunction().getArity())
+                substService.addIncompatibleNodes(this, specialFormula);
+
+            substService.addSubstitution(new FunctionSubstitution(this.getFunction(), fr.getFunction()));
+
+            var args = fr.getArguments();
+            this.args.forEach((arg, idx) => arg.resubstitute(args[idx], substService));
         }
 
         public toString() {

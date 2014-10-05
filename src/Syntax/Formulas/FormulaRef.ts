@@ -29,7 +29,7 @@ module FirstOrderPredicateLogic.Syntax {
             return result;
         }
 
-        public substitute(substitutions: Substition[]): Formula {
+        public substitute(substitutions: Substitution[]): Formula {
 
             var result: Formula = this;
             substitutions.some(s => {

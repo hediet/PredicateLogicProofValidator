@@ -26,33 +26,33 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
+            var newArgs = this.args.map(a => a.substituteVariables(substitutions));
+            return new PredicateRef(this.f, newArgs);
+        }
+
+        public substitute(substitutions: Substitution[]): Formula {
+
+            //todo substitute predicate
+
             var newArgs = this.args.map(a => a.substitute(substitutions));
             return new PredicateRef(this.f, newArgs);
         }
 
-        public substitute(substitutions: Substition[]): Formula {
+        public resubstitute(specialFormula: Formula, substService: ISubstitutionCollector): void {
 
-            var subs = substitutions.filter(s => s instanceof VariableSubstition).map(s =>
-                new VariableWithTermSubstitution((<VariableSubstition>s).getDeclarationToSubstitute(),
-                    new VariableRef((<VariableSubstition>s).getElementToInsert())));
+            if (!(specialFormula instanceof PredicateRef))
+                substService.addIncompatibleNodes(this, specialFormula);
 
-            var newArgs = this.args.map(a => a.substitute(subs));
-            return new PredicateRef(this.f, newArgs);
-        }
+            var pr = <PredicateRef>specialFormula;
 
-        public resubstitute(instance: Formula): Substition[] {
+            if (!this.getPredicate().equals(pr.getPredicate()))
+                substService.addIncompatibleNodes(this, specialFormula);
 
-            throw "Currently not implemented";
-
-            if (!(instance instanceof PredicateRef))
-                return null;
-
-            this.args.forEach(arg => {
-
-
-
+            this.args.forEach((arg, i) => {
+                arg.resubstitute(pr.args[i], substService);
             });
 
+            //todo check if arg
         }
 
         public applySubstitutions(): Formula {
@@ -60,24 +60,18 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public getUnboundVariables(): VariableDeclaration[] {
-            //all variables are unbound
-            return this.getVariables();
+            return this.getDeclarations().filter(d => d instanceof VariableDeclaration).map(d => <VariableDeclaration>d);
         }
 
-        public getVariables(): VariableDeclaration[] {
-            var result: VariableDeclaration[] = [];
+        public getDeclarations(): Declaration[] {
+            var result: Declaration[] = [];
 
             this.args.forEach(arg => {
-                result = result.concat(arg.getContainingVariables());
+                result = result.concat(arg.getDeclarations());
             });
-
             result = Helper.unique(result, r => r.getName());
 
             return result;
-        }
-
-        public getFormulaRefs(): FormulaDeclaration[] {
-            return [];
         }
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {

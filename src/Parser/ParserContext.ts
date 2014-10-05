@@ -26,13 +26,13 @@
             declarations.forEach(d => {
                 if (d instanceof Syntax.FunctionDeclaration)
                     this.declaredFunctions[d.getName()] = <Syntax.FunctionDeclaration>d;
-                if (d instanceof Syntax.PredicateDeclaration)
+                else if (d instanceof Syntax.PredicateDeclaration)
                     this.declaredPredicates[d.getName()] = <Syntax.PredicateDeclaration>d;
-                if (d instanceof Syntax.FormulaDeclaration)
+                else if (d instanceof Syntax.FormulaDeclaration)
                     this.declaredFormulas[d.getName()] = <Syntax.FormulaDeclaration>d;
-                if (d instanceof Syntax.VariableDeclaration)
+                else if (d instanceof Syntax.VariableDeclaration)
                     this.declaredVariables[d.getName()] = <Syntax.VariableDeclaration>d;
-                if (d instanceof Syntax.TermDeclaration)
+                else if (d instanceof Syntax.TermDeclaration)
                     this.declaredTerms[d.getName()] = <Syntax.TermDeclaration>d;
             });
         }
@@ -76,7 +76,7 @@
                 return this.declaredTerms[termName];
             }
 
-            return new Syntax.TermDeclaration(termName);
+            return null;
         }
     }
 }

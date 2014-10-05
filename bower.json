@@ -14,6 +14,8 @@
     "require": "http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.js",
     "ext-language_tools": "http://rawgithub.com/ajaxorg/ace-builds/master/src/ext-language_tools.js",
     "text": "http://requirejs.org/docs/release/1.0.8/minified/text.js",
-    "codemirror": "http://codemirror.net/codemirror.zip"
+    "codemirror": "http://codemirror.net/codemirror.zip",
+    "DefinitelyTyped": "https://github.com/jeffmay/DefinitelyTyped/archive/405be518fc9fe1e370ef44f11c9bbc50d8da74d7.zip",
+    "jquery":  "http://code.jquery.com/jquery-2.1.1.js"
   }
 }

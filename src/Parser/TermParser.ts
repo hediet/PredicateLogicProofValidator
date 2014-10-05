@@ -47,7 +47,8 @@
                  while (!t.tryRead(")") && t.peek() !== "") {
 
                      if (!first) {
-                         t.tryRead(",");
+                         //t.tryRead(",");
+                         t.read();
                          parserHelper.parseWhitespace(t);
                      }
                      first = false;

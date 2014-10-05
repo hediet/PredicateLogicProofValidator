@@ -18,16 +18,19 @@ module FirstOrderPredicateLogic.Syntax {
             return [this.variableDeclaration];
         }
 
+        public getDeclaration(): VariableDeclaration {
+            return this.variableDeclaration;
+        }
+
         public containsVariable(variable: VariableDeclaration): boolean {
             return variable.equals(this.variableDeclaration);
         }
 
-        public substitute(substitutions: VariableWithTermSubstitution[]): Term {
+        public substituteVariables(substitutions: VariableWithTermSubstitution[]): Term {
 
             var result: Term = this;
 
             substitutions.some(s => {
-
                 if (s.getVariableToSubstitute().equals(this.variableDeclaration)) {
                     result = s.getTermToInsert();
                     return true;

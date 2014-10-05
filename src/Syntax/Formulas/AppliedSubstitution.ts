@@ -46,25 +46,21 @@ module FirstOrderPredicateLogic.Syntax {
             throw "This method is abstract";
         }
 
-        public substitute(substitutions: Substition[]): Formula {
+        public substitute(substitutions: Substitution[]): Formula {
 
             var newVariableToSubstitute = this.substitution.getVariableToSubstitute();
-
             substitutions.some(s => {
                 if (s instanceof VariableSubstition) {
                     var s1 = <VariableSubstition>s;
                     if (s1.getDeclarationToSubstitute().equals(this.substitution.getVariableToSubstitute())) {
                         newVariableToSubstitute = s1.getElementToInsert();
+                        return true;
                     }
-                    return true;
                 }
                 return false;
             });
 
-            var termSubstitutions = substitutions.filter(s => s instanceof VariableSubstition).map(s =>
-                new VariableWithTermSubstitution((<VariableSubstition>s).getDeclarationToSubstitute(),
-                    new VariableRef((<VariableSubstition>s).getElementToInsert())));
-            var newTermToInsert = this.substitution.getTermToInsert().substitute(termSubstitutions);
+            var newTermToInsert = this.substitution.getTermToInsert().substitute(substitutions);
 
             var newFormulaToSubstitute = this.formulaToSubstitute.substitute(substitutions);
 
@@ -73,7 +69,8 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public applySubstitutions(): Formula {
-            return this.getSubstitutedFormula().applySubstitutions();
+
+            return this.formulaToSubstitute.applySubstitutions().substituteUnboundVariables([this.substitution]);;
         }
 
         public getUnboundVariables(): VariableDeclaration[]{
@@ -103,11 +100,11 @@ module FirstOrderPredicateLogic.Syntax {
 
             var subArgs = {
                 forceParenthesis: args.forceParenthesis,
-                parentOperatorPriority: 0,
+                parentOperatorPriority: 100000,
                 useUnicode: args.useUnicode
             };
 
-            return "(" + this.formulaToSubstitute.toString(subArgs) + ")" + this.substitution.toString(args.useUnicode);
+            return this.formulaToSubstitute.toString(subArgs) + this.substitution.toString(args.useUnicode);
         }
     }
 }

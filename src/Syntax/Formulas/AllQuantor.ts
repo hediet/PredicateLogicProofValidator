@@ -54,7 +54,7 @@ module FirstOrderPredicateLogic.Syntax {
             return this.clone(this.boundVariable, this.quantifiedFormula.substituteUnboundVariables(subs));
         }
 
-        public substitute(substitutions: Substition[]): Formula {
+        public substitute(substitutions: Substitution[]): Formula {
 
             var newBoundVariable = this.boundVariable;
 
