@@ -39,6 +39,12 @@
                 else if (identifier === "Rule") {
                     descriptions.push(this.parseRule(tokenizer));
                 }
+                else if (identifier === "Hypothesis") {
+                    descriptions.push(new Proof.CustomAxiomDescription(new Proof.HypothesisAxiom()));
+                }
+                else if (identifier === "Deduction") {
+                    descriptions.push(new Proof.CustomRuleDescription(new Proof.DeductionRule()));
+                }
             }
 
             return new Proof.Document(descriptions);

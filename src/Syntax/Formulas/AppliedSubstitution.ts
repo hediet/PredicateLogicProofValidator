@@ -61,7 +61,15 @@ module FirstOrderPredicateLogic.Syntax {
 
         public applySubstitutions(): Formula {
 
-            return this.formulaToSubstitute.applySubstitutions().substituteUnboundVariables([this.substitution]);;
+            var result = this.formulaToSubstitute.applySubstitutions();
+            
+            if (this.substitution.getTermToInsert() instanceof VariableRef) {
+                var vr = <VariableRef>this.substitution.getTermToInsert();
+                if (vr.getDeclaration().equals(this.substitution.getVariableToSubstitute()))
+                    return result;
+            }
+
+            return result.substituteUnboundVariables([this.substitution]);
         }
 
         public getUnboundVariables(): VariableDeclaration[]{

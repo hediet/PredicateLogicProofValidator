@@ -26,10 +26,37 @@ module FirstOrderPredicateLogic.Proof {
         public getName(): string {
             return this.name;
         }
+
+        public getFormulaBuilder(): ProofableFormulaBuilder {
+            throw "abstract";
+        }
     }
 
-    export class AxiomDescription extends Description {
+    export class AbstractAxiomDescription extends Description {
+        constructor(name: string) {
+            super(name);
+        }
 
+        public getFormulaBuilder(): ProofableFormulaBuilder {
+            throw "abstract";
+        }
+    }
+
+
+    export class CustomAxiomDescription extends AbstractAxiomDescription {
+        private formulaBuilder: ProofableFormulaBuilder;
+
+        constructor(formulaBuilder: ProofableFormulaBuilder) {
+            super(formulaBuilder.getName());
+            this.formulaBuilder = formulaBuilder;
+        }
+
+        public getFormulaBuilder(): ProofableFormulaBuilder {
+            return this.formulaBuilder;
+        }
+    }
+
+    export class AxiomDescription extends AbstractAxiomDescription  {
 
         private symbols: Syntax.Declaration[];
         private assertion: Syntax.Formula;
@@ -53,10 +80,36 @@ module FirstOrderPredicateLogic.Proof {
         public getAssertion() {
             return this.assertion;
         }
+
+        public getFormulaBuilder(): ProofableFormulaBuilder {
+            return new Axiom(this.getName(), this.getSymbols(), this.getAssertion(), this.getConditions());
+        }
     }
 
+    export class AbstractRuleDescription extends Description {
+        constructor(name: string) {
+            super(name);
+        }
 
-    export class RuleDescription extends Description {
+        public getFormulaBuilder(): Rule {
+            throw "abstract";
+        }
+    }
+
+    export class CustomRuleDescription extends AbstractRuleDescription {
+        private formulaBuilder: Rule;
+
+        constructor(formulaBuilder: Rule) {
+            super(formulaBuilder.getName());
+            this.formulaBuilder = formulaBuilder;
+        }
+
+        public getFormulaBuilder(): Rule {
+            return this.formulaBuilder;
+        }
+    }
+
+    export class RuleDescription extends AbstractRuleDescription {
 
         private symbols: Syntax.Declaration[];
         private assumptions: Syntax.Formula[];
@@ -87,8 +140,11 @@ module FirstOrderPredicateLogic.Proof {
         public getConclusion() {
             return this.conclusion;
         }
-    }
 
+        public getFormulaBuilder(): Rule {
+            return new Rule(this.getName(), this.getSymbols(), this.getConclusion(), this.getAssumptions(), this.getConditions());
+        }
+    }
 
     export class TheoremDescription extends Description {
 

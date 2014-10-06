@@ -31,6 +31,10 @@ module FirstOrderPredicateLogic.Proof {
         public getConditions(): AppliedCondition[] {
             return this.conditions;
         }
+
+        public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[]): Syntax.Formula[] {
+            return assumptionHypotheses;
+        }
     }
 
     export class ProofableFormulaBuilder extends FormulaBuilder {
@@ -72,10 +76,61 @@ module FirstOrderPredicateLogic.Proof {
         }
     }
 
-    
+
+    export class HypothesisAxiom extends Axiom {
+        
+        constructor() {
+            var phi = new Syntax.FormulaDeclaration("phi");
+
+            super("Hypothesis", [phi], new Syntax.FormulaRef(phi), []);
+        }
+        
+        public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[]): Syntax.Formula[] {
+            
+            var substitutedFormula = this.getFormulaTemplate().substitute(args);
+            
+            if (substitutedFormula.getUnboundVariables().length > 0)
+                throw "Formula contains unbound variables!";
+            
+            return [ substitutedFormula ];
+        }
+    }
+
+    export class DeductionRule extends Rule {
+        
+        private phiFormula: Syntax.Formula;
+
+        constructor() {
+
+            var phi = new Syntax.FormulaDeclaration("phi");
+            var psi = new Syntax.FormulaDeclaration("psi");
+
+            this.phiFormula = new Syntax.FormulaRef(phi);
+
+            super("Deduction", [phi, psi],
+                Syntax.Implication.factory.createInstance([this.phiFormula, new Syntax.FormulaRef(psi)]), 
+                [new Syntax.FormulaRef(psi)], []);
+        }
+
+        public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[]): Syntax.Formula[] {
+
+            var phi2 = this.phiFormula.substitute(args);
+            var assumption = Helper.firstOrDefault(assumptionHypotheses, null, h => h.equals(phi2) ? h : null);
+
+            if (assumption === null)
+                throw "Invalid assumption!";
+
+            return assumptionHypotheses.filter(a => !a.equals(phi2));
+        }
+    }
+
 
     export class Step {
         public getDeductedFormula(): Syntax.Formula {
+            throw "abstract";
+        }
+
+        public getHypotheses(): Syntax.Formula[] {
             throw "abstract";
         }
     }
@@ -109,6 +164,9 @@ module FirstOrderPredicateLogic.Proof {
             return this.pfb.getFormulaTemplate().substitute(this.args).applySubstitutions();
         }
 
+        public getHypotheses(): Syntax.Formula[] {
+            return this.pfb.getHypotheses([], this.args);
+        }
     }
 
     export class RuleStep extends Step {
@@ -116,12 +174,12 @@ module FirstOrderPredicateLogic.Proof {
         private rule: Rule;
         private args: Syntax.Substitution[];
         private assumptions: Step[];
+        private hypotheses: Syntax.Formula[];
 
         constructor(rule: Rule, assumptions: Step[], args: Syntax.Substitution[]) {
             super();
             this.rule = rule;
             this.assumptions = assumptions;
-
 
             //check assumptions and infer arguments
 
@@ -165,6 +223,10 @@ module FirstOrderPredicateLogic.Proof {
             });
 
             this.args = newArgs;
+
+
+            var hypotheses = Helper.uniqueJoin(assumptions, step => step.getHypotheses(), f => f.toString());
+            this.hypotheses = this.rule.getHypotheses(hypotheses, newArgs);
         }
 
         public getRule(): Rule {
@@ -179,7 +241,12 @@ module FirstOrderPredicateLogic.Proof {
 
             return this.rule.getFormulaTemplate().substitute(this.args);
         }
+
+        public getHypotheses(): Syntax.Formula[] {
+            return this.hypotheses;
+        }
     }
+
 
 
     class SubstitutionCollector implements Syntax.ISubstitutionCollector {

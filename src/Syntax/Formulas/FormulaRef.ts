@@ -46,7 +46,7 @@ module FirstOrderPredicateLogic.Syntax {
             throw "This method is abstract";
         }
 
-        public getFormulaRefs(): FormulaDeclaration[] {
+        public getDeclarations(): Declaration[] {
             return [this.getDeclaration()];
         }
 

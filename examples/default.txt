@@ -65,17 +65,40 @@ Rule MP
     Conclusion:
         |- psi
 }
-        
-Theorem Foo
+
+Rule G
 {
     Symbols:
-        Let P be a predicate.
-        Let f be a function.
+        Let phi be a formula.
         Let xi be a variable.
+
+    Assumptions:
+        |- phi
+
+    Conclusion:
+        |- forall xi: phi
+}
+
+
+Hypothesis
+
+Deduction
+	    
+Theorem T16
+{
+    Symbols:
 		Let phi be formula.
 
     Proof:
-        # 1. A4([xi], P(xi) -> phi, [f(xi)])
+
+        # 1. Hypothesis(forall xi: forall zeta: phi)
+        # 2. A4([xi], forall zeta: phi, [xi])
+        # 3. MP(@1, @2)
+        # 4. A4([zeta], phi, [zeta])
+        # 5. MP(@3, @4)
+        # 6. G(@5, [xi])
+        # 7. G(@6, [zeta])
+        # 8. Deduction(@7, forall xi: forall zeta: phi)
 }
 
 Theorem T1

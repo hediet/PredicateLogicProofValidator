@@ -18,7 +18,7 @@ $("#code").text(t);
 var termParser = new p.TermParser();
 var formulaParser = new p.FormulaParser(termParser, [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
 
-var supportedConditions = [ new pr.IsCollisionFreeCondition(), new pr.DoesNotContainFreeVariableCondition() ];
+var supportedConditions = [new pr.IsCollisionFreeCondition(), new pr.DoesNotContainFreeVariableCondition()];
 
 var documentParser = new p.DocumentParser(formulaParser, termParser, supportedConditions);
 
@@ -32,7 +32,7 @@ var editor = CodeMirror.fromTextArea(<HTMLTextAreaElement>document.getElementByI
 });
 
 
-var widgets: CodeMirror.LineWidget[] =  [];
+var widgets: CodeMirror.LineWidget[] = [];
 
 var update = () => {
 
@@ -50,18 +50,12 @@ var update = () => {
 
         result.getDescriptions().forEach(d => {
 
-            if (d instanceof pr.AxiomDescription) {
-
-                var ad = <pr.AxiomDescription>d;
-                var ax = new pr.Axiom(ad.getName(), ad.getSymbols(), ad.getAssertion(), ad.getConditions());
-                formulaBuilders[ax.getName()] = ax;
-
+            if (d instanceof pr.AbstractAxiomDescription) {
+                formulaBuilders[d.getName()] = d.getFormulaBuilder();
             }
-            else if (d instanceof pr.RuleDescription) {
-
+            else if (d instanceof pr.AbstractRuleDescription) {
                 var rd = <pr.RuleDescription>d;
-                var rule = new pr.Rule(rd.getName(), rd.getSymbols(), rd.getConclusion(), rd.getAssumptions(), rd.getConditions());
-                rules[rule.getName()] = rule;
+                rules[d.getName()] = rd.getFormulaBuilder();
 
             } else if (d instanceof pr.TheoremDescription) {
 
@@ -69,13 +63,13 @@ var update = () => {
 
                 var td = <pr.TheoremDescription>d;
                 td.getProofSteps().forEach(step => {
-                     
+
                     var newStep: pr.Step = null;
 
-                    ax = formulaBuilders[step.getOperation()];
+                    var ax = formulaBuilders[step.getOperation()];
 
                     if (typeof ax !== "undefined") {
-                        if (ax === null || typeof ax === "undefined")
+                        if (ax === null)
                             return;
 
                         var args = step.getArguments().map(a => {
@@ -98,13 +92,21 @@ var update = () => {
 
                         var providedAssumptionsSteps = providedAssumptions.map(s => steps[s.getReferencedStep()]);
 
-                        newStep = new pr.RuleStep(rule, providedAssumptionsSteps, stepArgs);
+                        newStep = new pr.RuleStep(rule, providedAssumptionsSteps, s.Substitution.fromValues(rule.getNecessaryParameters(), stepArgs));
                     }
 
 
                     steps[step.getStepIdentifier()] = newStep;
 
-                    var text = "⊢ " + newStep.getDeductedFormula().toString({
+                    var hypotheses = "";
+                    if (newStep.getHypotheses().length > 0) {
+                        hypotheses = "{ " + newStep.getHypotheses().map(h => h.toString({
+                            forceParenthesis: false,
+                            parentOperatorPriority: 0,
+                            useUnicode: true
+                        })).join(", ") + " } ";
+                    }
+                    var text = hypotheses + "⊢ " + newStep.getDeductedFormula().toString({
                         forceParenthesis: false, parentOperatorPriority: 0, useUnicode: true
                     });
                     var pos = p.TextRegion.getRegionOf(step);
@@ -114,7 +116,7 @@ var update = () => {
                     var l: string = editor.getDoc().getLine(line);
                     var space = l.substr(0, pos.getStartColumn() - 1);
 
-                    msg.innerHTML = "<pre>   " + space + text + "</pre>";
+                    msg.innerHTML = "<pre>   " + space + text  + "</pre>";
 
                     msg.className = "proof-step-formula";
 
