@@ -57,18 +57,12 @@ module FirstOrderPredicateLogic.Syntax {
 
         public getUnboundVariables(): VariableDeclaration[] {
 
-            var result: VariableDeclaration[] = [];
-            this.args.forEach(arg => result = Helper.unique(result.concat(arg.getUnboundVariables()), r => r.getName()));
-
-            return result;
+            return Helper.uniqueJoin(this.args, arg => arg.getUnboundVariables(), r => r.getName());
         }
 
         public getDeclarations(): Declaration[] {
 
-            var result: Declaration[] = [];
-            this.args.forEach(arg => result = Helper.unique(result.concat(arg.getDeclarations()), r => r.getName()));
-
-            return result;
+            return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
     }
 }

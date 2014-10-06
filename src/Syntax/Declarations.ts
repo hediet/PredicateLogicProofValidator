@@ -1,10 +1,11 @@
 ﻿
 module FirstOrderPredicateLogic.Syntax {
 
-    export class Declaration implements IEquatable<Declaration> {
+    export class Declaration extends Node implements IEquatable<Declaration> {
         private name: string;
 
         constructor(name: string) {
+            super();
             this.name = name;
         }
 
@@ -12,6 +13,11 @@ module FirstOrderPredicateLogic.Syntax {
             return this.name;
         }
         
+        public substitute(substitutions: Substitution[]): Node {
+            return Helper.firstOrDefault(substitutions, this,
+                s => s.getDeclarationToSubstitute().equals(this) ? s.getElementToInsert() : null);
+        }
+
         public equals(other: Declaration): boolean {
 
             if (!(typeof this === typeof other))

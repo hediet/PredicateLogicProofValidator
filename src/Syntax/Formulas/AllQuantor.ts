@@ -56,18 +56,8 @@ module FirstOrderPredicateLogic.Syntax {
 
         public substitute(substitutions: Substitution[]): Formula {
 
-            var newBoundVariable = this.boundVariable;
-
-            substitutions.some(s => {
-                if (s instanceof VariableSubstition) {
-                    var sub = <VariableSubstition>s;
-                    if (sub.getDeclarationToSubstitute().equals(this.boundVariable)) {
-                        newBoundVariable = sub.getElementToInsert();
-                        return true;
-                    }
-                }
-                return false;
-            });
+            var newBoundVariable = Helper.firstOrDefault(substitutions, this.boundVariable,
+                subst => subst.getDeclarationToSubstitute().equals(this.boundVariable) ? subst.getElementToInsert() : null);
 
             return this.clone(newBoundVariable, this.quantifiedFormula.substitute(substitutions));
         }

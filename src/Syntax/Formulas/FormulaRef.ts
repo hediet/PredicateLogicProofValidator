@@ -21,29 +21,13 @@ module FirstOrderPredicateLogic.Syntax {
 
         public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
 
-            var result: Formula = this;
-            substitutions.forEach(s => {
-                result = new AppliedSubstitution(result, s);
-            });
-
-            return result;
+            return substitutions.reduce<Formula>((last, s) => new AppliedSubstitution(last, s), this);
         }
 
         public substitute(substitutions: Substitution[]): Formula {
 
-            var result: Formula = this;
-            substitutions.some(s => {
-                if (s instanceof FormulaSubstitution) {
-                    var sub = <FormulaSubstitution>s;
-                    if (sub.getDeclarationToSubstitute().equals(this.getDeclaration())) {
-                        result = sub.getElementToInsert();
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            return result;
+            return Helper.firstOrDefault(substitutions, this,
+                s => s.getDeclarationToSubstitute().equals(this.declaration) ? s.getElementToInsert() : null);
         }
 
         public resubstitute(instance: Formula, substService: ISubstitutionCollector) {

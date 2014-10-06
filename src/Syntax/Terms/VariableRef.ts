@@ -14,7 +14,7 @@ module FirstOrderPredicateLogic.Syntax {
             return name;
         }
 
-        public getContainingVariables(): VariableDeclaration[] {
+        public getDeclarations(): Declaration[] {
             return [this.variableDeclaration];
         }
 

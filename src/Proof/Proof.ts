@@ -7,11 +7,13 @@ module FirstOrderPredicateLogic.Proof {
         private name: string;
         private parameters: Syntax.Declaration[];
         private formulaTemplate: Syntax.Formula;
+        private conditions: AppliedCondition[];
 
-        constructor(name: string, placeholders: Syntax.Declaration[], formulaTemplate: Syntax.Formula) {
+        constructor(name: string, placeholders: Syntax.Declaration[], formulaTemplate: Syntax.Formula, conditions: AppliedCondition[]) {
             this.name = name;
             this.parameters = placeholders;
             this.formulaTemplate = formulaTemplate;
+            this.conditions = conditions;
         }
 
         public getName(): string {
@@ -24,6 +26,10 @@ module FirstOrderPredicateLogic.Proof {
 
         public getFormulaTemplate(): Syntax.Formula {
             return this.formulaTemplate;
+        }
+
+        public getConditions(): AppliedCondition[] {
+            return this.conditions;
         }
     }
 
@@ -45,9 +51,9 @@ module FirstOrderPredicateLogic.Proof {
         private assumptions: Syntax.Formula[];
 
         constructor(name: string, parameters: Syntax.Declaration[],
-            formulaTemplate: Syntax.Formula, assumptions: Syntax.Formula[]) {
+            formulaTemplate: Syntax.Formula, assumptions: Syntax.Formula[], conditions: AppliedCondition[]) {
 
-            super(name, parameters, formulaTemplate);
+            super(name, parameters, formulaTemplate, conditions);
             this.assumptions = assumptions;
         }
 
@@ -83,6 +89,11 @@ module FirstOrderPredicateLogic.Proof {
             super();
             this.pfb = pfb;
             this.args = args;
+
+            pfb.getConditions().forEach(c => {
+                if (!c.check(this.args))
+                    throw "condition not met!";
+            });
         }
 
         public getArguments(): Syntax.Substitution[] {

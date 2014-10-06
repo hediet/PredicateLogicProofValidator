@@ -12,7 +12,7 @@
 
              var identifier = parserHelper.parseIdentifier(t);
 
-             if (identifier === "")
+             if (identifier === null)
                  t.read();// to prevent endless loops
 
              var funcDecl = context.getFunctionDeclaration(identifier);

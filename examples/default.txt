@@ -33,6 +33,9 @@ Axiom A4
         Let phi be a formula.
         Let sigma be a term.
 
+	Conditions:
+		(phi[xi <- sigma]) is collision free.
+
     Assertion:
         |- forall xi: phi -> phi[xi <- sigma]
 }
@@ -42,6 +45,9 @@ Axiom A5
     Symbols:
         Let xi be a variable.
         Let phi, psi be a formulas.
+
+	Conditions:
+		(xi) is not free in (phi).
 
     Assertion:
         |- forall xi: (phi -> psi) -> (phi -> forall xi: psi)

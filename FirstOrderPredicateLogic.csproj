@@ -72,6 +72,7 @@
     <TypeScriptCompile Include="src\Parser\Tokenizer.ts" />
     <TypeScriptCompile Include="src\Proof\Document.ts" />
     <TypeScriptCompile Include="src\Proof\Proof.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\AllQuantor.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\Formula.ts" />
     <TypeScriptCompile Include="src\Helper\Helper.ts" />

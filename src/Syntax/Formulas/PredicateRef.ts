@@ -64,14 +64,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public getDeclarations(): Declaration[] {
-            var result: Declaration[] = [];
-
-            this.args.forEach(arg => {
-                result = result.concat(arg.getDeclarations());
-            });
-            result = Helper.unique(result, r => r.getName());
-
-            return result;
+            return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {

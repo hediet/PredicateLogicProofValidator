@@ -1,7 +1,4 @@
 ﻿
-///<reference path="../lib/DefinitelyTyped/requirejs/require.d.ts"/>
-///<reference path="../lib/DefinitelyTyped/codemirror/codemirror.d.ts"/>
-///<reference path="../lib/DefinitelyTyped/jquery/jquery.d.ts"/>
 ///<reference path="definitions.d.ts"/>
 
 
@@ -21,7 +18,9 @@ $("#code").text(t);
 var termParser = new p.TermParser();
 var formulaParser = new p.FormulaParser(termParser, [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
 
-var documentParser = new p.DocumentParser(formulaParser, termParser);
+var supportedConditions = [ new pr.IsCollisionFreeCondition(), new pr.DoesNotContainFreeVariableCondition() ];
+
+var documentParser = new p.DocumentParser(formulaParser, termParser, supportedConditions);
 
 
 
@@ -54,14 +53,14 @@ var update = () => {
             if (d instanceof pr.AxiomDescription) {
 
                 var ad = <pr.AxiomDescription>d;
-                var ax = new pr.Axiom(ad.getName(), ad.getSymbols(), ad.getAssertion());
+                var ax = new pr.Axiom(ad.getName(), ad.getSymbols(), ad.getAssertion(), ad.getConditions());
                 formulaBuilders[ax.getName()] = ax;
 
             }
             else if (d instanceof pr.RuleDescription) {
 
                 var rd = <pr.RuleDescription>d;
-                var rule = new pr.Rule(rd.getName(), rd.getSymbols(), rd.getConclusion(), rd.getAssumptions());
+                var rule = new pr.Rule(rd.getName(), rd.getSymbols(), rd.getConclusion(), rd.getAssumptions(), rd.getConditions());
                 rules[rule.getName()] = rule;
 
             } else if (d instanceof pr.TheoremDescription) {
@@ -70,7 +69,7 @@ var update = () => {
 
                 var td = <pr.TheoremDescription>d;
                 td.getProofSteps().forEach(step => {
-
+                     
                     var newStep: pr.Step = null;
 
                     ax = formulaBuilders[step.getOperation()];

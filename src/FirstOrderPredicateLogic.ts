@@ -25,7 +25,7 @@
 
 ///<reference path="Proof/Proof.ts"/>
 ///<reference path="Proof/Document.ts"/>
-
+///<reference path="Proof/Conditions.ts"/>
 
 
 ///<reference path="Parser/TextRegion.ts"/>

@@ -1,39 +1,6 @@
 ﻿
 module FirstOrderPredicateLogic.Proof {
 
-    /*
-    export interface ICondition {
-        getName(): string;
-        check(formula: Syntax.Formula): boolean;
-    }
-
-    export class IsCollisionFreeCondition implements ICondition {
-        
-        public getName(): string {
-            return "IsCollisionFree";
-        }
-
-        public check(formula: Syntax.Formula): boolean {
-            
-            if (!(formula instanceof Syntax.AppliedSubstitution)) {
-                throw "invalid formula";
-            }
-
-            return (<Syntax.AppliedSubstitution>formula).isCollisionFree();
-        }
-    }
-
-    export class AppliedCondition {
-        
-        public getCondition(): ICondition {
-            
-        }
-
-        public getFormulaTemplate(): Syntax.Formula {
-            
-        }
-
-    }*/
 
     export class Document {
 
@@ -66,11 +33,17 @@ module FirstOrderPredicateLogic.Proof {
 
         private symbols: Syntax.Declaration[];
         private assertion: Syntax.Formula;
+        private conditions: AppliedCondition[];
 
-        constructor(name: string, symbols: Syntax.Declaration[], assertion: Syntax.Formula) {
+        constructor(name: string, symbols: Syntax.Declaration[], assertion: Syntax.Formula, conditions: AppliedCondition[]) {
             super(name);
             this.symbols = symbols;
             this.assertion = assertion;
+            this.conditions = conditions;
+        }
+
+        public getConditions(): AppliedCondition[] {
+            return this.conditions;
         }
 
         public getSymbols(): Syntax.Declaration[] {
@@ -88,16 +61,23 @@ module FirstOrderPredicateLogic.Proof {
         private symbols: Syntax.Declaration[];
         private assumptions: Syntax.Formula[];
         private conclusion: Syntax.Formula;
+        private conditions: AppliedCondition[];
 
-        constructor(name: string, symbols: Syntax.Declaration[], assumptions: Syntax.Formula[], conclusion: Syntax.Formula) {
+        constructor(name: string, symbols: Syntax.Declaration[],
+            assumptions: Syntax.Formula[], conclusion: Syntax.Formula, conditions: AppliedCondition[]) {
             super(name);
             this.symbols = symbols;
             this.assumptions = assumptions;
             this.conclusion = conclusion;
+            this.conditions = conditions;
         }
 
         public getSymbols(): Syntax.Declaration[] {
             return this.symbols;
+        }
+
+        public getConditions(): AppliedCondition[] {
+            return this.conditions;
         }
 
         public getAssumptions() {
