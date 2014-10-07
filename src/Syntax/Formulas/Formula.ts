@@ -32,29 +32,42 @@ module FirstOrderPredicateLogic.Syntax {
         }
     }
 
+    export class ConditionContext {
+        
+        private conditions: Proof.AppliedCondition[];
+
+        constructor(conditions: Proof.AppliedCondition[]) {
+            this.conditions = conditions;
+        }
+
+        public getConditions(): Proof.AppliedCondition[] {
+            return this.conditions;
+        }
+    }
+
     export class Formula extends Node {
 
-        public processAppliedSubstitutions(): Formula {
+        public processAppliedSubstitutions(context: ConditionContext): Formula {
             throw "This method is abstract";
         }
 
-        public getUnboundVariables(): VariableDeclaration[] {
+        public getUnboundVariables(context: ConditionContext): VariableDeclaration[] {
             throw "This method is abstract";
         }
 
-        public containsUnboundVariable(variable: VariableDeclaration): boolean {
+        public containsUnboundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
             throw "This method is abstract";
         }
 
-        public containsBoundVariable(variable: VariableDeclaration): boolean {
+        public containsBoundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
             throw "This method is abstract";
         }
 
-        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
+        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
             throw "This method is abstract";
         }
 
-        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
+        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Formula {
             throw "This method is abstract";
         }
 

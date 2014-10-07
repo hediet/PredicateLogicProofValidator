@@ -30,12 +30,12 @@
             return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
 
-        public containsVariable(variable: VariableDeclaration): boolean {
-            return this.args.some(arg => arg.containsVariable(variable));
+        public containsVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+            return this.args.some(arg => arg.containsVariable(variable, context));
         }
 
-        public substituteVariables(substitutions: VariableWithTermSubstitution[]): Term {
-            var newArgs = this.args.map(a => a.substituteVariables(substitutions));
+        public substituteVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Term {
+            var newArgs = this.args.map(a => a.substituteVariables(substitutions, context));
             return new FunctionRef(this.functionDeclaration, newArgs);
         }
 

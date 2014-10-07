@@ -31,8 +31,8 @@ module FirstOrderPredicateLogic.Syntax {
             return true;
         }
 
-        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
-            var newArgs = this.args.map(a => a.substituteVariables(substitutions));
+        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Formula {
+            var newArgs = this.args.map(a => a.substituteVariables(substitutions, context));
             return new PredicateRef(this.predicateDeclaration, newArgs);
         }
 

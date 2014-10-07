@@ -117,6 +117,9 @@ Theorem T16
     Symbols:
 		Let phi be formula.
 
+    Conditions:
+    	Only {<xi>, <zeta>} are free in (phi).
+
     Proof:
         # 1. Hypothesis(forall xi: forall zeta: phi)
         # 2. A4(<xi>, forall zeta: phi, [xi])
@@ -132,6 +135,10 @@ Theorem T17
 {
     Symbols:
 		Let phi, psi be formulas.
+
+	Conditions:
+    	Only {<xi>} are free in (phi).
+        Only {<xi>} are free in (psi).
 
 	Assertion:
     	|- forall xi: (phi -> psi) -> forall xi: phi -> forall xi: psi
@@ -153,7 +160,10 @@ Theorem T18
 {
     Symbols:
 		Let phi be a formula.
-        
+
+	Conditions:
+    	Only {<xi>, <zeta>} are free in (phi).
+
 	Assertion:
     	|- forall xi: forall zeta: phi -> forall xi: phi[zeta <- xi]
 
@@ -166,3 +176,13 @@ Theorem T18
         # 6. G(@5, <xi>)
         # 7. Deduction(@6, forall xi: forall zeta: phi)
 }
+
+Theorem TTest
+{
+    Symbols:
+		Let P be a predicate.
+        
+    Proof:
+        # 1. T17(P, P)
+}
+

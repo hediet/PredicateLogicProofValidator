@@ -16,16 +16,16 @@
             return this.formulaDeclaration;
         }
 
-        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
+        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
 
-            if (!this.containsUnboundVariable(substitution.getVariableToSubstitute()))
+            if (!this.containsUnboundVariable(substitution.getVariableToSubstitute(), context))
                 return true;
 
             //todo
             return true;
         }
 
-        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
+        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Formula {
             //todo
             return substitutions.reduce<Formula>((last, s) => new AppliedSubstitution(last, s), this);
         }
@@ -38,23 +38,43 @@
             collector.addSubstitution(new FormulaSubstitution(this.formulaDeclaration, concreteFormula));
         }
 
-        public processAppliedSubstitutions(): Formula {
+        public processAppliedSubstitutions(context: ConditionContext): Formula {
             return this;
         }
 
-        public getUnboundVariables(): VariableDeclaration[]{
-            //todo
-            return [];
+        public getUnboundVariables(context: ConditionContext): VariableDeclaration[] {
+
+            var conditions = context.getConditions();
+
+            var onlyCondition =
+                Helper.firstOrDefault(conditions, null, c =>
+                    (c.getCondition() instanceof Proof.OnlyContainsSpecifiedFreeVariablesCondition) &&  this.equals(<Syntax.Formula>c.getArguments()[1])
+                    ? c : null);
+
+            if (onlyCondition != null) {
+
+                var args = onlyCondition.getArguments();
+                var nodeArray = <Proof.NodeArray>args[0];
+                var variables = <Syntax.VariableDeclaration[]>nodeArray.getItems();
+                return variables;
+            }
+
+
+            throw "unbound variables are not specified for " + this.toString();
         }
 
-        public containsUnboundVariable(variable: VariableDeclaration): boolean {
-            //todo
-            return false;
+        public containsUnboundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+
+            return this.getUnboundVariables(context).some(v => v.equals(variable));
+
+            throw "unbound variables are not specified for " + this.toString();
         }
 
-        public containsBoundVariable(variable: VariableDeclaration): boolean {
-            //todo
-            return false;
+        public containsBoundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+            
+
+
+            throw "bound variables are not specified for " + this.toString();
         }
 
         public getDeclarations(): Declaration[] {

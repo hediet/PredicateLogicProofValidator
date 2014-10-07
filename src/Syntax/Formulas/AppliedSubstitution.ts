@@ -25,19 +25,19 @@ module FirstOrderPredicateLogic.Syntax {
             return this.substitution;
         }
 
-        public isCollisionFree(): boolean {
+        public isCollisionFree(context: ConditionContext): boolean {
             if (this.substitution.isIdentity())
                 return true;
-            return this.formulaToSubstitute.isSubstitutionCollisionFree(this.substitution);
+            return this.formulaToSubstitute.isSubstitutionCollisionFree(this.substitution, context);
         }
 
         /**
          * Gets the formula to which the substitution has been applied.
          */
-        public getSubstitutedFormula(): Formula {
+        public getSubstitutedFormula(context: ConditionContext): Formula {
 
             if (this.cachedSubstitutedFormula === null) {
-                this.cachedSubstitutedFormula = this.formulaToSubstitute.substituteUnboundVariables([this.substitution]);
+                this.cachedSubstitutedFormula = this.formulaToSubstitute.substituteUnboundVariables([this.substitution], context);
             }
 
             return this.cachedSubstitutedFormula;
@@ -65,11 +65,11 @@ module FirstOrderPredicateLogic.Syntax {
                 new VariableWithTermSubstitution(newVariableToSubstitute, newTermToInsert));
         }
 
-        public processAppliedSubstitutions(): Formula {
+        public processAppliedSubstitutions(context: ConditionContext): Formula {
 
-            var result = this.formulaToSubstitute.processAppliedSubstitutions();
+            var result = this.formulaToSubstitute.processAppliedSubstitutions(context);
             if (!this.substitution.isIdentity())
-                result = result.substituteUnboundVariables([this.substitution]);
+                result = result.substituteUnboundVariables([this.substitution], context);
             return result;
         }
 
@@ -84,13 +84,13 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
 
-        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
+        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Formula {
             //todo: Improve substitution (but this implementation should work too)
             return substitutions.reduce<Formula>((last, s) => new AppliedSubstitution(last, s), this);
         }
 
 
-        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
+        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
 
             //Maybe this question is too hard to solve...
             throw "Currently, checking whether iterated applied substitutions are collision free is not supported.";
@@ -98,38 +98,38 @@ module FirstOrderPredicateLogic.Syntax {
 
 
 
-        public containsUnboundVariable(variable: VariableDeclaration): boolean {
+        public containsUnboundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
 
             if (!this.substitution.getVariableToSubstitute().equals(variable)) {
-                if (this.formulaToSubstitute.containsUnboundVariable(variable))
+                if (this.formulaToSubstitute.containsUnboundVariable(variable, context))
                     return true;
             }
 
-            if (this.formulaToSubstitute.containsUnboundVariable(this.substitution.getVariableToSubstitute())) {
-                if (this.substitution.getTermToInsert().containsVariable(variable))
+            if (this.formulaToSubstitute.containsUnboundVariable(this.substitution.getVariableToSubstitute(), context)) {
+                if (this.substitution.getTermToInsert().containsVariable(variable, context))
                     return true;
             }
 
             return false;
         }
 
-        public containsBoundVariable(variable: VariableDeclaration): boolean {
-            if (this.formulaToSubstitute.containsBoundVariable(variable))
+        public containsBoundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+            if (this.formulaToSubstitute.containsBoundVariable(variable, context))
                 return true;
-            if (this.isCollisionFree() || !this.substitution.getTermToInsert().containsVariable(variable))
+            if (this.isCollisionFree(context) || !this.substitution.getTermToInsert().containsVariable(variable, context))
                 return false;
 
             throw "'" + variable.getName() + "' may be bound or not. In this implementation it cannot be decided.";
         }
 
-        public getUnboundVariables(): VariableDeclaration[] {
+        public getUnboundVariables(context: ConditionContext): VariableDeclaration[] {
 
-            var unboundVariables = this.formulaToSubstitute.getUnboundVariables();
+            var unboundVariables = this.formulaToSubstitute.getUnboundVariables(context);
 
-            if (this.isCollisionFree()) {
+            if (this.isCollisionFree(context)) {
                 //every free variable in 'termToInsert' will stay free.
 
-                if (!this.formulaToSubstitute.containsUnboundVariable(this.substitution.getVariableToSubstitute()))
+                if (!this.formulaToSubstitute.containsUnboundVariable(this.substitution.getVariableToSubstitute(), context))
                     return unboundVariables;
 
                 var termVariables = this.substitution.getTermToInsert().getDeclarations()

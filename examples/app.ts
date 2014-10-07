@@ -2,7 +2,7 @@
 ///<reference path="definitions.d.ts"/>
 
 
-import t = require("text!default.txt");
+import defaultText = require("text!default.txt");
 import $ = require("jquery");
 import CodeMirror = require("Codemirror");
 import FirstOrderPredicateLogic = require("FirstOrderPredicateLogic");
@@ -12,17 +12,17 @@ import p = FirstOrderPredicateLogic.Parser;
 import pr = FirstOrderPredicateLogic.Proof;
 
 
-$("#code").text(t);
+$("#code").text(defaultText);
 
 
 var termParser = new p.TermParser();
 var formulaParser = new p.FormulaParser(termParser,
     [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
 
-var supportedConditions = [new pr.IsCollisionFreeCondition(), new pr.DoesNotContainFreeVariableCondition()];
+var supportedConditions = [pr.IsCollisionFreeCondition.getInstance(), pr.DoesNotContainFreeVariableCondition.getInstance(),
+    pr.OnlyContainsSpecifiedFreeVariablesCondition.getInstance()];
 
 var documentParser = new p.DocumentParser(formulaParser, termParser, supportedConditions);
-
 
 
 var editor = CodeMirror.fromTextArea(<HTMLTextAreaElement>document.getElementById("code"), {
@@ -64,10 +64,12 @@ var update = () => {
 
                 var td = <pr.TheoremDescription>d;
 
+                var context = new s.ConditionContext(td.getConditions());
+
                 formulaBuilders[d.getName()] = td.getFormulaBuilder();
 
                 td.getProofSteps().forEach(step => {
-                    var newStep: pr.Step = null;
+                    var newStep: pr.Step;
 
                     var ax = formulaBuilders[step.getOperation()];
 
@@ -83,7 +85,7 @@ var update = () => {
                             return a;
                         });
 
-                        newStep = new pr.ProofableFormulaBuilderStep(ax, s.Substitution.fromValues(ax.getParameters(), args));
+                        newStep = new pr.ProofableFormulaBuilderStep(ax, s.Substitution.fromValues(ax.getParameters(), args), context);
                     } else {
 
                         var stepArgs = step.getArguments().slice(0);
@@ -95,7 +97,7 @@ var update = () => {
 
                         var providedAssumptionsSteps = providedAssumptions.map(s => steps[s.getReferencedStep()]);
 
-                        newStep = new pr.RuleStep(rule, providedAssumptionsSteps, s.Substitution.fromValues(rule.getNecessaryParameters(), stepArgs));
+                        newStep = new pr.RuleStep(rule, providedAssumptionsSteps, s.Substitution.fromValues(rule.getNecessaryParameters(), stepArgs), context);
                     }
 
 
@@ -119,7 +121,7 @@ var update = () => {
                     var l: string = editor.getDoc().getLine(line);
                     var space = l.substr(0, pos.getStartColumn() - 1);
 
-                    msg.innerHTML = "<pre>   " + space + text  + "</pre>";
+                    msg.innerHTML = "<pre>   " + space + text + "</pre>";
 
                     msg.className = "proof-step-formula";
 
@@ -135,7 +137,7 @@ var update = () => {
 
 };
 
-update();
+setTimeout(update, 10);
 
 
 

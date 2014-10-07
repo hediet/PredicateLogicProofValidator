@@ -29,6 +29,10 @@
         public getFormulaBuilder(): ProofableFormulaBuilder {
             throw "abstract";
         }
+
+        public getConditions(): AppliedCondition[] {
+            throw "abstract";
+        }
     }
 
     export class AbstractAxiomDescription extends Description {
@@ -150,13 +154,19 @@
         private symbols: Syntax.Declaration[];
         private proofSteps: ProofStep[];
         private assertion: Syntax.Formula;
+        private conditions: Proof.AppliedCondition[];
 
         constructor(name: string, symbols: Syntax.Declaration[],
-            assertion: Syntax.Formula, proofSteps: ProofStep[]) {
+            assertion: Syntax.Formula, proofSteps: ProofStep[], conditions: Proof.AppliedCondition[]) {
             super(name);
             this.symbols = symbols;
             this.assertion = assertion;
             this.proofSteps = proofSteps;
+            this.conditions = conditions;
+        }
+
+        public getConditions(): AppliedCondition[] {
+            return this.conditions;
         }
 
         public getSymbols(): Syntax.Declaration[] {
@@ -172,7 +182,7 @@
         }
 
         public getFormulaBuilder(): ProofableFormulaBuilder {
-            return new Axiom(this.getName(), this.getSymbols(), this.getAssertion(), []);
+            return new Axiom(this.getName(), this.getSymbols(), this.getAssertion(), this.conditions);
         }
     }
 

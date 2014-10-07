@@ -58,7 +58,6 @@
                 return this;
         }
 
-
         public getDeclarations(): Declaration[] {
             var result = this.quantifiedFormula.getDeclarations();
             result.push(this.boundVariable);
@@ -66,29 +65,29 @@
             return result;
         }
 
-        public getUnboundVariables(): VariableDeclaration[] {
-            var result = this.quantifiedFormula.getUnboundVariables();
+        public getUnboundVariables(context: ConditionContext): VariableDeclaration[] {
+            var result = this.quantifiedFormula.getUnboundVariables(context);
             result = result.filter(t => !t.equals(this.boundVariable));
             return result;
         }
 
-        public containsUnboundVariable(variable: VariableDeclaration): boolean {
+        public containsUnboundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
             if (variable.equals(this.boundVariable))
                 return false;
-            return this.quantifiedFormula.containsUnboundVariable(variable);
+            return this.quantifiedFormula.containsUnboundVariable(variable, context);
         }
 
-        public containsBoundVariable(variable: VariableDeclaration): boolean {
+        public containsBoundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
             if (variable.equals(this.boundVariable))
                 return true;
-            return this.quantifiedFormula.containsBoundVariable(variable);
+            return this.quantifiedFormula.containsBoundVariable(variable, context);
         }
 
-        public processAppliedSubstitutions(): Formula {
-            return this.clone(this.boundVariable, this.quantifiedFormula.processAppliedSubstitutions());
+        public processAppliedSubstitutions(context: ConditionContext): Formula {
+            return this.clone(this.boundVariable, this.quantifiedFormula.processAppliedSubstitutions(context));
         }
 
-        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
+        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
             if (substitution.getVariableToSubstitute().equals(this.boundVariable))
                 return true; //only free variables can be replaced
             
@@ -96,17 +95,17 @@
             //all variables of 'termToInsert' would appear in the quantified formula.
             //The substitution is not collision free, if the variable bound by this quantor appears
             //unbound in 'termToInsert'.
-            if (substitution.getTermToInsert().containsVariable(this.boundVariable)
-                && this.quantifiedFormula.containsUnboundVariable(substitution.getVariableToSubstitute()))
+            if (substitution.getTermToInsert().containsVariable(this.boundVariable, context)
+                && this.quantifiedFormula.containsUnboundVariable(substitution.getVariableToSubstitute(), context))
                 return false;
 
-            return this.quantifiedFormula.isSubstitutionCollisionFree(substitution);
+            return this.quantifiedFormula.isSubstitutionCollisionFree(substitution, context);
         }
 
-        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
+        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Formula {
             //since this.boundVariable is not free any more, all substitutions which substitutes that variable will be ignored.
             var filteredSubstitutions = substitutions.filter(s => !s.getVariableToSubstitute().equals(this.boundVariable));
-            return this.clone(this.boundVariable, this.quantifiedFormula.substituteUnboundVariables(filteredSubstitutions));
+            return this.clone(this.boundVariable, this.quantifiedFormula.substituteUnboundVariables(filteredSubstitutions, context));
         }
 
         public substitute(substitutions: Substitution[]): Formula {

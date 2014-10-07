@@ -19,7 +19,7 @@
             var t = new Tokenizer(str);
             return this.parse(t);
         }
-        
+
         public parse(tokenizer: Tokenizer): Proof.Document {
             Helper.ArgumentExceptionHelper.ensureTypeOf(tokenizer, Tokenizer, "tokenizer");
 
@@ -64,7 +64,7 @@
 
             var name = parserHelper.parseIdentifier(t);
             parserHelper.parseWhitespace(t);
-            
+
 
             t.tryRead("{");
             parserHelper.parseWhitespace(t);
@@ -123,6 +123,7 @@
             var declarations: Syntax.Declaration[] = [];
             var assertion: Syntax.Formula = null;
             var steps: Proof.ProofStep[] = [];
+            var conditions: Proof.AppliedCondition[] = [];
 
             if (t.peek() !== "{") {
                 name = parserHelper.parseIdentifier(t);
@@ -166,14 +167,17 @@
                         steps.push(step);
                     }
                 }
-
+                else if (s === "Conditions") {
+                    var context = new Parser.ParserContext(declarations);
+                    conditions = this.parseConditions(t, context);
+                }
 
                 parserHelper.parseWhitespace(t);
             }
 
             t.tryRead("}");
 
-            return new Proof.TheoremDescription(name, declarations, assertion, steps);
+            return new Proof.TheoremDescription(name, declarations, assertion, steps, conditions);
         }
 
 
@@ -215,7 +219,7 @@
                     parserHelper.parseWhitespace(t);
 
                     var argument: any = null;
-                    
+
                     if (t.tryRead("@")) {
                         var ref = t.readWhile(c => parserHelper.lettersAndNumbers.indexOf(c) !== -1);
                         argument = new Proof.StepRef(ref);
@@ -314,7 +318,27 @@
 
                     parserHelper.parseWhitespace(t);
 
-                    if (["<", "[", "("].indexOf(t.peek()) !== -1) {
+                    if (t.tryRead("{")) {
+                        parserHelper.parseWhitespace(t);
+                        var arg2: Syntax.Node[] = [];
+                        var first = true;
+                        while (t.peek() !== "" && t.peek() !== "}") {
+                            if (!first) {
+                                if (!t.tryRead(","))
+                                    t.read();
+                                parserHelper.parseWhitespace(t);
+                            } else
+                                first = false;
+
+                            var node = this.parseNode(t, context);
+                            arg2.push(node);
+                            parserHelper.parseWhitespace(t);
+                        }
+                        args.push(new Proof.NodeArray(arg2));
+                        words.push("?");
+                        t.tryRead("}");
+                    }
+                    else if (["<", "[", "("].indexOf(t.peek()) !== -1) {
                         var arg = this.parseNode(t, context);
                         args.push(arg);
                         words.push("?");
@@ -347,7 +371,7 @@
         }
 
         private parseNode(t: Tokenizer, context: IParserContext): Syntax.Node {
-            
+
             if (t.tryRead("<")) {
 
                 parserHelper.parseWhitespace(t);
@@ -355,7 +379,7 @@
                 var ident = parserHelper.parseIdentifier(t);
                 var elements: Syntax.Node[] = [
                     context.getFormulaDeclaration(ident), context.getFunctionDeclaration(ident),
-                    context.getPredicateDeclaration(ident), context.getTermDeclaration(ident), 
+                    context.getPredicateDeclaration(ident), context.getTermDeclaration(ident),
                     context.getVariableDeclaration(ident)
                 ];
 
@@ -436,9 +460,9 @@
                 else if (identifier === "variable")
                     symbols.forEach(s => result.push(new Syntax.VariableDeclaration(s)));
                 else if (identifier === "function")
-                    symbols.forEach(s => result.push(new Syntax.FunctionDeclaration(s, 0)));
+                    symbols.forEach(s => result.push(new Syntax.FunctionDeclaration(s, 1)));
                 else if (identifier === "predicate")
-                    symbols.forEach(s => result.push(new Syntax.PredicateDeclaration(s, 0)));
+                    symbols.forEach(s => result.push(new Syntax.PredicateDeclaration(s, 1)));
                 else if (identifier === "term")
                     symbols.forEach(s => result.push(new Syntax.TermDeclaration(s)));
                 else

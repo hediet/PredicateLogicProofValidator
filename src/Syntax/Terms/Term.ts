@@ -5,11 +5,11 @@
             throw "This method is abstract";
         }
 
-        public containsVariable(variable: VariableDeclaration): boolean {
+        public containsVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
             throw "This method is abstract";
         }
 
-        public substituteVariables(substitutions: VariableWithTermSubstitution[]): Term {
+        public substituteVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Term {
             throw "This method is abstract";
         }
 

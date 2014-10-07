@@ -26,12 +26,12 @@ module FirstOrderPredicateLogic.Syntax {
             return this.args;
         }
 
-        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
-            return this.args.every(f => f.isSubstitutionCollisionFree(substitution));
+        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
+            return this.args.every(f => f.isSubstitutionCollisionFree(substitution, context));
         }
 
-        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
-            return this.operationFactory.createInstance(this.args.map(arg => arg.substituteUnboundVariables(substitutions)));
+        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Formula {
+            return this.operationFactory.createInstance(this.args.map(arg => arg.substituteUnboundVariables(substitutions, context)));
         }
 
         public substitute(substitutions: Substitution[]): Formula {
@@ -55,20 +55,20 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
 
-        public processAppliedSubstitutions(): Formula {
-            return this.operationFactory.createInstance(this.args.map(arg => arg.processAppliedSubstitutions()));
+        public processAppliedSubstitutions(context: ConditionContext): Formula {
+            return this.operationFactory.createInstance(this.args.map(arg => arg.processAppliedSubstitutions(context)));
         }
 
-        public getUnboundVariables(): VariableDeclaration[] {
-            return Helper.uniqueJoin(this.args, arg => arg.getUnboundVariables(), r => r.getName());
+        public getUnboundVariables(context: ConditionContext): VariableDeclaration[] {
+            return Helper.uniqueJoin(this.args, arg => arg.getUnboundVariables(context), r => r.getName());
         }
 
-        public containsUnboundVariable(variable: VariableDeclaration): boolean {
-            return this.args.some(arg => arg.containsUnboundVariable(variable));
+        public containsUnboundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+            return this.args.some(arg => arg.containsUnboundVariable(variable, context));
         }
 
-        public containsBoundVariable(variable: VariableDeclaration): boolean {
-            return this.args.some(arg => arg.containsBoundVariable(variable));
+        public containsBoundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+            return this.args.some(arg => arg.containsBoundVariable(variable, context));
         }
 
         public getDeclarations(): Declaration[] {

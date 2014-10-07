@@ -31,7 +31,7 @@
             return this.conditions;
         }
 
-        public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[]): Syntax.Formula[] {
+        public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[], context: Syntax.ConditionContext): Syntax.Formula[] {
             return assumptionHypotheses;
         }
     }
@@ -84,11 +84,11 @@
             super("Hypothesis", [phi], new Syntax.FormulaRef(phi), []);
         }
 
-        public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[]): Syntax.Formula[] {
+        public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[], context: Syntax.ConditionContext): Syntax.Formula[] {
 
             var substitutedFormula = this.getFormulaTemplate().substitute(args);
 
-            if (substitutedFormula.getUnboundVariables().length > 0)
+            if (substitutedFormula.getUnboundVariables(context).length > 0)
                 throw "Formula contains unbound variables!";
 
             return [substitutedFormula];
@@ -138,16 +138,19 @@
 
         private pfb: ProofableFormulaBuilder;
         private args: Syntax.Substitution[];
+        private context: Syntax.ConditionContext;
 
-        constructor(pfb: ProofableFormulaBuilder, args: Syntax.Substitution[]) {
+        constructor(pfb: ProofableFormulaBuilder, args: Syntax.Substitution[], context: Syntax.ConditionContext) {
             super();
             this.pfb = pfb;
             this.args = args;
 
             pfb.getConditions().forEach(c => {
-                if (!c.check(this.args))
+                if (!c.check(this.args, context))
                     throw "condition not met!";
             });
+
+            this.context = context;
         }
 
         public getArguments(): Syntax.Substitution[] {
@@ -160,11 +163,11 @@
 
         public getDeductedFormula(): Syntax.Formula {
 
-            return this.pfb.getFormulaTemplate().substitute(this.args).processAppliedSubstitutions();
+            return this.pfb.getFormulaTemplate().substitute(this.args).processAppliedSubstitutions(this.context);
         }
 
         public getHypotheses(): Syntax.Formula[] {
-            return this.pfb.getHypotheses([], this.args);
+            return this.pfb.getHypotheses([], this.args, this.context);
         }
     }
 
@@ -175,7 +178,7 @@
         private assumptions: Step[];
         private hypotheses: Syntax.Formula[];
 
-        constructor(rule: Rule, assumptions: Step[], args: Syntax.Substitution[]) {
+        constructor(rule: Rule, assumptions: Step[], args: Syntax.Substitution[], context: Syntax.ConditionContext) {
             super();
             this.rule = rule;
             this.assumptions = assumptions;
@@ -225,7 +228,7 @@
 
 
             var hypotheses = Helper.uniqueJoin(assumptions, step => step.getHypotheses(), f => f.toString());
-            this.hypotheses = this.rule.getHypotheses(hypotheses, newArgs);
+            this.hypotheses = this.rule.getHypotheses(hypotheses, newArgs, context);
         }
 
         public getRule(): Rule {
