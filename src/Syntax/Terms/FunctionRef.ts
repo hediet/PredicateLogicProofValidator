@@ -1,85 +1,70 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
-
+﻿module FirstOrderPredicateLogic.Syntax {
 
     export class FunctionRef extends Term {
 
-        private f: FunctionDeclaration;
+        private functionDeclaration: FunctionDeclaration;
         private args: Term[];
 
-        constructor(f: FunctionDeclaration, args: Term[]) {
+        constructor(functionDeclaration: FunctionDeclaration, args: Term[]) {
             super();
-            this.f = f;
+
+            Helper.ArgumentExceptionHelper.ensureTypeOf(functionDeclaration, FunctionDeclaration, "functionDeclaration");
+            Helper.ArgumentExceptionHelper.ensureArrayTypeOf(args, Term, "args");
+
+            if (args.length !== functionDeclaration.getArity())
+                throw "Invalid number of arguments!";
+
+            this.functionDeclaration = functionDeclaration;
             this.args = args;
         }
 
-        public getFunction(): FunctionDeclaration {
-            return this.f;
+        public getFunctionDeclaration(): FunctionDeclaration {
+            return this.functionDeclaration;
         }
 
         public getArguments(): Term[] {
             return this.args;
         }
 
-        public getDeclarations(): Declaration[] {
-            var result: Declaration[] = [];
-            this.args.forEach(item => {
-                result = result.concat(item.getDeclarations());
-            });
-
-            result = Helper.unique(result, r => r.getName());
-            return result;
+        public getDeclarations(): Declaration[]{
+            return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
 
         public containsVariable(variable: VariableDeclaration): boolean {
-            var result = false;
-            this.args.forEach(item => {
-                if (item.containsVariable(variable))
-                    result = true;
-            });
-            return result;
+            return this.args.some(arg => arg.containsVariable(variable));
         }
 
         public substituteVariables(substitutions: VariableWithTermSubstitution[]): Term {
             var newArgs = this.args.map(a => a.substituteVariables(substitutions));
-            return new FunctionRef(this.f, newArgs);
+            return new FunctionRef(this.functionDeclaration, newArgs);
         }
 
         public substitute(substitutions: Substitution[]): Term {
-
-            var newFunctionRef = this.f;
-            substitutions.some(subst => {
-                if (subst.getDeclarationToSubstitute().equals(this.f)) {
-                    newFunctionRef = subst.getElementToInsert();
-                    return true;
-                }
-                return false;
-            });
-
+            var newFunctionRef = this.functionDeclaration.substitute(substitutions);
             var newArgs = this.args.map(a => a.substitute(substitutions));
             return new FunctionRef(newFunctionRef, newArgs);
         }
 
-        public resubstitute(specialFormula: Term, substService: ISubstitutionCollector) {
+        public resubstitute(concreteFormula: Term, collector: ISubstitutionCollector) {
 
-            if (!(specialFormula instanceof FunctionRef))
-                substService.addIncompatibleNodes(this, specialFormula);
+            if (!(concreteFormula instanceof FunctionRef))
+                collector.addIncompatibleNodes(this, concreteFormula);
             
-            var fr = <FunctionRef>specialFormula;
+            var conreteFunctionRef = <FunctionRef>concreteFormula;
 
-            if (this.getFunction().getArity() !== fr.getFunction().getArity())
-                substService.addIncompatibleNodes(this, specialFormula);
+            if (this.getFunctionDeclaration().getArity() !== conreteFunctionRef.getFunctionDeclaration().getArity())
+                collector.addIncompatibleNodes(this, concreteFormula);
 
-            substService.addSubstitution(new FunctionSubstitution(this.getFunction(), fr.getFunction()));
+            collector.addSubstitution(this.getFunctionDeclaration().createSubstitution(conreteFunctionRef.getFunctionDeclaration()));
 
-            var args = fr.getArguments();
-            this.args.forEach((arg, idx) => arg.resubstitute(args[idx], substService));
+            var args = conreteFunctionRef.getArguments();
+            this.args.forEach((arg, idx) => arg.resubstitute(args[idx], collector));
         }
 
         public toString() {
             var argsStr = this.args.map(arg => arg.toString()).join(", ");
 
-            return this.f.getName() + "(" + argsStr + ")";
+            return this.functionDeclaration.getName() + "(" + argsStr + ")";
         }
     }
 }

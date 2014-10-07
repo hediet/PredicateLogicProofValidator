@@ -1,5 +1,4 @@
-﻿
-module FirstOrderPredicateLogic.Proof {
+﻿module FirstOrderPredicateLogic.Proof {
 
 
     export class Document {
@@ -170,6 +169,10 @@ module FirstOrderPredicateLogic.Proof {
 
         public getProofSteps(): ProofStep[] {
             return this.proofSteps;
+        }
+
+        public getFormulaBuilder(): ProofableFormulaBuilder {
+            return new Axiom(this.getName(), this.getSymbols(), this.getAssertion(), []);
         }
     }
 

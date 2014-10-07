@@ -1,6 +1,8 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
+﻿module FirstOrderPredicateLogic.Syntax {
 
+    /**
+     * Represents an all quantor.
+     */
     export class AllQuantor extends Formula {
 
         public static getPriority() {
@@ -13,31 +15,40 @@ module FirstOrderPredicateLogic.Syntax {
         constructor(boundVariable: VariableDeclaration, quantifiedFormula: Formula) {
             super();
 
+            Helper.ArgumentExceptionHelper.ensureTypeOf(boundVariable, VariableDeclaration, "boundVariable");
+            Helper.ArgumentExceptionHelper.ensureTypeOf(quantifiedFormula, Formula, "quantifiedFormula");
+
             this.boundVariable = boundVariable;
             this.quantifiedFormula = quantifiedFormula;
         }
 
+        /**
+         * Gets the variable which is bound by this quantor.
+         */
         public getBoundVariable(): VariableDeclaration {
             return this.boundVariable;
         }
 
+        /**
+         * Gets the formula which is quantified by this quantor.
+         */
         public getQuantifiedFormula(): Formula {
             return this.quantifiedFormula;
         }
 
-        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
-            if (substitution.getVariableToSubstitute().equals(this.boundVariable))
-                return true; //only free variables can be replaced
+        public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
 
-            //termToInsert would replace at least one variable in 'formula',
-            //so all variables of 'termToInsert' would appear in the qualified formula.
-            //The substitution is not collision free, if the variable bound by this qualifier appears
-            //unbound in 'termToInsert'.
-            if (substitution.getTermToInsert().containsVariable(this.boundVariable)
-                && this.quantifiedFormula.containsUnboundVariable(substitution.getVariableToSubstitute()))
-                return false;
+            var result = (args.useUnicode ? "∀" : "forall ") + this.boundVariable.getName() + ": " + this.quantifiedFormula.toString(
+                {
+                    forceParenthesis: args.forceParenthesis,
+                    parentOperatorPriority: AllQuantor.getPriority(),
+                    useUnicode: args.useUnicode
+                });
 
-            return this.quantifiedFormula.isSubstitutionCollisionFree(substitution);
+            if (args.forceParenthesis)
+                result = "(" + result + ")";
+
+            return result;
         }
 
         private clone(newBoundVariable: VariableDeclaration, newQuantifiedFormula: Formula): AllQuantor {
@@ -48,67 +59,71 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
 
-        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
-
-            var subs = substitutions.filter(s => !s.getVariableToSubstitute().equals(this.boundVariable));
-            return this.clone(this.boundVariable, this.quantifiedFormula.substituteUnboundVariables(subs));
-        }
-
-        public substitute(substitutions: Substitution[]): Formula {
-
-            var newBoundVariable = Helper.firstOrDefault(substitutions, this.boundVariable,
-                subst => subst.getDeclarationToSubstitute().equals(this.boundVariable) ? subst.getElementToInsert() : null);
-
-            return this.clone(newBoundVariable, this.quantifiedFormula.substitute(substitutions));
-        }
-
-        public resubstitute(instance: Formula, substService: ISubstitutionCollector) {
-
-            if (!(instance instanceof AllQuantor)) {
-                substService.addIncompatibleNodes(this, instance);
-                return;
-            }
-
-            var a = <AllQuantor>instance;
-            var boundVariable = a.getBoundVariable();
-
-            substService.addSubstitution(new VariableSubstition(boundVariable, a.getBoundVariable()));
-            this.quantifiedFormula.resubstitute(a.getQuantifiedFormula(), substService);
-        }
-
-        public applySubstitutions(): Formula {
-            return this.clone(this.boundVariable, this.quantifiedFormula.applySubstitutions());
-        }
-
         public getDeclarations(): Declaration[] {
-
-            var result: Declaration[] = this.quantifiedFormula.getDeclarations();
+            var result = this.quantifiedFormula.getDeclarations();
             result.push(this.boundVariable);
             result = Helper.unique(result, r => r.getName());
-
             return result;
         }
 
         public getUnboundVariables(): VariableDeclaration[] {
             var result = this.quantifiedFormula.getUnboundVariables();
             result = result.filter(t => !t.equals(this.boundVariable));
-
             return result;
         }
 
-        public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
+        public containsUnboundVariable(variable: VariableDeclaration): boolean {
+            if (variable.equals(this.boundVariable))
+                return false;
+            return this.quantifiedFormula.containsUnboundVariable(variable);
+        }
 
-            var result = (args.useUnicode ? "∀" : "forall ") + this.boundVariable.getName() + ": " + this.quantifiedFormula.toString(
-            {
-                forceParenthesis: args.forceParenthesis,
-                parentOperatorPriority: AllQuantor.getPriority(),
-                useUnicode: args.useUnicode
-            });
+        public containsBoundVariable(variable: VariableDeclaration): boolean {
+            if (variable.equals(this.boundVariable))
+                return true;
+            return this.quantifiedFormula.containsBoundVariable(variable);
+        }
 
-            if (args.forceParenthesis)
-                result = "(" + result + ")";
+        public processAppliedSubstitutions(): Formula {
+            return this.clone(this.boundVariable, this.quantifiedFormula.processAppliedSubstitutions());
+        }
 
-            return result;
+        public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
+            if (substitution.getVariableToSubstitute().equals(this.boundVariable))
+                return true; //only free variables can be replaced
+            
+            //If termToInsert replaces at least one variable in 'quantifiedFormula',
+            //all variables of 'termToInsert' would appear in the quantified formula.
+            //The substitution is not collision free, if the variable bound by this quantor appears
+            //unbound in 'termToInsert'.
+            if (substitution.getTermToInsert().containsVariable(this.boundVariable)
+                && this.quantifiedFormula.containsUnboundVariable(substitution.getVariableToSubstitute()))
+                return false;
+
+            return this.quantifiedFormula.isSubstitutionCollisionFree(substitution);
+        }
+
+        public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
+            //since this.boundVariable is not free any more, all substitutions which substitutes that variable will be ignored.
+            var filteredSubstitutions = substitutions.filter(s => !s.getVariableToSubstitute().equals(this.boundVariable));
+            return this.clone(this.boundVariable, this.quantifiedFormula.substituteUnboundVariables(filteredSubstitutions));
+        }
+
+        public substitute(substitutions: Substitution[]): Formula {
+            var newBoundVariable = this.boundVariable.substitute(substitutions);
+            return this.clone(newBoundVariable, this.quantifiedFormula.substitute(substitutions));
+        }
+
+        public resubstitute(concreteFormula: Formula, collector: ISubstitutionCollector) {
+            if (!(concreteFormula instanceof AllQuantor)) {
+                collector.addIncompatibleNodes(this, concreteFormula);
+                return;
+            }
+
+            var concreteAllQuantor = <AllQuantor>concreteFormula;
+
+            collector.addSubstitution(new VariableSubstition(this.boundVariable, concreteAllQuantor.getBoundVariable()));
+            this.quantifiedFormula.resubstitute(concreteAllQuantor.getQuantifiedFormula(), collector);
         }
     }
 }

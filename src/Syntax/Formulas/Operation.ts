@@ -7,8 +7,12 @@ module FirstOrderPredicateLogic.Syntax {
         private args: Formula[];
 
         constructor(operationFactory: IOperationFactory, args: Formula[]) {
-
             super();
+
+            Helper.ArgumentExceptionHelper.ensureArrayTypeOf(args, Formula, "args");
+
+            if (args.length !== operationFactory.getArity())
+                throw "Invalid number of arguments!";
 
             this.operationFactory = operationFactory;
             this.args = args;
@@ -18,7 +22,7 @@ module FirstOrderPredicateLogic.Syntax {
             return this.operationFactory;
         }
 
-        public getArgs(): Formula[] {
+        public getArguments(): Formula[] {
             return this.args;
         }
 
@@ -34,34 +38,40 @@ module FirstOrderPredicateLogic.Syntax {
             return this.operationFactory.createInstance(this.args.map(arg => arg.substitute(substitutions)));
         }
 
-        public resubstitute(instance: Formula, substService: ISubstitutionCollector) {
-            if (!(instance instanceof Operation)) {
-                substService.addIncompatibleNodes(this, instance);
+        public resubstitute(concreteFormula: Formula, collector: ISubstitutionCollector) {
+            if (!(concreteFormula instanceof Operation)) {
+                collector.addIncompatibleNodes(this, concreteFormula);
                 return;
             }
-            var a = <Operation>instance;
-            if (this.getOperationFactory() !== a.getOperationFactory()) {
-                substService.addIncompatibleNodes(this, instance);
+            var concreteOperation = <Operation>concreteFormula;
+            if (this.getOperationFactory() !== concreteOperation.getOperationFactory()) {
+                collector.addIncompatibleNodes(this, concreteFormula);
                 return;
             }
 
-            var operationArgs = a.getArgs();
+            var concreteOperationArgs = concreteOperation.getArguments();
 
-            this.args.forEach((arg, idx) => arg.resubstitute(operationArgs[idx], substService));
+            this.args.forEach((arg, idx) => arg.resubstitute(concreteOperationArgs[idx], collector));
         }
 
 
-        public applySubstitutions(): Formula {
-            return this.operationFactory.createInstance(this.args.map(arg => arg.applySubstitutions()));
+        public processAppliedSubstitutions(): Formula {
+            return this.operationFactory.createInstance(this.args.map(arg => arg.processAppliedSubstitutions()));
         }
 
         public getUnboundVariables(): VariableDeclaration[] {
-
             return Helper.uniqueJoin(this.args, arg => arg.getUnboundVariables(), r => r.getName());
         }
 
-        public getDeclarations(): Declaration[] {
+        public containsUnboundVariable(variable: VariableDeclaration): boolean {
+            return this.args.some(arg => arg.containsUnboundVariable(variable));
+        }
 
+        public containsBoundVariable(variable: VariableDeclaration): boolean {
+            return this.args.some(arg => arg.containsBoundVariable(variable));
+        }
+
+        public getDeclarations(): Declaration[] {
             return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
     }

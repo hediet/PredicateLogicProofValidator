@@ -44,10 +44,10 @@ Axiom A5
 {
     Symbols:
         Let xi be a variable.
-        Let phi, psi be a formulas.
+        Let phi, psi be formulas.
 
 	Conditions:
-		(xi) is not free in (phi).
+		<xi> is not free in (phi).
 
     Assertion:
         |- forall xi: (phi -> psi) -> (phi -> forall xi: psi)
@@ -83,23 +83,6 @@ Rule G
 Hypothesis
 
 Deduction
-	    
-Theorem T16
-{
-    Symbols:
-		Let phi be formula.
-
-    Proof:
-
-        # 1. Hypothesis(forall xi: forall zeta: phi)
-        # 2. A4([xi], forall zeta: phi, [xi])
-        # 3. MP(@1, @2)
-        # 4. A4([zeta], phi, [zeta])
-        # 5. MP(@3, @4)
-        # 6. G(@5, [xi])
-        # 7. G(@6, [zeta])
-        # 8. Deduction(@7, forall xi: forall zeta: phi)
-}
 
 Theorem T1
 {
@@ -115,4 +98,71 @@ Theorem T1
         # 3. MP(@2, @1)
         # 4. A1(phi, phi)
         # 5. MP(@4, @3)
+}
+
+Theorem T2
+{
+	Symbols:
+    	Let phi, psi, chi be formulas.
+        
+    Assertion:
+    	(phi -> psi) -> ((psi -> chi) -> (phi -> chi))
+        
+    Proof:
+    	# 1. A1(phi, phi)
+}
+  
+Theorem T16
+{
+    Symbols:
+		Let phi be formula.
+
+    Proof:
+        # 1. Hypothesis(forall xi: forall zeta: phi)
+        # 2. A4(<xi>, forall zeta: phi, [xi])
+        # 3. MP(@1, @2)
+        # 4. A4(<zeta>, phi, [zeta])
+        # 5. MP(@3, @4)
+        # 6. G(@5, <xi>)
+        # 7. G(@6, <zeta>)
+        # 8. Deduction(@7, forall xi: forall zeta: phi)
+}
+
+Theorem T17
+{
+    Symbols:
+		Let phi, psi be formulas.
+
+	Assertion:
+    	|- forall xi: (phi -> psi) -> forall xi: phi -> forall xi: psi
+
+    Proof:
+        # 1. Hypothesis(forall xi: (phi -> psi))
+        # 2. A4(<xi>, phi -> psi, [xi])
+        # 3. MP(@1, @2)
+        # 4. Hypothesis(forall xi: phi)
+        # 5. A4(<xi>, phi, [xi])
+        # 6. MP(@4, @5)
+        # 7. MP(@6, @3)
+        # 8. G(@7, <xi>)
+        # 9. Deduction(@8, forall xi: phi)
+        # 10. Deduction(@9, forall xi: (phi -> psi))
+}
+
+Theorem T18
+{
+    Symbols:
+		Let phi be a formula.
+        
+	Assertion:
+    	|- forall xi: forall zeta: phi -> forall xi: phi[zeta <- xi]
+
+    Proof:
+        # 1. Hypothesis(forall xi: forall zeta: phi)
+        # 2. A4(<xi>, forall zeta: phi, [xi])
+        # 3. MP(@1, @2)
+        # 4. A4(<zeta>, phi, [xi])
+        # 5. MP(@3, @4)
+        # 6. G(@5, <xi>)
+        # 7. Deduction(@6, forall xi: forall zeta: phi)
 }

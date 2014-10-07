@@ -1,7 +1,6 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
+﻿module FirstOrderPredicateLogic.Syntax {
 
-    export class Substitution implements IEquatable<Substitution> {
+    export class Substitution {
 
         public isIdentity(): boolean {
             throw "abstract";
@@ -11,7 +10,7 @@ module FirstOrderPredicateLogic.Syntax {
             throw "abstract";
         }
 
-        public getElementToInsert(): any {
+        public getElementToInsert(): Node {
             throw "abstract";
         }
 
@@ -24,7 +23,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
     }
 
-    export class SpecificSubstitution<TDeclaration extends Declaration, TElementToInsert extends IEquatable<any>> extends Substitution {
+    export class SpecificSubstitution<TDeclaration extends Declaration, TElementToInsert extends Node> extends Substitution {
         
         private declarationToSubstitute: TDeclaration;
         private elementToInsert: TElementToInsert;
@@ -95,7 +94,7 @@ module FirstOrderPredicateLogic.Syntax {
                 return false;
 
             var termRefToInsert = <TermRef>this.getElementToInsert();
-            return termRefToInsert.getDeclaration().equals(this.getDeclarationToSubstitute());
+            return termRefToInsert.getTermDeclaration().equals(this.getDeclarationToSubstitute());
         }
     }
 
@@ -124,7 +123,7 @@ module FirstOrderPredicateLogic.Syntax {
                 return false;
 
             var formulaRefToInsert = <FormulaRef>this.getElementToInsert();
-            return formulaRefToInsert.getDeclaration().equals(this.getDeclarationToSubstitute());
+            return formulaRefToInsert.getFormulaDeclaration().equals(this.getDeclarationToSubstitute());
         }
     }
 }

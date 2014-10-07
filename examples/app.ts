@@ -16,7 +16,8 @@ $("#code").text(t);
 
 
 var termParser = new p.TermParser();
-var formulaParser = new p.FormulaParser(termParser, [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
+var formulaParser = new p.FormulaParser(termParser,
+    [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
 
 var supportedConditions = [new pr.IsCollisionFreeCondition(), new pr.DoesNotContainFreeVariableCondition()];
 
@@ -62,8 +63,10 @@ var update = () => {
                 var steps: { [id: string]: pr.Step } = {};
 
                 var td = <pr.TheoremDescription>d;
-                td.getProofSteps().forEach(step => {
 
+                formulaBuilders[d.getName()] = td.getFormulaBuilder();
+
+                td.getProofSteps().forEach(step => {
                     var newStep: pr.Step = null;
 
                     var ax = formulaBuilders[step.getOperation()];

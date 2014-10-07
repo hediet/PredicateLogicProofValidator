@@ -1,118 +1,14 @@
 ﻿
 
-Axiom A1
-{
-	Symbols:
-		Let phi, psi be formulas.
-
-	Assertion:
-		|- phi -> (psi -> phi)
-}
-
-Axiom A2
-{
-	Symbols:
-		Let phi, psi, chi be formulas.
-
-	Assertion:
-		|- (phi -> (psi -> chi)) -> ((phi -> psi) -> (phi -> chi))
-}
-
-Axiom A3
-{
-	Symbols:
-		Let phi, psi be formulas.
-
-	Assertion:
-		|- (!phi -> !psi) -> (psi -> phi)
-}
-
-Axiom A4
-{
-	Symbols:
-		Let xi be a variable.
-		Let phi be a formula.
-		Let sigma be a term.
-
-	Condition:
-		(phi[xi <- sigma]) is collision free.
-
-	Assertion:
-		|- forall xi: phi -> phi[xi <- sigma]
-}
-
-Axiom A5
-{
-	Symbols:
-		Let xi be a variable.
-		Let phi, psi be formulas.
-
-	Condition:
-		(xi) is not free in (phi).
-
-	Assertion:
-		|- forall xi: (phi -> psi) -> (phi -> forall xi: psi)
-}
-
-Axiom A6
-{
-	Symbols:
-		Let xi be a variable.
-
-	Assertion:
-		|- xi = xi
-}
-
-Axiom A7
-{
-	Symbols:
-		Let xi, zeta be a variable.
-		Let phi be a formula.
-
-	Condition:
-		(phi[zeta <- xi]) is collision free.
-
-	Assertion:
-		|- xi = zeta -> (phi[zeta <- xi] -> phi)
-}
-
-
-Rule MP
-{
-	Symbols:
-		Let phi, psi be formulas.
-
-	Assumptions:
-		|- phi
-		|- phi -> psi
-
-	Conclusion:
-		|- psi
-}
-
-
-Rule G
-{
-	Symbols:
-		Let xi be a variable.
-		Let phi be a formula.
-
-	Assumption:
-		|- phi
-
-	Conclusion:
-		|- forall xi: phi
-}
-
-
 
 GlobalSymbols
 {
 	Let sigma be a term.
+	Let *(2) be a function.
 	Let +(2) be a function.
 	Let 0(0) be a function.
 	Let s(1) be a function.
-	Let = be a predicate.
+	Let =(2) be a predicate.
 }
 
 
@@ -130,8 +26,11 @@ Theorem Foo
     Symbols:
         Let phi be a formula.
 	
+	Condition:
+		Only {<xi>, <zeta>} are free in (phi).
+
     Proof:
-        # 
+        
 }
 
 

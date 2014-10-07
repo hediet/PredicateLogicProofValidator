@@ -1,5 +1,4 @@
-﻿
-module FirstOrderPredicateLogic.Proof {
+﻿module FirstOrderPredicateLogic.Proof {
 
 
     export class FormulaBuilder {
@@ -78,26 +77,26 @@ module FirstOrderPredicateLogic.Proof {
 
 
     export class HypothesisAxiom extends Axiom {
-        
+
         constructor() {
             var phi = new Syntax.FormulaDeclaration("phi");
 
             super("Hypothesis", [phi], new Syntax.FormulaRef(phi), []);
         }
-        
+
         public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[]): Syntax.Formula[] {
-            
+
             var substitutedFormula = this.getFormulaTemplate().substitute(args);
-            
+
             if (substitutedFormula.getUnboundVariables().length > 0)
                 throw "Formula contains unbound variables!";
-            
-            return [ substitutedFormula ];
+
+            return [substitutedFormula];
         }
     }
 
     export class DeductionRule extends Rule {
-        
+
         private phiFormula: Syntax.Formula;
 
         constructor() {
@@ -108,7 +107,7 @@ module FirstOrderPredicateLogic.Proof {
             this.phiFormula = new Syntax.FormulaRef(phi);
 
             super("Deduction", [phi, psi],
-                Syntax.Implication.factory.createInstance([this.phiFormula, new Syntax.FormulaRef(psi)]), 
+                Syntax.Implication.factory.createInstance([this.phiFormula, new Syntax.FormulaRef(psi)]),
                 [new Syntax.FormulaRef(psi)], []);
         }
 
@@ -161,7 +160,7 @@ module FirstOrderPredicateLogic.Proof {
 
         public getDeductedFormula(): Syntax.Formula {
 
-            return this.pfb.getFormulaTemplate().substitute(this.args).applySubstitutions();
+            return this.pfb.getFormulaTemplate().substitute(this.args).processAppliedSubstitutions();
         }
 
         public getHypotheses(): Syntax.Formula[] {
@@ -276,9 +275,8 @@ module FirstOrderPredicateLogic.Proof {
 
             if (typeof oldSubst === "undefined") {
                 this.substitutions[name] = substitution;
-            } else {
-                if (!substitution.equals(oldSubst))
-                    this.error = true;
+            } else if (!substitution.equals(oldSubst)) {
+                this.error = true;
             }
         }
 

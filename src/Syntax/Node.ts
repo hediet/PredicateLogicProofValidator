@@ -10,6 +10,10 @@ module FirstOrderPredicateLogic.Syntax {
         public toString(): string {
             throw "abstract";
         }
+
+        public equals(other: Node): boolean {
+            throw "abstract";
+        }
     }
 
 }

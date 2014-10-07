@@ -1,6 +1,4 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
-
+﻿module FirstOrderPredicateLogic.Syntax {
 
     export class UnaryOperation extends Operation {
 
@@ -16,7 +14,7 @@ module FirstOrderPredicateLogic.Syntax {
                 useUnicode: args.useUnicode
             };
 
-            var result = this.getOperationFactory().getName(args.useUnicode) + this.getArgs()[0].toString(subArgs);
+            var result = this.getOperationFactory().getName(args.useUnicode) + this.getArguments()[0].toString(subArgs);
 
             if (args.parentOperatorPriority > subArgs.parentOperatorPriority || args.forceParenthesis)
                 result = "(" + result + ")";
@@ -45,7 +43,8 @@ module FirstOrderPredicateLogic.Syntax {
                 useUnicode: args.useUnicode
             };
 
-            var result = this.getArgs()[0].toString(subArgs1) + " " + this.getOperationFactory().getName(args.useUnicode) + " " + this.getArgs()[1].toString(subArgs2);
+            var result = this.getArguments()[0].toString(subArgs1) + " " +
+                this.getOperationFactory().getName(args.useUnicode) + " " + this.getArguments()[1].toString(subArgs2);
 
             if (args.parentOperatorPriority > subArgs1.parentOperatorPriority || args.forceParenthesis)
                 result = "(" + result + ")";
@@ -53,7 +52,6 @@ module FirstOrderPredicateLogic.Syntax {
             return result;
         }
     }
-
 
 
     export class Equivalence extends BinaryOperation {

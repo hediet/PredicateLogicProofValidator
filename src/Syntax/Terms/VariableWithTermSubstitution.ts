@@ -21,9 +21,13 @@
             return this.termToInsert;
         }
 
-        public toString(useUnicode: boolean = false): string {
+        public isIdentity(): boolean {
+            return this.termToInsert.equals(new VariableRef(this.variableToSubstitute));
+        }
 
-            return "[" + this.variableToSubstitute.getName() + (useUnicode ? " ⇦ " : " <- ") + this.termToInsert.toString() + "]";
+        public toString(useUnicode: boolean = false): string {
+            return "[" + this.variableToSubstitute.getName()
+                + (useUnicode ? " ⇦ " : " <- ") + this.termToInsert.toString() + "]";
         }
     }
 } 

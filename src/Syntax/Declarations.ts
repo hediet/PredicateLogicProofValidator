@@ -1,11 +1,13 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
+﻿module FirstOrderPredicateLogic.Syntax {
 
-    export class Declaration extends Node implements IEquatable<Declaration> {
+    export class Declaration extends Node {
         private name: string;
 
         constructor(name: string) {
             super();
+
+            Helper.ArgumentExceptionHelper.ensureTypeOf(name, "string", "name");
+
             this.name = name;
         }
 
@@ -13,11 +15,6 @@ module FirstOrderPredicateLogic.Syntax {
             return this.name;
         }
         
-        public substitute(substitutions: Substitution[]): Node {
-            return Helper.firstOrDefault(substitutions, this,
-                s => s.getDeclarationToSubstitute().equals(this) ? s.getElementToInsert() : null);
-        }
-
         public equals(other: Declaration): boolean {
 
             if (!(typeof this === typeof other))
@@ -26,7 +23,7 @@ module FirstOrderPredicateLogic.Syntax {
             return this.name === other.getName();
         }
 
-        public createSubstitution(elementToInsert: any): Substitution {
+        public createSubstitution(elementToInsert: Node): Substitution {
             throw "abstract";
         }
     }
@@ -36,12 +33,13 @@ module FirstOrderPredicateLogic.Syntax {
             return "Variable declaration of " + this.getName();
         }
 
-        public createSubstitution(elementToInsert: any) {
+        public createSubstitution(elementToInsert: VariableDeclaration) {
+            return new VariableSubstition(this, elementToInsert);
+        }
 
-            if (elementToInsert instanceof VariableRef)
-                elementToInsert = (<VariableRef>elementToInsert).getDeclaration();
-
-            return new VariableSubstition(this, <VariableDeclaration>elementToInsert);
+        public substitute(substitutions: Substitution[]): VariableDeclaration {
+            return Helper.firstOrDefault(substitutions, this,
+                s => s.getDeclarationToSubstitute().equals(this) ? <VariableDeclaration>s.getElementToInsert() : null);
         }
     }
 
@@ -65,8 +63,13 @@ module FirstOrderPredicateLogic.Syntax {
             return super.equals(other) && (<FunctionDeclaration>other).arity == this.arity;
         }
 
-        public createSubstitution(elementToInsert: any) {
-            return new FunctionSubstitution(this, <FunctionDeclaration>elementToInsert);
+        public createSubstitution(elementToInsert: FunctionDeclaration) {
+            return new FunctionSubstitution(this, elementToInsert);
+        }
+
+        public substitute(substitutions: Substitution[]): FunctionDeclaration {
+            return Helper.firstOrDefault(substitutions, this,
+                s => s.getDeclarationToSubstitute().equals(this) ? <FunctionDeclaration>s.getElementToInsert() : null);
         }
     }
 
@@ -91,8 +94,13 @@ module FirstOrderPredicateLogic.Syntax {
             return super.equals(other) && (<PredicateDeclaration>other).arity == this.arity;
         }
 
-        public createSubstitution(elementToInsert: any) {
-            return new PredicateSubstitution(this, <PredicateDeclaration>elementToInsert);
+        public createSubstitution(elementToInsert: PredicateDeclaration) {
+            return new PredicateSubstitution(this, elementToInsert);
+        }
+
+        public substitute(substitutions: Substitution[]): PredicateDeclaration {
+            return Helper.firstOrDefault(substitutions, this,
+                s => s.getDeclarationToSubstitute().equals(this) ? <PredicateDeclaration>s.getElementToInsert() : null);
         }
     }
 
@@ -102,8 +110,13 @@ module FirstOrderPredicateLogic.Syntax {
             return "Term declaration of " + this.getName();
         }
 
-        public createSubstitution(elementToInsert: any) {
-            return new TermSubstitution(this, <Term>elementToInsert);
+        public createSubstitution(elementToInsert: Term) {
+            return new TermSubstitution(this, elementToInsert);
+        }
+
+        public substitute(substitutions: Substitution[]): Term {
+            return Helper.firstOrDefault(substitutions, new TermRef(this),
+                s => s.getDeclarationToSubstitute().equals(this) ? <Term>s.getElementToInsert() : null);
         }
     }
 
@@ -113,8 +126,13 @@ module FirstOrderPredicateLogic.Syntax {
             return "Formula declaration of " + this.getName();
         }
 
-        public createSubstitution(elementToInsert: any) {
-            return new FormulaSubstitution(this, <Formula>elementToInsert);
+        public createSubstitution(elementToInsert: Formula) {
+            return new FormulaSubstitution(this, elementToInsert);
+        }
+
+        public substitute(substitutions: Substitution[]): Formula {
+            return Helper.firstOrDefault(substitutions, new FormulaRef(this),
+                s => s.getDeclarationToSubstitute().equals(this) ? <Formula>s.getElementToInsert() : null);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿module FirstOrderPredicateLogic.Syntax {
 
-    export class Term extends Node implements IEquatable<Term> {
+    export class Term extends Node {
         public getDeclarations(): Declaration[] {
             throw "This method is abstract";
         }
@@ -25,7 +25,7 @@
         }
 
         public equals(other: Term): boolean {
-            throw "abstract";
+            throw "This method is abstract";
         }
     }
 }

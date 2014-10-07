@@ -57,13 +57,12 @@
         private parseRule(t: Tokenizer): Proof.RuleDescription {
             parserHelper.parseWhitespace(t);
 
-            var name = null;
             var declarations: Syntax.Declaration[] = [];
             var conclusion: Syntax.Formula = null;
             var assumptions: Syntax.Formula[] = [];
             var conditions: Proof.AppliedCondition[] = [];
 
-            name = parserHelper.parseIdentifier(t);
+            var name = parserHelper.parseIdentifier(t);
             parserHelper.parseWhitespace(t);
             
 
@@ -106,8 +105,7 @@
                 }
                 else if (s === "Conditions") {
                     conditions = this.parseConditions(t, context);
-                }
-
+                } else break;
 
                 parserHelper.parseWhitespace(t);
             }
@@ -217,19 +215,13 @@
                     parserHelper.parseWhitespace(t);
 
                     var argument: any = null;
-
-                    if (t.tryRead("[")) {
-                        parserHelper.parseWhitespace(t);
-                        argument = this.termParser.parseTerm(t, context);
-                        parserHelper.parseWhitespace(t);
-                        t.tryRead("]");
-                    } else if (t.tryRead("@")) {
-
+                    
+                    if (t.tryRead("@")) {
                         var ref = t.readWhile(c => parserHelper.lettersAndNumbers.indexOf(c) !== -1);
                         argument = new Proof.StepRef(ref);
 
                     } else {
-                        argument = this.formulaParser.parseFormula(t, context);
+                        argument = this.parseNode(t, context);
                     }
 
                     args.push(argument);
@@ -409,7 +401,7 @@
 
                 var first = true;
 
-                while (tokenizer.peek() !== "") {
+                while (tokenizer.peek() !== "" && tokenizer.peek() !== "}") {
                     parserHelper.parseWhitespace(tokenizer);
                     if (!first) {
                         if (!tokenizer.tryRead(","))
@@ -449,6 +441,8 @@
                     symbols.forEach(s => result.push(new Syntax.PredicateDeclaration(s, 0)));
                 else if (identifier === "term")
                     symbols.forEach(s => result.push(new Syntax.TermDeclaration(s)));
+                else
+                    break;
 
                 parserHelper.parseWhitespace(tokenizer);
                 tokenizer.tryRead(".");

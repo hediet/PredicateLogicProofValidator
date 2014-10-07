@@ -3,23 +3,29 @@ module FirstOrderPredicateLogic.Syntax {
 
     export class PredicateRef extends Formula {
 
-        private f: PredicateDeclaration;
+        private predicateDeclaration: PredicateDeclaration;
         private args: Term[];
 
-        constructor(f: PredicateDeclaration, args: Term[]) {
+        constructor(predicateDeclaration: PredicateDeclaration, args: Term[]) {
             super();
-            this.f = f;
+
+            Helper.ArgumentExceptionHelper.ensureTypeOf(predicateDeclaration, PredicateDeclaration, "predicateDeclaration");
+            Helper.ArgumentExceptionHelper.ensureArrayTypeOf(args, Term, "args");
+
+            if (args.length !== predicateDeclaration.getArity())
+                throw "Invalid number of arguments!";
+
+            this.predicateDeclaration = predicateDeclaration;
             this.args = args;
         }
 
         public getPredicate(): PredicateDeclaration {
-            return this.f;
+            return this.predicateDeclaration;
         }
 
         public getArguments(): Term[] {
             return this.args;
         }
-
 
         public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
             return true;
@@ -27,35 +33,32 @@ module FirstOrderPredicateLogic.Syntax {
 
         public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
             var newArgs = this.args.map(a => a.substituteVariables(substitutions));
-            return new PredicateRef(this.f, newArgs);
+            return new PredicateRef(this.predicateDeclaration, newArgs);
         }
 
         public substitute(substitutions: Substitution[]): Formula {
 
-            //todo substitute predicate
-
+            var newPredicateDeclaration = this.predicateDeclaration.substitute(substitutions);
             var newArgs = this.args.map(a => a.substitute(substitutions));
-            return new PredicateRef(this.f, newArgs);
+            return new PredicateRef(newPredicateDeclaration, newArgs);
         }
 
-        public resubstitute(specialFormula: Formula, substService: ISubstitutionCollector): void {
+        public resubstitute(concreteFormula: Formula, collector: ISubstitutionCollector): void {
 
-            if (!(specialFormula instanceof PredicateRef))
-                substService.addIncompatibleNodes(this, specialFormula);
+            if (!(concreteFormula instanceof PredicateRef))
+                collector.addIncompatibleNodes(this, concreteFormula);
 
-            var pr = <PredicateRef>specialFormula;
+            var conretePredicateRef = <PredicateRef>concreteFormula;
 
-            if (!this.getPredicate().equals(pr.getPredicate()))
-                substService.addIncompatibleNodes(this, specialFormula);
+            if (!this.getPredicate().equals(conretePredicateRef.getPredicate()))
+                collector.addIncompatibleNodes(this, concreteFormula);
 
             this.args.forEach((arg, i) => {
-                arg.resubstitute(pr.args[i], substService);
+                arg.resubstitute(conretePredicateRef.args[i], collector);
             });
-
-            //todo check if arg
         }
 
-        public applySubstitutions(): Formula {
+        public processAppliedSubstitutions(): Formula {
             return this;
         }
 
@@ -70,10 +73,7 @@ module FirstOrderPredicateLogic.Syntax {
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
             var argsStr = this.args.map(arg => arg.toString()).join(", ");
 
-            if (argsStr == "")
-                return this.f.getName();
-
-            return this.f.getName() + "(" + argsStr + ")";
+            return this.predicateDeclaration.getName() + ((argsStr !== "") ? "(" + argsStr + ")" : "");
         }
     }
 }

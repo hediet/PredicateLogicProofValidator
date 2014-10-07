@@ -1,5 +1,4 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
+﻿module FirstOrderPredicateLogic.Syntax {
 
     export class VariableRef extends Term {
 
@@ -7,6 +6,9 @@ module FirstOrderPredicateLogic.Syntax {
 
         constructor(variableDeclaration: VariableDeclaration) {
             super();
+
+            Helper.ArgumentExceptionHelper.ensureTypeOf(variableDeclaration, VariableDeclaration, "variableDeclaration");
+
             this.variableDeclaration = variableDeclaration;
         }
 
@@ -18,7 +20,7 @@ module FirstOrderPredicateLogic.Syntax {
             return [this.variableDeclaration];
         }
 
-        public getDeclaration(): VariableDeclaration {
+        public getVariableDeclaration(): VariableDeclaration {
             return this.variableDeclaration;
         }
 
@@ -28,21 +30,20 @@ module FirstOrderPredicateLogic.Syntax {
 
         public substituteVariables(substitutions: VariableWithTermSubstitution[]): Term {
 
-            var result: Term = this;
-
-            substitutions.some(s => {
-                if (s.getVariableToSubstitute().equals(this.variableDeclaration)) {
-                    result = s.getTermToInsert();
-                    return true;
-                }
-                return false;
-            });
-
-            return result;
+            return Helper.firstOrDefault(substitutions, this,
+                subst => subst.getVariableToSubstitute().equals(this.variableDeclaration)
+                    ? subst.getTermToInsert() : null);
         }
 
         public toString() {
             return this.variableDeclaration.getName();
+        }
+
+        public equals(other: Term): boolean {
+            if (!(other instanceof VariableRef))
+                return false;
+            var otherVariableRef = <VariableRef>other;
+            return this.variableDeclaration.equals(otherVariableRef.getVariableDeclaration());
         }
     }
 }

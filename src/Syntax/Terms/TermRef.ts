@@ -1,13 +1,15 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
+﻿module FirstOrderPredicateLogic.Syntax {
 
     export class TermRef extends Term {
 
-        private declaration: TermDeclaration;
+        private termDeclaration: TermDeclaration;
 
         constructor(termDeclaration: TermDeclaration) {
             super();
-            this.declaration = termDeclaration;
+
+            Helper.ArgumentExceptionHelper.ensureTypeOf(termDeclaration, TermDeclaration, "termDeclaration");
+
+            this.termDeclaration = termDeclaration;
         }
 
 
@@ -16,32 +18,23 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public substitute(substitutions: Substitution[]): Term {
-
-            var result: Term = this;
-
-            substitutions.some(subst => {
-                if (subst.getDeclarationToSubstitute().equals(this.getDeclaration())) {
-                    result = subst.getElementToInsert();
-                    return true;
-                }
-
-                return false;
-            });
-
-            return result;
+            return this.termDeclaration.substitute(substitutions);
         }
 
-        public resubstitute(specialFormula: Term, substService: ISubstitutionCollector) {
-            substService.addSubstitution(new TermSubstitution(this.getDeclaration(), specialFormula));
+        public resubstitute(concreteFormula: Term, collector: ISubstitutionCollector) {
+            collector.addSubstitution(new TermSubstitution(this.getTermDeclaration(), concreteFormula));
         }
 
+        public getTermDeclaration(): TermDeclaration {
+            return this.termDeclaration;
+        }
 
-        public getDeclaration(): TermDeclaration {
-            return this.declaration;
+        public getDeclarations(): Declaration[] {
+            return [this.termDeclaration];
         }
 
         public toString(): string {
-            return this.declaration.getName();
+            return this.termDeclaration.getName();
         }
     }
 }

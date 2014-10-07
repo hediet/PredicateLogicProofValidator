@@ -1,57 +1,68 @@
-﻿
-module FirstOrderPredicateLogic.Syntax {
+﻿module FirstOrderPredicateLogic.Syntax {
 
     export class FormulaRef extends Formula {
 
-        private declaration: FormulaDeclaration;
+        private formulaDeclaration: FormulaDeclaration;
 
-        constructor(fd: FormulaDeclaration) {
+        constructor(formulaDeclaration: FormulaDeclaration) {
             super();
-            this.declaration = fd;
+
+            Helper.ArgumentExceptionHelper.ensureTypeOf(formulaDeclaration, FormulaDeclaration, "formulaDeclaration");
+
+            this.formulaDeclaration = formulaDeclaration;
         }
 
-        public getDeclaration(): FormulaDeclaration {
-            return this.declaration;
+        public getFormulaDeclaration(): FormulaDeclaration {
+            return this.formulaDeclaration;
         }
 
         public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution): boolean {
+
+            if (!this.containsUnboundVariable(substitution.getVariableToSubstitute()))
+                return true;
+
             //todo
             return true;
         }
 
         public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[]): Formula {
-
+            //todo
             return substitutions.reduce<Formula>((last, s) => new AppliedSubstitution(last, s), this);
         }
 
         public substitute(substitutions: Substitution[]): Formula {
-
-            return Helper.firstOrDefault(substitutions, this,
-                s => s.getDeclarationToSubstitute().equals(this.declaration) ? s.getElementToInsert() : null);
+            return this.formulaDeclaration.substitute(substitutions);
         }
 
-        public resubstitute(instance: Formula, substService: ISubstitutionCollector) {
-            substService.addSubstitution(new FormulaSubstitution(this.declaration, instance));
+        public resubstitute(concreteFormula: Formula, collector: ISubstitutionCollector) {
+            collector.addSubstitution(new FormulaSubstitution(this.formulaDeclaration, concreteFormula));
         }
 
-        public applySubstitutions(): Formula {
+        public processAppliedSubstitutions(): Formula {
             return this;
         }
 
-        public getUnboundVariables(): VariableDeclaration[] {
+        public getUnboundVariables(): VariableDeclaration[]{
+            //todo
             return [];
         }
 
-        public getVariables(): VariableDeclaration[] {
-            throw "This method is abstract";
+        public containsUnboundVariable(variable: VariableDeclaration): boolean {
+            //todo
+            return false;
+        }
+
+        public containsBoundVariable(variable: VariableDeclaration): boolean {
+            //todo
+            return false;
         }
 
         public getDeclarations(): Declaration[] {
-            return [this.getDeclaration()];
+            return [this.getFormulaDeclaration()];
         }
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
-            return this.declaration.getName();
+            return this.formulaDeclaration.getName();
         }
     }
 }
