@@ -105,13 +105,68 @@ Theorem T2
 	Symbols:
     	Let phi, psi, chi be formulas.
         
+    Conditions:
+    	Only {} are free in (phi).
+        Only {} are free in (psi).
+        Only {} are free in (chi).
+        
     Assertion:
-    	(phi -> psi) -> ((psi -> chi) -> (phi -> chi))
+    	|- (phi -> psi) -> ((psi -> chi) -> (phi -> chi))
         
     Proof:
-    	# 1. A1(phi, phi)
+    	# 1. Hypothesis(phi)
+        # 2. Hypothesis(phi -> psi)
+        # 3. MP(@1, @2)
+        # 4. Hypothesis(psi -> chi)
+        # 5. MP(@3, @4)
+        # 6. Deduction(@5, phi)
+        # 7. Deduction(@6, psi -> chi)
+        # 8. Deduction(@7, phi -> psi)
 }
-  
+
+Theorem T3
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	Only {} are free in (phi).
+        Only {} are free in (psi).
+      
+    Assertion:
+    	phi -> ((phi -> psi) -> psi)
+        
+    Proof:
+    	# 1. Hypothesis(phi)
+        # 2. Hypothesis(phi -> psi)
+        # 3. MP(@1, @2)
+        # 4. Deduction(@3, phi -> psi)
+        # 5. Deduction(@4, phi)
+}
+
+Theorem T4
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	Only {} are free in (phi).
+      
+    Assertion:
+    	|- !!phi -> phi
+        
+    Proof:
+    	# 1. A1(!!phi, !!!!phi)
+        # 2. Hypothesis(!!phi)
+        # 3. MP(@2, @1)
+        # 4. A3(!!!phi, !phi)
+        # 5. MP(@3, @4)
+        # 6. A3(phi, !!phi)
+        # 7. MP(@5, @6)
+        # 8. MP(@2, @7)
+        # 9. Deduction(@8, !!phi)
+}
+
 Theorem T16
 {
     Symbols:
@@ -175,14 +230,5 @@ Theorem T18
         # 5. MP(@3, @4)
         # 6. G(@5, <xi>)
         # 7. Deduction(@6, forall xi: forall zeta: phi)
-}
-
-Theorem TTest
-{
-    Symbols:
-		Let P be a predicate.
-        
-    Proof:
-        # 1. T17(P, P)
 }
 

@@ -12,5 +12,8 @@
 }
 
 
-.proof-step-formula {  color: gray; padding: 2px 5px 3px;  }
+.proof-step-formula {  color: blue; margin-left: 10px;z-index: 3; }
+
+.proof-step-formula > pre { margin: 0; }
     
+.hypotheses { color: gray; }

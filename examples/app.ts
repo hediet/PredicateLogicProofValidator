@@ -12,6 +12,152 @@ import p = FirstOrderPredicateLogic.Parser;
 import pr = FirstOrderPredicateLogic.Proof;
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class EndOfLineWidget {
+
+    constructor(public node: HTMLElement,
+        public lineHandle: CodeMirror.LineHandle,
+        public alignmentBlock: WidgetAlignmentBlock) {
+
+    }
+
+
+}
+
+
+class WidgetAlignmentBlock {
+   
+    constructor(public id: number) {
+    }
+}
+
+class EndOfLineWidgetManager {
+
+    private widgets: EndOfLineWidget[] = [];
+    private id: number = 0;
+
+    constructor(private editor: CodeMirror.Editor) {
+
+        editor.on("change", () => this.update());
+
+    }
+
+    private update() {
+
+        var alignmentBlockWidths: { [id: number]: number } = { };
+
+        this.widgets.forEach(w => {
+
+            if (w.alignmentBlock === null)
+                return;
+
+            var info = this.editor.lineInfo(w.lineHandle);
+            if (info === null)
+                return;
+
+            var line = info.line;
+            var column = info.text.length - 1;
+
+            var coords = this.editor.charCoords({ line: line, ch: column }, "window");
+
+            if (typeof alignmentBlockWidths[w.alignmentBlock.id] === "undefined")
+                alignmentBlockWidths[w.alignmentBlock.id] = coords.right;
+            else 
+                alignmentBlockWidths[w.alignmentBlock.id] = Math.max(alignmentBlockWidths[w.alignmentBlock.id], coords.right);
+        });
+        var first = true;
+        this.widgets.forEach(w => {
+
+            var info = this.editor.lineInfo(w.lineHandle);
+            var line = info.line;
+            var column = info.text.length - 1;
+
+            var coords = this.editor.charCoords({ line: line, ch: column }, "local");
+            if (first) {
+                console.log(coords);
+                first = false;
+            }
+            if (typeof alignmentBlockWidths[w.alignmentBlock.id] !== "undefined")
+                coords.right = alignmentBlockWidths[w.alignmentBlock.id];
+
+            w.node.style.left = coords.right + "px";
+            w.node.style.top = coords.top + "px";
+        });
+    }
+
+    public addAlignmentBlock(): WidgetAlignmentBlock {
+        return new WidgetAlignmentBlock(this.id++);
+    }
+
+    public addLineWidget(line: number, node: HTMLElement, alignmentBlock: WidgetAlignmentBlock = null): EndOfLineWidget {
+
+        node.style.position = "absolute";
+
+        this.editor.getWrapperElement().appendChild(node);
+
+        var lineHandler = this.editor.getDoc().getLineHandle(line);
+        var result = new EndOfLineWidget(node, lineHandler, alignmentBlock);
+        this.widgets.push(result);
+        this.update();
+        return result;
+    }
+
+    public removeLineWidget(widget: EndOfLineWidget) {
+
+        var index = this.widgets.indexOf(widget);
+        this.widgets.splice(index, 1);
+
+        widget.node.parentNode.removeChild(widget.node);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 $("#code").text(defaultText);
 
 
@@ -32,17 +178,23 @@ var editor = CodeMirror.fromTextArea(<HTMLTextAreaElement>document.getElementByI
     viewportMargin: Infinity
 });
 
+var widgetManager = new EndOfLineWidgetManager(editor);
 
-var widgets: CodeMirror.LineWidget[] = [];
+var storedWidgets: EndOfLineWidget[] = [];
+
+
+
+
 
 var update = () => {
 
 
     editor.operation(function () {
-        for (var i = 0; i < widgets.length; ++i)
-            widgets[i].clear();
 
-        widgets.length = 0;
+        for (var i = 0; i < storedWidgets.length; ++i)
+            widgetManager.removeLineWidget(storedWidgets[i]);
+
+        storedWidgets.length = 0;
 
         var result = documentParser.parseStr(editor.getDoc().getValue());
 
@@ -67,6 +219,8 @@ var update = () => {
                 var context = new s.ConditionContext(td.getConditions());
 
                 formulaBuilders[d.getName()] = td.getFormulaBuilder();
+
+                var currentBlock = widgetManager.addAlignmentBlock();
 
                 td.getProofSteps().forEach(step => {
                     var newStep: pr.Step;
@@ -111,24 +265,18 @@ var update = () => {
                             useUnicode: true
                         })).join(", ") + " } ";
                     }
-                    var text = hypotheses + "⊢ " + newStep.getDeductedFormula().toString({
+                    var text = newStep.getDeductedFormula().toString({
                         forceParenthesis: false, parentOperatorPriority: 0, useUnicode: true
                     });
                     var pos = p.TextRegion.getRegionOf(step);
                     var line = pos.getStartLine() - 1;
                     var msg = document.createElement("div");
 
-                    var l: string = editor.getDoc().getLine(line);
-                    var space = l.substr(0, pos.getStartColumn() - 1);
-
-                    msg.innerHTML = "<pre>   " + space + text + "</pre>";
-
+                    msg.innerHTML = '<span class="hypotheses">' + hypotheses + "</span>⊢ " + text;
                     msg.className = "proof-step-formula";
 
-
-                    var widget = editor.addLineWidget(line, msg, { coverGutter: false, noHScroll: true, above: false, showIfHidden: false });
-                    widgets.push(widget);
-
+                    var widget = widgetManager.addLineWidget(line, msg, currentBlock);
+                    storedWidgets.push(widget);
                 });
             }
         });
@@ -146,4 +294,8 @@ editor.on("change", () => {
     clearTimeout(waiting);
     waiting = setTimeout(update, 500);
 });
+
+
+
+
 
