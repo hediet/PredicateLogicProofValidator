@@ -9,8 +9,8 @@ module FirstOrderPredicateLogic.Syntax {
         constructor(predicateDeclaration: PredicateDeclaration, args: Term[]) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureTypeOf(predicateDeclaration, PredicateDeclaration, "predicateDeclaration");
-            Helper.ArgumentExceptionHelper.ensureArrayTypeOf(args, Term, "args");
+            Common.ArgumentExceptionHelper.ensureTypeOf(predicateDeclaration, PredicateDeclaration, "predicateDeclaration");
+            Common.ArgumentExceptionHelper.ensureArrayTypeOf(args, Term, "args");
 
             if (args.length !== predicateDeclaration.getArity())
                 throw "Invalid number of arguments!";
@@ -67,7 +67,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public getDeclarations(): Declaration[] {
-            return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
+            return Common.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {

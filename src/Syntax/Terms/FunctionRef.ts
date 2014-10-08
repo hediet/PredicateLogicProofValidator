@@ -8,8 +8,8 @@
         constructor(functionDeclaration: FunctionDeclaration, args: Term[]) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureTypeOf(functionDeclaration, FunctionDeclaration, "functionDeclaration");
-            Helper.ArgumentExceptionHelper.ensureArrayTypeOf(args, Term, "args");
+            Common.ArgumentExceptionHelper.ensureTypeOf(functionDeclaration, FunctionDeclaration, "functionDeclaration");
+            Common.ArgumentExceptionHelper.ensureArrayTypeOf(args, Term, "args");
 
             if (args.length !== functionDeclaration.getArity())
                 throw "Invalid number of arguments!";
@@ -27,7 +27,7 @@
         }
 
         public getDeclarations(): Declaration[]{
-            return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
+            return Common.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
 
         public containsVariable(variable: VariableDeclaration, context: ConditionContext): boolean {

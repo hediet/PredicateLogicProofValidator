@@ -1,5 +1,4 @@
-﻿
-module FirstOrderPredicateLogic.Helper {
+﻿module FirstOrderPredicateLogic.Common {
 
     export function unique<T, U>(a: T[], selector: (t: T) => U = (i => i)) {
         var prims = { "boolean": {}, "number": {}, "string": {} }, objs: U[] = [];

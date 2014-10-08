@@ -6,7 +6,7 @@
         constructor(name: string) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureTypeOf(name, "string", "name");
+            Common.ArgumentExceptionHelper.ensureTypeOf(name, "string", "name");
 
             this.name = name;
         }
@@ -38,7 +38,7 @@
         }
 
         public substitute(substitutions: Substitution[]): VariableDeclaration {
-            return Helper.firstOrDefault(substitutions, this,
+            return Common.firstOrDefault(substitutions, this,
                 s => s.getDeclarationToSubstitute().equals(this) ? <VariableDeclaration>s.getElementToInsert() : null);
         }
     }
@@ -68,7 +68,7 @@
         }
 
         public substitute(substitutions: Substitution[]): FunctionDeclaration {
-            return Helper.firstOrDefault(substitutions, this,
+            return Common.firstOrDefault(substitutions, this,
                 s => s.getDeclarationToSubstitute().equals(this) ? <FunctionDeclaration>s.getElementToInsert() : null);
         }
     }
@@ -99,7 +99,7 @@
         }
 
         public substitute(substitutions: Substitution[]): PredicateDeclaration {
-            return Helper.firstOrDefault(substitutions, this,
+            return Common.firstOrDefault(substitutions, this,
                 s => s.getDeclarationToSubstitute().equals(this) ? <PredicateDeclaration>s.getElementToInsert() : null);
         }
     }
@@ -115,7 +115,7 @@
         }
 
         public substitute(substitutions: Substitution[]): Term {
-            return Helper.firstOrDefault(substitutions, new TermRef(this),
+            return Common.firstOrDefault(substitutions, new TermRef(this),
                 s => s.getDeclarationToSubstitute().equals(this) ? <Term>s.getElementToInsert() : null);
         }
     }
@@ -131,7 +131,7 @@
         }
 
         public substitute(substitutions: Substitution[]): Formula {
-            return Helper.firstOrDefault(substitutions, new FormulaRef(this),
+            return Common.firstOrDefault(substitutions, new FormulaRef(this),
                 s => s.getDeclarationToSubstitute().equals(this) ? <Formula>s.getElementToInsert() : null);
         }
     }

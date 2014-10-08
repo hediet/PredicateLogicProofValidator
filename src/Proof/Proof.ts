@@ -1,6 +1,128 @@
 ﻿module FirstOrderPredicateLogic.Proof {
 
 
+
+
+
+
+    export class System {
+
+        private formulaBuilders: FormulaBuilder[];
+
+        constructor(document: Document) {
+
+            var formulaBuilders: { [id: string]: FormulaBuilder } = {};
+
+            document.getDescriptions().forEach(d => {
+
+                if (d instanceof AbstractAxiomDescription) {
+                    var formulaBuilder = d.getFormulaBuilder();
+                    (<any>d).__system_formulaBuilder = formulaBuilder;
+                    formulaBuilders[d.getName()] = formulaBuilder;
+                }
+                else if (d instanceof AbstractRuleDescription) {
+                    var rule = d.getFormulaBuilder();
+                    (<any>d).__system_formulaBuilder = rule;
+                    formulaBuilders[d.getName()] = rule;
+
+                } else if (d instanceof TheoremDescription) {
+
+                    var steps: { [id: string]: Step } = {};
+
+                    var td = <TheoremDescription>d;
+
+                    var context = new ConditionContext(td.getConditions());
+
+                    formulaBuilders[d.getName()] = td.getFormulaBuilder();
+
+                    td.getProofSteps().forEach(step => {
+                        var newStep: Step;
+
+                        var referencedOperation = formulaBuilders[step.getOperation()];
+
+                        if (referencedOperation instanceof ProofableFormulaBuilder) {
+                            var referencedFormulaBuilder = <ProofableFormulaBuilder>referencedOperation;
+
+                            var args = step.getArguments().map(a => {
+                                if (a instanceof StepRef) {
+                                    var referencedStepName = (<StepRef>a).getReferencedStep();
+                                    return steps[referencedStepName].getDeductedFormula();
+                                }
+                                return a;
+                            });
+
+                            newStep = new ProofableFormulaBuilderStep(referencedFormulaBuilder,
+                                Syntax.Substitution.fromValues(referencedFormulaBuilder.getParameters(), args), context);
+                        } else if (referencedOperation instanceof Rule) {
+                            var referencedRule = <Rule>referencedOperation;
+
+                            var stepArgs = step.getArguments().slice(0);
+                            var providedAssumptions: StepRef[] = [];
+                            referencedRule.getAssumptions().forEach(a => {
+                                providedAssumptions.push(stepArgs.shift());
+                            });
+
+                            var providedAssumptionsSteps = providedAssumptions.map(s => steps[s.getReferencedStep()]);
+
+                            newStep = new RuleStep(referencedRule, providedAssumptionsSteps,
+                                Syntax.Substitution.fromValues(referencedRule.getNecessaryParameters(), stepArgs), context);
+                        } else
+                            throw "Referenced operation is not supported";
+
+                        (<any>step).__system_step = newStep;
+                        steps[step.getStepIdentifier()] = newStep;
+                    });
+                }
+            });
+        }
+
+
+
+
+        public getFormulaBuilders(): FormulaBuilder[] {
+            return this.formulaBuilders;
+        }
+
+        public getFormulaBuilder(description: Description) {
+            return (<any>description).__system_formulaBuilder;
+        }
+
+        public getStep(step: ProofStep): Step {
+            return (<any>step).__system_step;
+        }
+
+
+        public getIsProven(theorem: TheoremDescription) {
+
+            var steps = theorem.getProofSteps();
+            var lastStep = steps[steps.length - 1];
+            var realStep = this.getStep(lastStep);
+
+            var assertion = theorem.getAssertion();
+
+            if (realStep.getHypotheses().length > 0)
+                return false;
+
+            return realStep.getDeductedFormula().equals(assertion);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     export class FormulaBuilder {
 
         private name: string;
@@ -114,7 +236,7 @@
         public getHypotheses(assumptionHypotheses: Syntax.Formula[], args: Syntax.Substitution[]): Syntax.Formula[] {
 
             var phi2 = this.phiFormula.substitute(args);
-            var assumption = Helper.firstOrDefault(assumptionHypotheses, null, h => h.equals(phi2) ? h : null);
+            var assumption = Common.firstOrDefault(assumptionHypotheses, null, h => h.equals(phi2) ? h : null);
 
             if (assumption === null)
                 throw "Invalid assumption!";
@@ -227,7 +349,7 @@
             this.args = newArgs;
 
 
-            var hypotheses = Helper.uniqueJoin(assumptions, step => step.getHypotheses(), f => f.toString());
+            var hypotheses = Common.uniqueJoin(assumptions, step => step.getHypotheses(), f => f.toString());
             this.hypotheses = this.rule.getHypotheses(hypotheses, newArgs, context);
         }
 

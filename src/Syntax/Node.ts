@@ -1,5 +1,4 @@
-﻿ 
-module FirstOrderPredicateLogic.Syntax {
+﻿ module FirstOrderPredicateLogic.Syntax {
 
     export class Node {
 

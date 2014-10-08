@@ -6,8 +6,8 @@
         private termToInsert: Term;
 
         constructor(variableToSubstitute: VariableDeclaration, termToInsert: Term) {
-            Helper.ArgumentExceptionHelper.ensureTypeOf(variableToSubstitute, VariableDeclaration, "variableToSubstitute");
-            Helper.ArgumentExceptionHelper.ensureTypeOf(termToInsert, Term, "termToInsert");
+            Common.ArgumentExceptionHelper.ensureTypeOf(variableToSubstitute, VariableDeclaration, "variableToSubstitute");
+            Common.ArgumentExceptionHelper.ensureTypeOf(termToInsert, Term, "termToInsert");
 
             this.variableToSubstitute = variableToSubstitute;
             this.termToInsert = termToInsert;

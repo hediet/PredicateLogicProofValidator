@@ -60,8 +60,10 @@
   <ItemGroup>
     <TypeScriptCompile Include="examples\app.ts" />
     <TypeScriptCompile Include="examples\definitions.d.ts" />
+    <TypeScriptCompile Include="examples\EndOfLineWidgetManager.ts" />
     <TypeScriptCompile Include="src\Helper\ArgumentExceptionHelper.ts" />
     <TypeScriptCompile Include="src\FirstOrderPredicateLogic.ts" />
+    <TypeScriptCompile Include="src\Helper\ArrayType.ts" />
     <TypeScriptCompile Include="src\Helper\IEquatable.ts" />
     <TypeScriptCompile Include="src\Parser\DocumentParser.ts" />
     <TypeScriptCompile Include="src\Parser\FormulaParser.ts" />
@@ -84,6 +86,7 @@
     <TypeScriptCompile Include="src\Syntax\Formulas\Operation.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\OperationFactory.ts" />
     <TypeScriptCompile Include="src\Syntax\Declarations.ts" />
+    <TypeScriptCompile Include="src\Syntax\NodeArray.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\TermRef.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\VariableRef.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\FunctionRef.ts" />

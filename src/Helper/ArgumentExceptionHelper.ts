@@ -1,4 +1,5 @@
-﻿module FirstOrderPredicateLogic.Helper {
+﻿module FirstOrderPredicateLogic.Common {
+
     export class ArgumentExceptionHelper {
         
         public static ensureUndefinedOrTypeOf(obj: any, type: any, name: string) {

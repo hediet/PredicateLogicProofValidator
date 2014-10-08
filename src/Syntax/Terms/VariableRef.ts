@@ -7,13 +7,9 @@
         constructor(variableDeclaration: VariableDeclaration) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureTypeOf(variableDeclaration, VariableDeclaration, "variableDeclaration");
+            Common.ArgumentExceptionHelper.ensureTypeOf(variableDeclaration, VariableDeclaration, "variableDeclaration");
 
             this.variableDeclaration = variableDeclaration;
-        }
-
-        public getName(): string {
-            return name;
         }
 
         public getDeclarations(): Declaration[] {
@@ -30,7 +26,7 @@
 
         public substituteVariables(substitutions: VariableWithTermSubstitution[]): Term {
 
-            return Helper.firstOrDefault(substitutions, this,
+            return Common.firstOrDefault(substitutions, this,
                 subst => subst.getVariableToSubstitute().equals(this.variableDeclaration)
                     ? subst.getTermToInsert() : null);
         }

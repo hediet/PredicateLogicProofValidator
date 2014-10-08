@@ -2,8 +2,10 @@
 ///<reference path="Helper/IEquatable.ts"/>
 ///<reference path="Helper/Helper.ts"/>
 ///<reference path="Helper/ArgumentExceptionHelper.ts"/>
+///<reference path="Helper/ArrayType.ts"/>
 
 ///<reference path="Syntax/Node.ts"/>
+///<reference path="Syntax/NodeArray.ts"/>
 
 ///<reference path="Syntax/Declarations.ts"/>
 ///<reference path="Syntax/Terms/VariableWithTermSubstitution.ts"/>

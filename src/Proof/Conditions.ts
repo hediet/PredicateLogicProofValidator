@@ -1,5 +1,72 @@
-﻿
-module FirstOrderPredicateLogic.Proof {
+﻿module FirstOrderPredicateLogic.Proof {
+
+    export class ConditionContext extends Syntax.ConditionContext {
+
+        private conditions: Proof.AppliedCondition[];
+
+        constructor(conditions: Proof.AppliedCondition[]) {
+            super();
+            this.conditions = conditions;
+        }
+
+        public getConditions(): Proof.AppliedCondition[] {
+            return this.conditions;
+        }
+
+
+        public formulaGetUnboundVariables(declaration: Syntax.FormulaDeclaration): Syntax.VariableDeclaration[] {
+            var onlyCondition =
+                Common.firstOrDefault(this.getConditions(), null, c =>
+                    (c.getCondition() instanceof Proof.OnlyContainsSpecifiedFreeVariablesCondition)
+                    && new Syntax.FormulaRef(declaration).equals(<Syntax.Formula>c.getArguments()[1])
+                    ? c : null);
+
+            if (onlyCondition != null) {
+
+                var args = onlyCondition.getArguments();
+                var nodeArray = <Syntax.NodeArray>args[0];
+                var variables = <Syntax.VariableDeclaration[]>nodeArray.getItems();
+                return variables;
+            }
+
+            return null;
+        }
+
+        public formulaContainsUnboundVariable(declaration: Syntax.FormulaDeclaration, variable: Syntax.VariableDeclaration): boolean {
+
+            var unboundVariables = this.formulaGetUnboundVariables(declaration);
+            if (unboundVariables !== null) {
+                return unboundVariables.some(v => v.equals(variable));
+            }
+
+            return null;
+        }
+
+        public formulaContainsBoundVariable(declaration: Syntax.FormulaDeclaration, variable: Syntax.VariableDeclaration): boolean {
+            return null;
+        }
+
+        public formulaIsSubstitutionCollisionFree(declaration: Syntax.FormulaDeclaration,
+            substitution: Syntax.VariableWithTermSubstitution, context: ConditionContext): boolean {
+
+            var result = null;
+
+            this.conditions.forEach(c => {
+                if (c.getCondition() instanceof Proof.IsCollisionFreeCondition) {
+
+                    var appliedSubstitution = <Syntax.AppliedSubstitution>c.getArguments()[0];
+                    if (appliedSubstitution.equals(
+                        new Syntax.AppliedSubstitution(new Syntax.FormulaRef(declaration), substitution)))
+                        result = true;
+                }
+            });
+
+
+            return result;
+        }
+    }
+
+
 
 
     export interface ICondition {
@@ -66,51 +133,6 @@ module FirstOrderPredicateLogic.Proof {
         }
     }
 
-    export class NodeArray extends Syntax.Node {
-
-        private items: Syntax.Node[];
-
-        constructor(items: Syntax.Node[]) {
-            super();
-
-            this.items = items;
-        }
-
-        public getItems(): Syntax.Node[] {
-            return this.items;
-        }
-
-        public substitute(substitutions: Syntax.Substitution[]): NodeArray {
-            return new NodeArray(this.items.map(item => item.substitute(substitutions)));
-        }
-
-        public toString(): string {
-            return "{ " + this.items.join(", ") + " }";
-        }
-
-        public equals(other: Syntax.Node): boolean {
-            if (!(other instanceof NodeArray))
-                return false;
-            var otherNodeArray = <NodeArray>other;
-
-            if (this.items.length !== otherNodeArray.items.length)
-                return false;
-            return this.items.every((item, idx) => item.equals(otherNodeArray.items[idx]));
-        }
-    }
-
-    export class ArrayType {
-        
-        private baseType: any;
-
-        constructor(baseType: any) {
-            this.baseType = baseType;
-        }
-
-        public getItemType() {
-            return this.baseType;
-        }
-    }
 
     export class OnlyContainsSpecifiedFreeVariablesCondition implements ICondition {
 
@@ -127,12 +149,12 @@ module FirstOrderPredicateLogic.Proof {
         }
 
         public getParameterTypes(): any[] {
-            return [new ArrayType(Syntax.VariableDeclaration), Syntax.Formula];
+            return [new Common.ArrayType(Syntax.VariableDeclaration), Syntax.Formula];
         }
 
         public check(args: Syntax.Node[], context: Syntax.ConditionContext): boolean {
 
-            var nodeArray = <NodeArray>args[0];
+            var nodeArray = <Syntax.NodeArray>args[0];
             var formula = <Syntax.Formula>args[1];
 
             var variables = <Syntax.VariableDeclaration[]>nodeArray.getItems();

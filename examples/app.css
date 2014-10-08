@@ -3,17 +3,40 @@
 }
 
 .CodeMirror {
-  height: auto;
-  border: 1px solid black; font-size: 13px;
+    height: auto;
+    border: 1px solid black;
+    font-size: 13px;
 }
+
 .CodeMirror-scroll {
-  overflow-y: hidden;
-  overflow-x: auto;
+    overflow-y: hidden;
+    overflow-x: auto;
 }
 
 
-.proof-step-formula {  color: blue; margin-left: 10px;z-index: 3; }
+.proof-step-formula {
+    color: blue;
+    margin-left: 10px;
+    z-index: 3;
+}
 
-.proof-step-formula > pre { margin: 0; }
-    
-.hypotheses { color: gray; }
+    .proof-step-formula > pre {
+        margin: 0;
+    }
+
+.hypotheses {
+    color: gray;
+}
+
+
+.proof-status {
+    color: gray;
+    font-size: 85%;
+    margin-left: 5px;
+}
+
+.proof-status-proven {
+}
+
+.proof-status-invalid {
+}

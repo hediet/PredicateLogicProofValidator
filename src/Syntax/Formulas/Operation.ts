@@ -9,7 +9,7 @@ module FirstOrderPredicateLogic.Syntax {
         constructor(operationFactory: IOperationFactory, args: Formula[]) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureArrayTypeOf(args, Formula, "args");
+            Common.ArgumentExceptionHelper.ensureArrayTypeOf(args, Formula, "args");
 
             if (args.length !== operationFactory.getArity())
                 throw "Invalid number of arguments!";
@@ -60,7 +60,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public getUnboundVariables(context: ConditionContext): VariableDeclaration[] {
-            return Helper.uniqueJoin(this.args, arg => arg.getUnboundVariables(context), r => r.getName());
+            return Common.uniqueJoin(this.args, arg => arg.getUnboundVariables(context), r => r.getName());
         }
 
         public containsUnboundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
@@ -72,7 +72,7 @@ module FirstOrderPredicateLogic.Syntax {
         }
 
         public getDeclarations(): Declaration[] {
-            return Helper.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
+            return Common.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
         }
     }
 }

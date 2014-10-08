@@ -11,291 +11,131 @@ import s = FirstOrderPredicateLogic.Syntax;
 import p = FirstOrderPredicateLogic.Parser;
 import pr = FirstOrderPredicateLogic.Proof;
 
+import EndOfLineWidgetManager = require("EndOfLineWidgetManager");
 
 
 
+class App {
+    
+    private editor: CodeMirror.Editor;
+    private widgetManager: EndOfLineWidgetManager.EndOfLineWidgetManager;
+    private endOfLineWidgets: EndOfLineWidgetManager.EndOfLineWidget[] = [];
+    private lineWidgets: CodeMirror.LineWidget[] = [];
+    private documentParser: p.DocumentParser;
 
+    constructor() {
+        
+        $("#code").text(defaultText);
 
+        var termParser = new p.TermParser();
+        var formulaParser = new p.FormulaParser(termParser,
+            [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
 
+        var supportedConditions = [pr.IsCollisionFreeCondition.getInstance(), pr.DoesNotContainFreeVariableCondition.getInstance(),
+            pr.OnlyContainsSpecifiedFreeVariablesCondition.getInstance()];
 
+        this.documentParser = new p.DocumentParser(formulaParser, termParser, supportedConditions);
 
-
-
-
-
-
-
-
-
-
-
-
-
-class EndOfLineWidget {
-
-    constructor(public node: HTMLElement,
-        public lineHandle: CodeMirror.LineHandle,
-        public alignmentBlock: WidgetAlignmentBlock) {
-
-    }
-
-
-}
-
-
-class WidgetAlignmentBlock {
-   
-    constructor(public id: number) {
-    }
-}
-
-class EndOfLineWidgetManager {
-
-    private widgets: EndOfLineWidget[] = [];
-    private id: number = 0;
-
-    constructor(private editor: CodeMirror.Editor) {
-
-        editor.on("change", () => this.update());
-
-    }
-
-    private update() {
-
-        var alignmentBlockWidths: { [id: number]: number } = { };
-
-        this.widgets.forEach(w => {
-
-            if (w.alignmentBlock === null)
-                return;
-
-            var info = this.editor.lineInfo(w.lineHandle);
-            if (info === null)
-                return;
-
-            var line = info.line;
-            var column = info.text.length - 1;
-
-            var coords = this.editor.charCoords({ line: line, ch: column }, "window");
-
-            if (typeof alignmentBlockWidths[w.alignmentBlock.id] === "undefined")
-                alignmentBlockWidths[w.alignmentBlock.id] = coords.right;
-            else 
-                alignmentBlockWidths[w.alignmentBlock.id] = Math.max(alignmentBlockWidths[w.alignmentBlock.id], coords.right);
+        this.editor = CodeMirror.fromTextArea(<HTMLTextAreaElement>document.getElementById("code"), {
+            lineNumbers: true,
+            styleActiveLine: true,
+            matchBrackets: true,
+            viewportMargin: Infinity
         });
-        var first = true;
-        this.widgets.forEach(w => {
 
-            var info = this.editor.lineInfo(w.lineHandle);
-            var line = info.line;
-            var column = info.text.length - 1;
+        this.widgetManager = new EndOfLineWidgetManager.EndOfLineWidgetManager(this.editor);
 
-            var coords = this.editor.charCoords({ line: line, ch: column }, "local");
-            if (first) {
-                console.log(coords);
-                first = false;
-            }
-            if (typeof alignmentBlockWidths[w.alignmentBlock.id] !== "undefined")
-                coords.right = alignmentBlockWidths[w.alignmentBlock.id];
+        setTimeout(() => this.editorChanged(), 10);
 
-            w.node.style.left = coords.right + "px";
-            w.node.style.top = coords.top + "px";
+        var waiting;
+        this.editor.on("change", () => {
+            clearTimeout(waiting);
+            waiting = setTimeout(() => this.editorChanged(), 500);
         });
     }
 
-    public addAlignmentBlock(): WidgetAlignmentBlock {
-        return new WidgetAlignmentBlock(this.id++);
-    }
-
-    public addLineWidget(line: number, node: HTMLElement, alignmentBlock: WidgetAlignmentBlock = null): EndOfLineWidget {
-
-        node.style.position = "absolute";
-
-        this.editor.getWrapperElement().appendChild(node);
-
-        var lineHandler = this.editor.getDoc().getLineHandle(line);
-        var result = new EndOfLineWidget(node, lineHandler, alignmentBlock);
-        this.widgets.push(result);
-        this.update();
-        return result;
-    }
-
-    public removeLineWidget(widget: EndOfLineWidget) {
-
-        var index = this.widgets.indexOf(widget);
-        this.widgets.splice(index, 1);
-
-        widget.node.parentNode.removeChild(widget.node);
-    }
-}
 
 
 
+    private editorChanged() {
+        
 
+        for (var i = 0; i < this.endOfLineWidgets.length; ++i)
+            this.widgetManager.removeLineWidget(this.endOfLineWidgets[i]);
 
+        for (var i = 0; i < this.lineWidgets.length; ++i)
+            this.lineWidgets[i].clear();
 
+        this.endOfLineWidgets.length = 0;
+        this.lineWidgets.length = 0;
 
+        var result = this.documentParser.parseStr(this.editor.getDoc().getValue());
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-$("#code").text(defaultText);
-
-
-var termParser = new p.TermParser();
-var formulaParser = new p.FormulaParser(termParser,
-    [s.Equivalence.factory, s.Implication.factory, s.Or.factory, s.And.factory, s.Negation.factory]);
-
-var supportedConditions = [pr.IsCollisionFreeCondition.getInstance(), pr.DoesNotContainFreeVariableCondition.getInstance(),
-    pr.OnlyContainsSpecifiedFreeVariablesCondition.getInstance()];
-
-var documentParser = new p.DocumentParser(formulaParser, termParser, supportedConditions);
-
-
-var editor = CodeMirror.fromTextArea(<HTMLTextAreaElement>document.getElementById("code"), {
-    lineNumbers: true,
-    styleActiveLine: true,
-    matchBrackets: true,
-    viewportMargin: Infinity
-});
-
-var widgetManager = new EndOfLineWidgetManager(editor);
-
-var storedWidgets: EndOfLineWidget[] = [];
-
-
-
-
-
-var update = () => {
-
-
-    editor.operation(function () {
-
-        for (var i = 0; i < storedWidgets.length; ++i)
-            widgetManager.removeLineWidget(storedWidgets[i]);
-
-        storedWidgets.length = 0;
-
-        var result = documentParser.parseStr(editor.getDoc().getValue());
-
-        var formulaBuilders: { [id: string]: pr.ProofableFormulaBuilder } = {};
-        var rules: { [id: string]: pr.Rule } = {};
+        var system = new pr.System(result);
 
         result.getDescriptions().forEach(d => {
 
-            if (d instanceof pr.AbstractAxiomDescription) {
-                formulaBuilders[d.getName()] = d.getFormulaBuilder();
-            }
-            else if (d instanceof pr.AbstractRuleDescription) {
-                var rd = <pr.RuleDescription>d;
-                rules[d.getName()] = rd.getFormulaBuilder();
+            
 
-            } else if (d instanceof pr.TheoremDescription) {
-
-                var steps: { [id: string]: pr.Step } = {};
-
+            if (d instanceof pr.TheoremDescription) {
                 var td = <pr.TheoremDescription>d;
+                
+                var text = "";
+                if (system.getIsProven(td)) {
+                    status = "proof-status-proven";
+                    text = "This theorem is proved";
+                } else {
+                    status = "proof-status-invalid";
+                    text = "This theorem is not proved";
+                }
 
-                var context = new s.ConditionContext(td.getConditions());
+                var pos = p.TextRegion.getRegionOf(td);
+                var line = pos.getStartLine() - 1;
+                var msg = document.createElement("div");
+                msg.innerHTML =  text;
+                msg.className = "proof-status " + status;
+                this.lineWidgets.push(this.editor.addLineWidget(line, msg, {
+                    coverGutter: false,
+                    noHScroll: true,
+                    above: true,
+                    showIfHidden: false
+                }));
 
-                formulaBuilders[d.getName()] = td.getFormulaBuilder();
-
-                var currentBlock = widgetManager.addAlignmentBlock();
+                var currentBlock = this.widgetManager.addAlignmentBlock();
 
                 td.getProofSteps().forEach(step => {
-                    var newStep: pr.Step;
-
-                    var ax = formulaBuilders[step.getOperation()];
-
-                    if (typeof ax !== "undefined") {
-                        if (ax === null)
-                            return;
-
-                        var args = step.getArguments().map(a => {
-                            if (a instanceof pr.StepRef) {
-                                var referencedStepName = (<pr.StepRef>a).getReferencedStep();
-                                return steps[referencedStepName].getDeductedFormula();
-                            }
-                            return a;
-                        });
-
-                        newStep = new pr.ProofableFormulaBuilderStep(ax, s.Substitution.fromValues(ax.getParameters(), args), context);
-                    } else {
-
-                        var stepArgs = step.getArguments().slice(0);
-                        var rule = rules[step.getOperation()];
-                        var providedAssumptions: pr.StepRef[] = [];
-                        rule.getAssumptions().forEach(a => {
-                            providedAssumptions.push(stepArgs.shift());
-                        });
-
-                        var providedAssumptionsSteps = providedAssumptions.map(s => steps[s.getReferencedStep()]);
-
-                        newStep = new pr.RuleStep(rule, providedAssumptionsSteps, s.Substitution.fromValues(rule.getNecessaryParameters(), stepArgs), context);
-                    }
-
-
-                    steps[step.getStepIdentifier()] = newStep;
-
-                    var hypotheses = "";
-                    if (newStep.getHypotheses().length > 0) {
-                        hypotheses = "{ " + newStep.getHypotheses().map(h => h.toString({
-                            forceParenthesis: false,
-                            parentOperatorPriority: 0,
-                            useUnicode: true
-                        })).join(", ") + " } ";
-                    }
-                    var text = newStep.getDeductedFormula().toString({
-                        forceParenthesis: false, parentOperatorPriority: 0, useUnicode: true
-                    });
-                    var pos = p.TextRegion.getRegionOf(step);
-                    var line = pos.getStartLine() - 1;
-                    var msg = document.createElement("div");
-
-                    msg.innerHTML = '<span class="hypotheses">' + hypotheses + "</span>⊢ " + text;
-                    msg.className = "proof-step-formula";
-
-                    var widget = widgetManager.addLineWidget(line, msg, currentBlock);
-                    storedWidgets.push(widget);
+                    this.processStep(system, step, currentBlock);
                 });
             }
         });
+    }
 
-    });
+    private processStep(system: pr.System, step: pr.ProofStep, currentBlock: EndOfLineWidgetManager.WidgetAlignmentBlock) {
+        
+        var realStep = system.getStep(step);
 
-};
+        var hypotheses = "";
+        if (realStep.getHypotheses().length > 0) {
+            hypotheses = "{ " + realStep.getHypotheses().map(h => h.toString({
+                forceParenthesis: false,
+                parentOperatorPriority: 0,
+                useUnicode: true
+            })).join(", ") + " } ";
+        }
+        var text = realStep.getDeductedFormula().toString({
+            forceParenthesis: false, parentOperatorPriority: 0, useUnicode: true
+        });
+        var pos = p.TextRegion.getRegionOf(step);
+        var line = pos.getStartLine() - 1;
+        var msg = document.createElement("div");
 
-setTimeout(update, 10);
+        msg.innerHTML = '<span class="hypotheses">' + hypotheses + "</span>⊢ " + text;
+        msg.className = "proof-step-formula";
+
+        var widget = this.widgetManager.addLineWidget(line, msg, currentBlock);
+        this.endOfLineWidgets.push(widget);
+    }
+}
 
 
-
-var waiting;
-editor.on("change", () => {
-    clearTimeout(waiting);
-    waiting = setTimeout(update, 500);
-});
-
-
-
-
-
+new App();

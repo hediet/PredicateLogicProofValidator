@@ -10,8 +10,8 @@ module FirstOrderPredicateLogic.Syntax {
         constructor(formulaToSubstitute: Formula, substitution: VariableWithTermSubstitution) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureTypeOf(formulaToSubstitute, Formula, "formulaToSubstitute");
-            Helper.ArgumentExceptionHelper.ensureTypeOf(substitution, VariableWithTermSubstitution, "substitution");
+            Common.ArgumentExceptionHelper.ensureTypeOf(formulaToSubstitute, Formula, "formulaToSubstitute");
+            Common.ArgumentExceptionHelper.ensureTypeOf(substitution, VariableWithTermSubstitution, "substitution");
 
             this.formulaToSubstitute = formulaToSubstitute;
             this.substitution = substitution;
@@ -65,6 +65,27 @@ module FirstOrderPredicateLogic.Syntax {
                 new VariableWithTermSubstitution(newVariableToSubstitute, newTermToInsert));
         }
 
+        public resubstitute(concreteFormula: Formula, collector: ISubstitutionCollector): void {
+            
+            if (!(concreteFormula instanceof AppliedSubstitution)) {
+                collector.addIncompatibleNodes(this, concreteFormula);
+                return;
+            }
+
+            var concreteAppliedSubstitution = <AppliedSubstitution>concreteFormula;
+
+            if (!this.substitution.getTermToInsert().equals(concreteAppliedSubstitution.substitution.getTermToInsert())) {
+                collector.addIncompatibleNodes(this, concreteFormula);
+                return;
+            }
+
+            if (!this.substitution.getVariableToSubstitute().equals(concreteAppliedSubstitution.substitution.getVariableToSubstitute())) {
+                collector.addIncompatibleNodes(this, concreteFormula);
+                return;
+            }
+            this.formulaToSubstitute.resubstitute(concreteAppliedSubstitution.formulaToSubstitute, collector);
+        }
+
         public processAppliedSubstitutions(context: ConditionContext): Formula {
 
             var result = this.formulaToSubstitute.processAppliedSubstitutions(context);
@@ -80,7 +101,7 @@ module FirstOrderPredicateLogic.Syntax {
             result.concat(this.substitution.getTermToInsert().getDeclarations());
             result.push(this.substitution.getVariableToSubstitute());
 
-            return Helper.unique(result, decl => decl.toString());
+            return Common.unique(result, decl => decl.toString());
         }
 
 
@@ -137,7 +158,7 @@ module FirstOrderPredicateLogic.Syntax {
                     .map(d => <VariableDeclaration>d);
 
                 unboundVariables = unboundVariables.filter(v => !v.equals(this.substitution.getVariableToSubstitute())).concat(termVariables);
-                return Helper.unique(unboundVariables, v => v.getName());
+                return Common.unique(unboundVariables, v => v.getName());
             }
 
             throw "In this implementation, the unbound variables cannot be obtained because this applied substitution is not collision free";

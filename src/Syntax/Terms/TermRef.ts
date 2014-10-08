@@ -7,7 +7,7 @@
         constructor(termDeclaration: TermDeclaration) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureTypeOf(termDeclaration, TermDeclaration, "termDeclaration");
+            Common.ArgumentExceptionHelper.ensureTypeOf(termDeclaration, TermDeclaration, "termDeclaration");
 
             this.termDeclaration = termDeclaration;
         }

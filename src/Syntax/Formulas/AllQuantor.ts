@@ -15,8 +15,8 @@
         constructor(boundVariable: VariableDeclaration, quantifiedFormula: Formula) {
             super();
 
-            Helper.ArgumentExceptionHelper.ensureTypeOf(boundVariable, VariableDeclaration, "boundVariable");
-            Helper.ArgumentExceptionHelper.ensureTypeOf(quantifiedFormula, Formula, "quantifiedFormula");
+            Common.ArgumentExceptionHelper.ensureTypeOf(boundVariable, VariableDeclaration, "boundVariable");
+            Common.ArgumentExceptionHelper.ensureTypeOf(quantifiedFormula, Formula, "quantifiedFormula");
 
             this.boundVariable = boundVariable;
             this.quantifiedFormula = quantifiedFormula;
@@ -61,7 +61,7 @@
         public getDeclarations(): Declaration[] {
             var result = this.quantifiedFormula.getDeclarations();
             result.push(this.boundVariable);
-            result = Helper.unique(result, r => r.getName());
+            result = Common.unique(result, r => r.getName());
             return result;
         }
 

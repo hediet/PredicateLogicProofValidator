@@ -11,7 +11,7 @@ module FirstOrderPredicateLogic.Syntax {
 
     export interface ISubstitutionCollector {
         addSubstitution(substitution: Substitution): void;
-        addIncompatibleNodes(genericFormula: Node, specialFormula: Node): void;
+        addIncompatibleNodes(genericFormula: Node, concreteFormula: Node): void;
     }
 
 
@@ -34,14 +34,21 @@ module FirstOrderPredicateLogic.Syntax {
 
     export class ConditionContext {
         
-        private conditions: Proof.AppliedCondition[];
-
-        constructor(conditions: Proof.AppliedCondition[]) {
-            this.conditions = conditions;
+        public formulaGetUnboundVariables(declaration: FormulaDeclaration): VariableDeclaration[] {
+            throw "This method is abstract";
         }
 
-        public getConditions(): Proof.AppliedCondition[] {
-            return this.conditions;
+        public formulaContainsUnboundVariable(declaration: FormulaDeclaration, variable: VariableDeclaration): boolean {
+            throw "This method is abstract";
+        }
+
+        public formulaContainsBoundVariable(declaration: FormulaDeclaration, variable: VariableDeclaration): boolean {
+            throw "This method is abstract";
+        }
+
+        public formulaIsSubstitutionCollisionFree(declaration: FormulaDeclaration,
+            substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
+            throw "This method is abstract";
         }
     }
 

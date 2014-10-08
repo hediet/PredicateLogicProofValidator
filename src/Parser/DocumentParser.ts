@@ -14,14 +14,14 @@
         }
 
         public parseStr(str: string): Proof.Document {
-            Helper.ArgumentExceptionHelper.ensureTypeOf(str, "string", "str");
+            Common.ArgumentExceptionHelper.ensureTypeOf(str, "string", "str");
 
             var t = new Tokenizer(str);
             return this.parse(t);
         }
 
         public parse(tokenizer: Tokenizer): Proof.Document {
-            Helper.ArgumentExceptionHelper.ensureTypeOf(tokenizer, Tokenizer, "tokenizer");
+            Common.ArgumentExceptionHelper.ensureTypeOf(tokenizer, Tokenizer, "tokenizer");
 
             var descriptions: Proof.Description[] = [];
 
@@ -30,20 +30,29 @@
 
                 var identifier = parserHelper.parseIdentifier(tokenizer);
 
+                var description: Proof.Description = null;
+
+                var start = tokenizer.getPosition();
+
                 if (identifier === "Axiom") {
-                    descriptions.push(this.parseAxiom(tokenizer));
+                    description = this.parseAxiom(tokenizer);
                 }
                 else if (identifier === "Theorem") {
-                    descriptions.push(this.parseTheorem(tokenizer));
+                    description = this.parseTheorem(tokenizer);
                 }
                 else if (identifier === "Rule") {
-                    descriptions.push(this.parseRule(tokenizer));
+                    description = this.parseRule(tokenizer);
                 }
                 else if (identifier === "Hypothesis") {
-                    descriptions.push(new Proof.CustomAxiomDescription(new Proof.HypothesisAxiom()));
+                    description = new Proof.CustomAxiomDescription(new Proof.HypothesisAxiom());
                 }
                 else if (identifier === "Deduction") {
-                    descriptions.push(new Proof.CustomRuleDescription(new Proof.DeductionRule()));
+                    description = new Proof.CustomRuleDescription(new Proof.DeductionRule());
+                }
+
+                if (description !== null) {
+                    TextRegion.setRegionTo(description, tokenizer.getRegion(start));
+                    descriptions.push(description);
                 }
             }
 
@@ -334,7 +343,7 @@
                             arg2.push(node);
                             parserHelper.parseWhitespace(t);
                         }
-                        args.push(new Proof.NodeArray(arg2));
+                        args.push(new Syntax.NodeArray(arg2));
                         words.push("?");
                         t.tryRead("}");
                     }
@@ -355,7 +364,7 @@
 
                 var sentence = words.join(" ");
 
-                var condition = Helper.firstOrDefault(this.supportedConditions, null, c => c.getTemplate() === sentence ? c : null);
+                var condition = Common.firstOrDefault(this.supportedConditions, null, c => c.getTemplate() === sentence ? c : null);
 
                 if (condition === null)
                     throw "Condition not found";
@@ -383,7 +392,7 @@
                     context.getVariableDeclaration(ident)
                 ];
 
-                var result = Helper.firstOrDefault(elements, null, e => e);
+                var result = Common.firstOrDefault(elements, null, e => e);
 
                 parserHelper.parseWhitespace(t);
                 t.tryRead(">");

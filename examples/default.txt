@@ -134,7 +134,7 @@ Theorem T3
         Only {} are free in (psi).
       
     Assertion:
-    	phi -> ((phi -> psi) -> psi)
+    	|- phi -> ((phi -> psi) -> psi)
         
     Proof:
     	# 1. Hypothesis(phi)
@@ -218,6 +218,7 @@ Theorem T18
 
 	Conditions:
     	Only {<xi>, <zeta>} are free in (phi).
+		(phi[zeta <- xi]) is collision free.
 
 	Assertion:
     	|- forall xi: forall zeta: phi -> forall xi: phi[zeta <- xi]
