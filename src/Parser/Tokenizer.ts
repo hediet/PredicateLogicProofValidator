@@ -5,7 +5,7 @@
         private text: string;
         private currentPosition: number = 0;
 
-        private currentLine: number = 1;
+        private currentLine: number = 0;
         private currentColumn: number = 0;
 
         constructor(text: string) {

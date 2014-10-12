@@ -16,3 +16,7 @@ declare module "Codemirror" {
 declare module "FirstOrderPredicateLogic" {
     export = FirstOrderPredicateLogic;
 }
+
+declare module "CodemirrorLint" {
+    export = text;
+}

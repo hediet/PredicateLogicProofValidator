@@ -106,9 +106,9 @@ Theorem T2
     	Let phi, psi, chi be formulas.
         
     Conditions:
-    	Only {} are free in (phi).
-        Only {} are free in (psi).
-        Only {} are free in (chi).
+		(phi) is closed.
+        (psi) is closed.
+        (chi) is closed.
         
     Assertion:
     	|- (phi -> psi) -> ((psi -> chi) -> (phi -> chi))
@@ -124,14 +124,15 @@ Theorem T2
         # 8. Deduction(@7, phi -> psi)
 }
 
+
 Theorem T3
 {
 	Symbols:
     	Let phi, psi be formulas.
         
     Conditions:
-    	Only {} are free in (phi).
-        Only {} are free in (psi).
+    	(phi) is closed.
+        (psi) is closed.
       
     Assertion:
     	|- phi -> ((phi -> psi) -> psi)
@@ -145,15 +146,15 @@ Theorem T3
 }
 
 Theorem T4
-{
+{ 
 	Symbols:
-    	Let phi, psi be formulas.
-        
+    	Let phi be a formula.
+         
     Conditions:
-    	Only {} are free in (phi).
+    	(phi) is closed.
       
     Assertion:
-    	|- !!phi -> phi
+    	|- !!phi  -> phi
         
     Proof:
     	# 1. A1(!!phi, !!!!phi)
@@ -167,6 +168,54 @@ Theorem T4
         # 9. Deduction(@8, !!phi)
 }
 
+
+Theorem T5
+{
+	Symbols:
+    	Let phi be a formula.
+        
+    Conditions:
+    	(phi) is closed.
+        
+    Assertion:
+    	|- phi -> !!phi
+        
+    Proof:
+    	# 1. A3(!!phi, phi)
+        # 2. T4(!phi)
+        # 3. MP(@2, @1)
+}
+
+
+Theorem T6
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi -> psi) -> (!psi -> !phi)
+        
+    Proof:
+    	# 1. A3(!phi, !psi)
+        # 2. Hypothesis(phi -> psi)
+        # 3. Hypothesis(!!phi)
+        # 4. T4(phi)
+        # 5. MP(@3, @4)
+        # 6. MP(@5, @2)
+        # 7. T5(psi)
+        # 8. MP(@6, @7)
+        # 9. Deduction(@8, !!phi)
+        # 10. Deduction(@9, phi -> psi)
+        # 11. MP(@2, @10)
+        # 12. MP(@11, @1)
+        # 13. Deduction(@12, phi -> psi)
+}
+
+
 Theorem T16
 {
     Symbols:
@@ -174,6 +223,9 @@ Theorem T16
 
     Conditions:
     	Only {<xi>, <zeta>} are free in (phi).
+
+	Assertion:
+    	|- forall xi: forall zeta: phi -> forall zeta: forall xi: phi
 
     Proof:
         # 1. Hypothesis(forall xi: forall zeta: phi)
@@ -196,7 +248,7 @@ Theorem T17
         Only {<xi>} are free in (psi).
 
 	Assertion:
-    	|- forall xi: (phi -> psi) -> forall xi: phi -> forall xi: psi
+    	|- forall xi: (phi -> psi) -> (forall xi: phi -> forall xi: psi)
 
     Proof:
         # 1. Hypothesis(forall xi: (phi -> psi))

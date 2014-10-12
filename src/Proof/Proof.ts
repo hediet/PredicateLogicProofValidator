@@ -1,128 +1,6 @@
 ﻿module FirstOrderPredicateLogic.Proof {
 
 
-
-
-
-
-    export class System {
-
-        private formulaBuilders: FormulaBuilder[];
-
-        constructor(document: Document) {
-
-            var formulaBuilders: { [id: string]: FormulaBuilder } = {};
-
-            document.getDescriptions().forEach(d => {
-
-                if (d instanceof AbstractAxiomDescription) {
-                    var formulaBuilder = d.getFormulaBuilder();
-                    (<any>d).__system_formulaBuilder = formulaBuilder;
-                    formulaBuilders[d.getName()] = formulaBuilder;
-                }
-                else if (d instanceof AbstractRuleDescription) {
-                    var rule = d.getFormulaBuilder();
-                    (<any>d).__system_formulaBuilder = rule;
-                    formulaBuilders[d.getName()] = rule;
-
-                } else if (d instanceof TheoremDescription) {
-
-                    var steps: { [id: string]: Step } = {};
-
-                    var td = <TheoremDescription>d;
-
-                    var context = new ConditionContext(td.getConditions());
-
-                    formulaBuilders[d.getName()] = td.getFormulaBuilder();
-
-                    td.getProofSteps().forEach(step => {
-                        var newStep: Step;
-
-                        var referencedOperation = formulaBuilders[step.getOperation()];
-
-                        if (referencedOperation instanceof ProofableFormulaBuilder) {
-                            var referencedFormulaBuilder = <ProofableFormulaBuilder>referencedOperation;
-
-                            var args = step.getArguments().map(a => {
-                                if (a instanceof StepRef) {
-                                    var referencedStepName = (<StepRef>a).getReferencedStep();
-                                    return steps[referencedStepName].getDeductedFormula();
-                                }
-                                return a;
-                            });
-
-                            newStep = new ProofableFormulaBuilderStep(referencedFormulaBuilder,
-                                Syntax.Substitution.fromValues(referencedFormulaBuilder.getParameters(), args), context);
-                        } else if (referencedOperation instanceof Rule) {
-                            var referencedRule = <Rule>referencedOperation;
-
-                            var stepArgs = step.getArguments().slice(0);
-                            var providedAssumptions: StepRef[] = [];
-                            referencedRule.getAssumptions().forEach(a => {
-                                providedAssumptions.push(stepArgs.shift());
-                            });
-
-                            var providedAssumptionsSteps = providedAssumptions.map(s => steps[s.getReferencedStep()]);
-
-                            newStep = new RuleStep(referencedRule, providedAssumptionsSteps,
-                                Syntax.Substitution.fromValues(referencedRule.getNecessaryParameters(), stepArgs), context);
-                        } else
-                            throw "Referenced operation is not supported";
-
-                        (<any>step).__system_step = newStep;
-                        steps[step.getStepIdentifier()] = newStep;
-                    });
-                }
-            });
-        }
-
-
-
-
-        public getFormulaBuilders(): FormulaBuilder[] {
-            return this.formulaBuilders;
-        }
-
-        public getFormulaBuilder(description: Description) {
-            return (<any>description).__system_formulaBuilder;
-        }
-
-        public getStep(step: ProofStep): Step {
-            return (<any>step).__system_step;
-        }
-
-
-        public getIsProven(theorem: TheoremDescription) {
-
-            var steps = theorem.getProofSteps();
-            var lastStep = steps[steps.length - 1];
-            var realStep = this.getStep(lastStep);
-
-            var assertion = theorem.getAssertion();
-
-            if (realStep.getHypotheses().length > 0)
-                return false;
-
-            return realStep.getDeductedFormula().equals(assertion);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     export class FormulaBuilder {
 
         private name: string;
@@ -269,7 +147,7 @@
 
             pfb.getConditions().forEach(c => {
                 if (!c.check(this.args, context))
-                    throw "condition not met!";
+                    throw "condition '" + c.getCondition().getName() + "' not met!";
             });
 
             this.context = context;
@@ -315,7 +193,7 @@
             });
 
             if (substService.getIsError())
-                throw "substitution error!";
+                throw "substitution error: " + substService.getConflicts().map(c => c.toString()).join(", ");
 
             var newArgs: Syntax.Substitution[] = [];
             var indexedArgs: { [id: string]: Syntax.Substitution } = {};
@@ -339,7 +217,7 @@
 
                 if (indexedArgs.hasOwnProperty(arg.getDeclarationToSubstitute().getName())) {
                     if (!indexedArgs[name].equals(arg))
-                        throw "substitution error";
+                        throw "substitution error"; //should not happen if only necessary arguments are provided
                 } else {
                     newArgs.push(arg);
                 }
@@ -371,15 +249,56 @@
         }
     }
 
+    class SubstitutionConflict {
+        public toString(): string {
+            throw "abstract";
+        }
+    }
 
+    class IncompatibleNodeConflict {
+        constructor(private genericFormula: Syntax.Formula, private concreteFormula: Syntax.Formula) {
+        }
+
+        public toString(): string {
+            return "Cannot insert '" + this.concreteFormula + "' into '" + this.genericFormula + "'";
+        }
+    }
+
+    class SubstituteWithDifferentElements {
+        
+        constructor(private declaration: Syntax.Declaration,
+            private elementsToInsert: Syntax.Node[]) {
+        }
+
+        public toString(): string {
+            return "Cannot substitute '" + this.declaration + "' with " +
+                this.elementsToInsert.map(e => "'" + e.toString() + "'").join(" and ") + " at the same time.";
+        }
+    }
 
     class SubstitutionCollector implements Syntax.ISubstitutionCollector {
 
-        private error: boolean;
-        private substitutions: { [id: string]: Syntax.Substitution } = {};
+        private substitutions: { [id: string]: Syntax.Substitution[] } = {};
+
+        private conflicts: IncompatibleNodeConflict[] = [];
+        private isError: boolean;
 
         public getIsError(): boolean {
-            return this.error;
+            return this.isError;
+        }
+
+        public getConflicts(): SubstitutionConflict[] {
+            var result: SubstitutionConflict[] = this.conflicts;
+
+            for (var propt in this.substitutions) {
+                if ((this.substitutions[propt].length > 1)) {
+                    result.push(new SubstituteWithDifferentElements(
+                        this.substitutions[propt][0].getDeclarationToSubstitute(),
+                        this.substitutions[propt].map(s => s.getElementToInsert())));
+                }
+            }
+
+            return result;
         }
 
         public getSubstitutions(): Syntax.Substitution[] {
@@ -387,7 +306,7 @@
             var result: Syntax.Substitution[] = [];
 
             for (var propt in this.substitutions) {
-                result.push(this.substitutions[propt]);
+                result.push(this.substitutions[propt][0]);
             }
 
             return result;
@@ -396,17 +315,19 @@
         public addSubstitution(substitution: Syntax.Substitution) {
 
             var name = substitution.getDeclarationToSubstitute().getName();
-            var oldSubst = this.substitutions[name];
+            var oldSubsts = this.substitutions[name];
 
-            if (typeof oldSubst === "undefined") {
-                this.substitutions[name] = substitution;
-            } else if (!substitution.equals(oldSubst)) {
-                this.error = true;
+            if (typeof oldSubsts === "undefined") {
+                this.substitutions[name] = [substitution];
+            } else if (!oldSubsts.some(s => substitution.equals(s))) {
+                this.isError = true;
+                oldSubsts.push(substitution);
             }
         }
 
-        public addIncompatibleNodes(genericFormula: Syntax.Formula, specialFormula: Syntax.Formula) {
-            this.error = true;
+        public addIncompatibleNodes(genericFormula: Syntax.Formula, concreteFormula: Syntax.Formula) {
+            this.isError = true;
+            this.conflicts.push(new IncompatibleNodeConflict(genericFormula, concreteFormula));
         }
     }
 

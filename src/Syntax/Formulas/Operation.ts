@@ -3,6 +3,12 @@ module FirstOrderPredicateLogic.Syntax {
 
     export class Operation extends Formula {
 
+
+        public static getAvailableOperations() {
+            return [Equivalence.factory, Implication.factory, Or.factory, And.factory, Negation.factory];
+        }
+
+
         private operationFactory: IOperationFactory;
         private args: Formula[];
 

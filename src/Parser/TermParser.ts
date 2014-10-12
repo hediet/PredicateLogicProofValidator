@@ -1,9 +1,8 @@
 ﻿ module FirstOrderPredicateLogic.Parser {
      
-
      export class TermParser {
          
-         public parseTerm(t: Tokenizer, context: IParserContext): Syntax.Term {
+         public parseTerm(t: Tokenizer, context: IParserContext, logger: ParserLogger): Syntax.Term {
 
 
              parserHelper.parseWhitespace(t);
@@ -15,19 +14,25 @@
              if (identifier === null)
                  t.read();// to prevent endless loops
 
-             var funcDecl = context.getFunctionDeclaration(identifier);
+             var funcDecl = context.getFunctionDeclaration(identifier.getIdentifier());
+
+             var result: Syntax.Term = null;
 
              if (funcDecl == null) { // the identifier is a variable or a term
 
-                 var termDecl = context.getTermDeclaration(identifier);
+                 var termDecl = context.getTermDeclaration(identifier.getIdentifier());
 
                  if (termDecl !== null) {
-                     return new Syntax.TermRef(termDecl);
+                     result = new Syntax.TermRef(termDecl);
+                 } else {
+                     var decl = context.getVariableDeclaration(identifier.getIdentifier());
+                     result = new Syntax.VariableRef(decl);
                  }
 
-                 var decl = context.getVariableDeclaration(identifier);
-
-                 return new Syntax.VariableRef(decl);
+                 if (result !== null) {
+                     TextRegion.setRegionTo(result, TextRegion.getRegionOf(identifier));
+                     return result;
+                 }
              }
 
 
@@ -53,7 +58,7 @@
                      }
                      first = false;
 
-                     var term = this.parseTerm(t, context);
+                     var term = this.parseTerm(t, context, logger);
                      arguments.push(term);
 
                      parserHelper.parseWhitespace(t);

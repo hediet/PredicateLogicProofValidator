@@ -12,18 +12,22 @@
              return tokenizer.readWhile(c => this.whitespace.indexOf(c) !== -1);
          }
 
-         public parseIdentifier(tokenizer: Tokenizer): string {
+         public parseIdentifier(tokenizer: Tokenizer, restrictFirstLetter: boolean = true): Proof.IdentifierElement {
+
+             var firstLetters = restrictFirstLetter ? this.letters : this.lettersAndNumbers;
 
              var p = tokenizer.getPosition();
              var identifier = tokenizer.read();
-             if (this.letters.indexOf(identifier) === -1) {
+             if (firstLetters.indexOf(identifier) === -1) {
                  tokenizer.gotoPosition(p);
                  return null;
              }
 
              identifier += tokenizer.readWhile(s => this.lettersAndNumbers.indexOf(s) !== -1);
 
-             return identifier;
+             var identifierElement = new Proof.IdentifierElement(identifier);
+             TextRegion.setRegionTo(identifierElement, tokenizer.getRegion(p));
+             return identifierElement;
          }
      }
 

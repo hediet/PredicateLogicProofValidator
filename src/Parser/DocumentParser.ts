@@ -5,192 +5,283 @@
 
         private formulaParser: FormulaParser;
         private termParser: TermParser;
-        private supportedConditions: Proof.ICondition[];
+        private supportedConditions: Proof.Condition[];
 
-        constructor(formulaParser: FormulaParser, termParser: TermParser, supportedConditions: Proof.ICondition[]) {
+        constructor(formulaParser: FormulaParser, termParser: TermParser, supportedConditions: Proof.Condition[]) {
             this.formulaParser = formulaParser;
             this.termParser = termParser;
             this.supportedConditions = supportedConditions;
         }
 
-        public parseStr(str: string): Proof.Document {
+        public parseStr(str: string, logger: ParserLogger): Proof.Document {
             Common.ArgumentExceptionHelper.ensureTypeOf(str, "string", "str");
 
             var t = new Tokenizer(str);
-            return this.parse(t);
+            return this.parse(t, logger);
         }
 
-        public parse(tokenizer: Tokenizer): Proof.Document {
+        public parse(tokenizer: Tokenizer, logger: ParserLogger): Proof.Document {
             Common.ArgumentExceptionHelper.ensureTypeOf(tokenizer, Tokenizer, "tokenizer");
 
             var descriptions: Proof.Description[] = [];
 
-            while (tokenizer.peek() !== "") {
-                parserHelper.parseWhitespace(tokenizer);
+            parserHelper.parseWhitespace(tokenizer);
 
+            while (tokenizer.peek() !== "") {
+                var start = tokenizer.getPosition();
                 var identifier = parserHelper.parseIdentifier(tokenizer);
 
-                var description: Proof.Description = null;
+                var availableDescriptions: { [id: string]: () => Proof.Description } = {
+                    "Axiom": () => this.parseAxiom(tokenizer, logger),
+                    "Rule": () => this.parseRule(tokenizer, logger),
+                    "Theorem": () => this.parseTheorem(tokenizer, logger),
+                    "Hypothesis": () => new Proof.CustomAxiomDescription(new Proof.HypothesisAxiom()),
+                    "Deduction": () => new Proof.CustomRuleDescription(new Proof.DeductionRule())
+                };
 
-                var start = tokenizer.getPosition();
+                var parseFunction = identifier === null ? undefined : availableDescriptions[identifier.getIdentifier()];
 
-                if (identifier === "Axiom") {
-                    description = this.parseAxiom(tokenizer);
-                }
-                else if (identifier === "Theorem") {
-                    description = this.parseTheorem(tokenizer);
-                }
-                else if (identifier === "Rule") {
-                    description = this.parseRule(tokenizer);
-                }
-                else if (identifier === "Hypothesis") {
-                    description = new Proof.CustomAxiomDescription(new Proof.HypothesisAxiom());
-                }
-                else if (identifier === "Deduction") {
-                    description = new Proof.CustomRuleDescription(new Proof.DeductionRule());
-                }
+                if (typeof parseFunction === "undefined") {
 
-                if (description !== null) {
+                    var butGot: string;
+                    if (identifier === null)
+                        butGot = tokenizer.readWhile(c => (parserHelper.whitespace.indexOf(c) === -1) && (parserHelper.letters.indexOf(c) === -1));
+                    else
+                        butGot = identifier.getIdentifier();
+
+                    logger.logError("Expected a type identifier, but got '" + butGot + "'", tokenizer.getRegion(start));
+                } else {
+                    var description = parseFunction();
                     TextRegion.setRegionTo(description, tokenizer.getRegion(start));
                     descriptions.push(description);
                 }
+
+                parserHelper.parseWhitespace(tokenizer);
             }
 
             return new Proof.Document(descriptions);
         }
 
 
+        private expect(t: Tokenizer, l: ParserLogger, text: string) {
+            if (!t.tryRead(text)) {
+                l.logError("Expected '" + text + "'", t.getRegion(t.getPosition()));
+            }
+        }
 
+        private parseSection(t: Tokenizer, l: ParserLogger, availableSections: { [id: string]: (sectionTextRegion: TextRegion) => void }) {
 
+            this.expect(t, l, "{");
 
-        private parseRule(t: Tokenizer): Proof.RuleDescription {
-            parserHelper.parseWhitespace(t);
-
-            var declarations: Syntax.Declaration[] = [];
-            var conclusion: Syntax.Formula = null;
-            var assumptions: Syntax.Formula[] = [];
-            var conditions: Proof.AppliedCondition[] = [];
-
-            var name = parserHelper.parseIdentifier(t);
-            parserHelper.parseWhitespace(t);
-
-
-            t.tryRead("{");
             parserHelper.parseWhitespace(t);
 
             while (t.peek() !== "" && t.peek() !== "}") {
 
-                var s = this.readNextSection(t);
+                var s = this.readNextSection(t, l);
 
                 if (s === null) {
-                    t.readWhile(c => parserHelper.letters.indexOf(c) === -1);
+                    var butGotStart = t.getPosition();
+                    var butGot = t.readWhile(c => parserHelper.letters.indexOf(c) === -1
+                        && c !== "}" && parserHelper.whitespace.indexOf(c) === -1);
+                    l.logError("Expected a section or '}', but got '" + butGot + "'", t.getRegion(butGotStart));
                     continue;
                 }
 
-                if (s === "Symbols") {
-                    declarations = this.parseSymbols(t);
+                var sectionParseFunction = availableSections[s.getIdentifier()];
+
+                if (typeof sectionParseFunction === "undefined") {
+                    l.logError("Unknown section '" + s.getIdentifier() + "'", TextRegion.getRegionOf(s));
                 }
-                else if (s === "Conclusion") {
+                else
+                    sectionParseFunction(TextRegion.getRegionOf(s));
+
+                parserHelper.parseWhitespace(t);
+            }
+
+            this.expect(t, l, "}");
+        }
+
+        private emptyArrayIfNull<T>(arr: T[]): T[] {
+            if (arr === null)
+                return [];
+            return arr;
+        }
+
+        private parseAxiom(t: Tokenizer, l: ParserLogger): Proof.AxiomDescription {
+
+            parserHelper.parseWhitespace(t);
+
+            var declarations: Syntax.Declaration[] = null;
+            var assertion: Syntax.Formula = null;
+            var conditions: Proof.AppliedCondition[] = null;
+            var name = parserHelper.parseIdentifier(t);
+
+            if (name === null) {
+                l.logError("Axiom must have a name", t.getRegion(t.getPosition()));
+            }
+
+            parserHelper.parseWhitespace(t);
+
+            var availableSections: { [id: string]: (t: TextRegion) => void } = {
+                "Symbols": (sectionRegion) => {
+                    declarations = this.parseSymbols(t, l);
+                    if (conditions !== null || assertion !== null) {
+                        l.logError("Symbols must be defined first", sectionRegion);
+                    }
+                },
+                "Assertion": () => {
                     parserHelper.parseWhitespace(t);
                     t.tryRead("|-");
                     var context = new Parser.ParserContext(declarations);
-
-                    var start = t.getPosition();
-                    conclusion = this.formulaParser.parseFormula(t, context);
-                    TextRegion.setRegionTo(conclusion, t.getRegion(start));
+                    assertion = this.formulaParser.parseFormula(t, context, l);
+                },
+                "Conditions": (sectionRegion) => {
+                    var context = new Parser.ParserContext(declarations);
+                    conditions = this.parseConditions(t, context, l);
+                    if (assertion !== null) {
+                        l.logError("Conditions must be defined before the assertion", sectionRegion);
+                    }
                 }
-                else if (s === "Assumptions") {
+            };
+
+            this.parseSection(t, l, availableSections);
+
+            return new Proof.AxiomDescription(name, this.emptyArrayIfNull(declarations),
+                assertion, this.emptyArrayIfNull(conditions));
+        }
+
+
+        private parseRule(t: Tokenizer, l: ParserLogger): Proof.RuleDescription {
+            parserHelper.parseWhitespace(t);
+
+            var declarations: Syntax.Declaration[] = null;
+            var conclusion: Syntax.Formula = null;
+            var assumptions: Syntax.Formula[] = null;
+            var conditions: Proof.AppliedCondition[] = null;
+            var name = parserHelper.parseIdentifier(t);
+
+            if (name === null) {
+                l.logError("Rule must have a name", t.getRegion(t.getPosition()));
+            }
+
+            parserHelper.parseWhitespace(t);
+
+            var availableSections: { [id: string]: (region: TextRegion) => void } = {
+                "Symbols": (sectionRegion) => {
+                    declarations = this.parseSymbols(t, l);
+                    if (conditions !== null || conclusion !== null || assumptions !== null) {
+                        l.logError("Symbols must be defined first", TextRegion.getRegionOf(sectionRegion));
+                    }
+                },
+                "Conditions": (sectionRegion) => {
+                    var context = new Parser.ParserContext(declarations);
+                    conditions = this.parseConditions(t, context, l);
+                    if (conclusion !== null && assumptions !== null) {
+                        l.logError("Conditions must be defined before assumptions or the conclusion",
+                            TextRegion.getRegionOf(sectionRegion));
+                    }
+                },
+                "Assumptions": (sectionRegion) => {
                     parserHelper.parseWhitespace(t);
+
+                    assumptions = [];
 
                     while (t.tryRead("|-")) {
 
                         parserHelper.parseWhitespace(t);
                         var context = new Parser.ParserContext(declarations);
-                        var assumption = this.formulaParser.parseFormula(t, context);
+                        var assumption = this.formulaParser.parseFormula(t, context, l);
                         assumptions.push(assumption);
 
                         parserHelper.parseWhitespace(t);
                     }
+                    if (conclusion !== null) {
+                        l.logError("Assumptions must be defined before the conclusion",
+                            TextRegion.getRegionOf(sectionRegion));
+                    }
+                },
+                "Conclusion": () => {
+                    parserHelper.parseWhitespace(t);
+                    this.expect(t, l, "|-");
+                    var context = new Parser.ParserContext(declarations);
+                    conclusion = this.formulaParser.parseFormula(t, context, l);
                 }
-                else if (s === "Conditions") {
-                    conditions = this.parseConditions(t, context);
-                } else break;
+            };
 
-                parserHelper.parseWhitespace(t);
-            }
+            this.parseSection(t, l, availableSections);
 
-            t.tryRead("}");
-
-            return new Proof.RuleDescription(name, declarations, assumptions, conclusion, conditions);
+            return new Proof.RuleDescription(name, this.emptyArrayIfNull(declarations),
+                this.emptyArrayIfNull(assumptions),
+                conclusion, this.emptyArrayIfNull(conditions));
         }
 
-        private parseTheorem(t: Tokenizer): Proof.TheoremDescription {
+        private parseTheorem(t: Tokenizer, l: ParserLogger): Proof.TheoremDescription {
 
             parserHelper.parseWhitespace(t);
 
-            var name = null;
-            var declarations: Syntax.Declaration[] = [];
+            var name: Proof.IdentifierElement = null;
+            var declarations: Syntax.Declaration[] = null;
             var assertion: Syntax.Formula = null;
-            var steps: Proof.ProofStep[] = [];
-            var conditions: Proof.AppliedCondition[] = [];
+            var steps: Proof.ProofStep[] = null;
+            var conditions: Proof.AppliedCondition[] = null;
 
             if (t.peek() !== "{") {
                 name = parserHelper.parseIdentifier(t);
                 parserHelper.parseWhitespace(t);
             }
 
-            t.tryRead("{");
-            parserHelper.parseWhitespace(t);
-
-            while (t.peek() !== "" && t.peek() !== "}") {
-
-                var s = this.readNextSection(t);
-
-                if (s === null) {
-                    t.readWhile(c => parserHelper.letters.indexOf(c) === -1);
-                    continue;
-                }
-
-                if (s === "Symbols") {
-                    declarations = this.parseSymbols(t);
-                }
-                else if (s === "Assertion") {
-                    parserHelper.parseWhitespace(t);
-                    t.tryRead("|-");
+            var availableSections: { [id: string]: (region: TextRegion) => void } = {
+                "Symbols": (sectionRegion) => {
+                    declarations = this.parseSymbols(t, l);
+                    if (conditions !== null || steps !== null || assertion !== null) {
+                        l.logError("Symbols must be defined first", TextRegion.getRegionOf(sectionRegion));
+                    }
+                },
+                "Conditions": (sectionRegion) => {
                     var context = new Parser.ParserContext(declarations);
-
-                    var start = t.getPosition();
-                    assertion = this.formulaParser.parseFormula(t, context);
-                    TextRegion.setRegionTo(assertion, t.getRegion(start));
-                }
-                else if (s === "Proof") {
+                    conditions = this.parseConditions(t, context, l);
+                    if (steps !== null && assertion !== null) {
+                        l.logError("Conditions must be defined before the assertions or the proof",
+                            TextRegion.getRegionOf(sectionRegion));
+                    }
+                },
+                "Assertion": (sectionRegion) => {
                     parserHelper.parseWhitespace(t);
+                    this.expect(t, l, "|-");
+                    var context = new Parser.ParserContext(declarations);
+                    assertion = this.formulaParser.parseFormula(t, context, l);
+
+                    if (steps !== null) {
+                        l.logError("Assertion must be defined before the proof",
+                            TextRegion.getRegionOf(sectionRegion));
+                    }
+                },
+                "Proof": () => {
+                    parserHelper.parseWhitespace(t);
+
+                    steps = [];
 
                     while (t.peek() !== "") {
 
                         var context = new Parser.ParserContext(declarations);
-                        var step = this.parseProofStep(t, context);
+                        var step = this.parseProofStep(t, context, l);
 
                         if (step === null)
                             break;
                         steps.push(step);
                     }
                 }
-                else if (s === "Conditions") {
-                    var context = new Parser.ParserContext(declarations);
-                    conditions = this.parseConditions(t, context);
-                }
+            };
 
-                parserHelper.parseWhitespace(t);
-            }
+            this.parseSection(t, l, availableSections);
 
-            t.tryRead("}");
-
-            return new Proof.TheoremDescription(name, declarations, assertion, steps, conditions);
+            return new Proof.TheoremDescription(name,
+                this.emptyArrayIfNull(declarations), assertion,
+                this.emptyArrayIfNull(steps), this.emptyArrayIfNull(conditions));
         }
 
 
-        private parseProofStep(t: Tokenizer, context: IParserContext): Proof.ProofStep {
+        private parseProofStep(t: Tokenizer, context: IParserContext, l: ParserLogger): Proof.ProofStep {
 
             parserHelper.parseWhitespace(t);
 
@@ -201,9 +292,12 @@
 
             parserHelper.parseWhitespace(t);
 
-            var stepIdent = t.readWhile(c => parserHelper.lettersAndNumbers.indexOf(c) !== -1);
+            var stepIdent = parserHelper.parseIdentifier(t, false);
+            if (stepIdent === null) {
+                l.logError("Each step must have an identifier", t.getRegion(start));
+            }
 
-            t.tryRead(".");
+            this.expect(t, l, ".");
 
             parserHelper.parseWhitespace(t);
             var operation = parserHelper.parseIdentifier(t);
@@ -227,14 +321,14 @@
 
                     parserHelper.parseWhitespace(t);
 
-                    var argument: any = null;
+                    var argument: any;
 
                     if (t.tryRead("@")) {
-                        var ref = t.readWhile(c => parserHelper.lettersAndNumbers.indexOf(c) !== -1);
+                        var ref = parserHelper.parseIdentifier(t, false);
                         argument = new Proof.StepRef(ref);
 
                     } else {
-                        argument = this.parseNode(t, context);
+                        argument = this.parseNode(t, context, l);
                     }
 
                     args.push(argument);
@@ -242,8 +336,7 @@
                     parserHelper.parseWhitespace(t);
                 }
 
-
-                t.tryRead(")");
+                this.expect(t, l, ")");
             }
 
             var step = new Proof.ProofStep(stepIdent, operation, args);
@@ -253,72 +346,21 @@
         }
 
 
-        private parseAxiom(t: Tokenizer): Proof.AxiomDescription {
-
-            parserHelper.parseWhitespace(t);
-
-            var name = null;
-            var declarations: Syntax.Declaration[] = [];
-            var assertion: Syntax.Formula = null;
-            var conditions: Proof.AppliedCondition[] = [];
-
-            if (t.peek() !== "{") {
-                name = parserHelper.parseIdentifier(t);
-                parserHelper.parseWhitespace(t);
-            }
-
-            t.tryRead("{");
-            parserHelper.parseWhitespace(t);
-
-            while (t.peek() !== "" && t.peek() !== "}") {
-
-                var s = this.readNextSection(t);
-
-                if (s === null) {
-                    t.readWhile(c => parserHelper.letters.indexOf(c) === -1);
-                    continue;
-                }
-
-                if (s === "Symbols") {
-                    declarations = this.parseSymbols(t);
-                }
-                else if (s === "Assertion") {
-                    parserHelper.parseWhitespace(t);
-                    t.tryRead("|-");
-                    var context = new Parser.ParserContext(declarations);
-
-                    var start = t.getPosition();
-                    assertion = this.formulaParser.parseFormula(t, context);
-                    var region = t.getRegion(start);
-                    (<any>assertion).getTextRegion = () => region;
-                }
-                else if (s === "Conditions") {
-                    var context = new Parser.ParserContext(declarations);
-                    conditions = this.parseConditions(t, context);
-                }
-
-                parserHelper.parseWhitespace(t);
-            }
-
-            t.tryRead("}");
-
-            return new Proof.AxiomDescription(name, declarations, assertion, conditions);
-        }
-
-
-        private parseConditions(t: Tokenizer, context: IParserContext): Proof.AppliedCondition[] {
+        private parseConditions(t: Tokenizer, context: IParserContext, l: ParserLogger): Proof.AppliedCondition[] {
 
             var result: Proof.AppliedCondition[] = [];
 
+            parserHelper.parseWhitespace(t);
+
             while (t.peek() !== "") {
 
-                var p = t.getPosition();
+                var startPos = t.getPosition();
                 parserHelper.parseIdentifier(t);
                 if (t.tryRead(":")) {
-                    t.gotoPosition(p);
+                    t.gotoPosition(startPos);
                     break;
                 }
-                t.gotoPosition(p);
+                t.gotoPosition(startPos);
 
                 var args: Syntax.Node[] = [];
                 var words: string[] = [];
@@ -339,7 +381,7 @@
                             } else
                                 first = false;
 
-                            var node = this.parseNode(t, context);
+                            var node = this.parseNode(t, context, l);
                             arg2.push(node);
                             parserHelper.parseWhitespace(t);
                         }
@@ -348,7 +390,7 @@
                         t.tryRead("}");
                     }
                     else if (["<", "[", "("].indexOf(t.peek()) !== -1) {
-                        var arg = this.parseNode(t, context);
+                        var arg = this.parseNode(t, context, l);
                         args.push(arg);
                         words.push("?");
                     } else {
@@ -357,139 +399,229 @@
                         if (ident === null)
                             t.read();
                         else {
-                            words.push(ident);
+                            words.push(ident.getIdentifier());
                         }
                     }
                 }
+
+                this.expect(t, l, ".");
 
                 var sentence = words.join(" ");
 
                 var condition = Common.firstOrDefault(this.supportedConditions, null, c => c.getTemplate() === sentence ? c : null);
 
-                if (condition === null)
-                    throw "Condition not found";
+                var region = t.getRegion(startPos);
 
-                result.push(new Proof.AppliedCondition(condition, args));
+                if (condition === null) {
+                    var min = Infinity;
+                    var didYouMean: Proof.Condition;
+                    this.supportedConditions.forEach(c => {
+                        var d = Common.getEditDistance(sentence, c.getTemplate());
+                        if (d < min) {
+                            min = d;
+                            didYouMean = c;
+                        }
+                    });
+                    
 
-                t.tryRead(".");
+                    l.logError("Condition not found, did you mean '" + didYouMean.getTemplate() + "'", region);
+                } else {
+                    var cancel = false;
+                    condition.getParameterTypes().forEach((type, idx) => {
+                        var arg = args[idx];
+
+                        if (arg == null) {
+                            l.logError("Argument '" + idx + "' is not defined", region);
+                            cancel = true;
+                        }
+                        else if (type instanceof Common.ArrayType) {
+                            var arrType = <Common.ArrayType>type; //TODO write recursive check function or enhance the type system
+                            if (!(arg instanceof Syntax.NodeArray)) {
+                                l.logError("Argument must be an array", TextRegion.getRegionOf(arg));
+                                cancel = true;
+                            }
+                            var arr = <Syntax.NodeArray>arg;
+                            arr.getItems().forEach(element => {
+                                if (element == null) {
+                                    l.logError("Argument '" + idx + "' is not defined", region);
+                                    cancel = true;
+                                }
+                                else if (!(element instanceof arrType.getItemType())) {
+                                    l.logError("Argument must be type of '" + arrType.getItemType() + "'", TextRegion.getRegionOf(element));
+                                    cancel = true;
+                                }
+                            });
+                        } else {
+                            if (!(arg instanceof type)) {
+                                l.logError("Argument must be type of '" + type + "'", TextRegion.getRegionOf(arg));
+                                cancel = true;
+                            }
+                        }
+                    });
+                    if (!cancel) {
+                        var appliedCondition = new Proof.AppliedCondition(condition, args);
+                        TextRegion.setRegionTo(appliedCondition, region);
+                        result.push(appliedCondition);
+                    }
+                }
+
                 parserHelper.parseWhitespace(t);
             }
-
 
             return result;
         }
 
-        private parseNode(t: Tokenizer, context: IParserContext): Syntax.Node {
+        private parseNode(t: Tokenizer, context: IParserContext, l: ParserLogger): Syntax.Node {
 
             if (t.tryRead("<")) {
 
                 parserHelper.parseWhitespace(t);
 
-                var ident = parserHelper.parseIdentifier(t);
-                var elements: Syntax.Node[] = [
-                    context.getFormulaDeclaration(ident), context.getFunctionDeclaration(ident),
-                    context.getPredicateDeclaration(ident), context.getTermDeclaration(ident),
-                    context.getVariableDeclaration(ident)
-                ];
+                var result: Syntax.Node = null;
 
-                var result = Common.firstOrDefault(elements, null, e => e);
+                var identifier = parserHelper.parseIdentifier(t);
+                if (identifier === null) {
+                    l.logError("Expected identifier", t.getRegion(t.getPosition()));
+                } else {
+                    var identValue = identifier.getIdentifier();
+                    var elements: Syntax.Node[] = [
+                        context.getFormulaDeclaration(identValue), context.getFunctionDeclaration(identValue),
+                        context.getPredicateDeclaration(identValue), context.getTermDeclaration(identValue),
+                        context.getVariableDeclaration(identValue)
+                    ];
 
-                parserHelper.parseWhitespace(t);
-                t.tryRead(">");
+                    result = Common.firstOrDefault(elements, null, e => e);
+
+                    parserHelper.parseWhitespace(t);
+                }
+                this.expect(t, l, ">");
 
                 return result;
             }
             else if (t.tryRead("[")) {
                 parserHelper.parseWhitespace(t);
-
-                var result2 = this.termParser.parseTerm(t, context);
-
+                var result2 = this.termParser.parseTerm(t, context, l);
                 parserHelper.parseWhitespace(t);
-                t.tryRead("]");
-
+                this.expect(t, l, "]");
                 return result2;
             }
 
-            return this.formulaParser.parseFormula(t, context);
+            return this.formulaParser.parseFormula(t, context, l);
         }
 
-        private parseSymbols(tokenizer: Tokenizer): Syntax.Declaration[] {
+        private parseSymbols(t: Tokenizer, l: ParserLogger): Syntax.Declaration[] {
 
-            parserHelper.parseWhitespace(tokenizer);
+            parserHelper.parseWhitespace(t);
 
             var result: Syntax.Declaration[] = [];
 
-            while (tokenizer.peek() !== "") {
+            while (t.peek() !== "" && t.peek() !== "}") {
 
-                var symbols: string[] = [];
+                var symbols: { identifier: Proof.IdentifierElement; arity: number }[] = [];
 
-                var p = tokenizer.getPosition();
-                var identifier = parserHelper.parseIdentifier(tokenizer);
-                if (tokenizer.peek() === ":") {
-                    tokenizer.gotoPosition(p);
+                var p = t.getPosition();
+                var ident = parserHelper.parseIdentifier(t);
+                if (t.peek() === ":") {
+                    t.gotoPosition(p);
                     break;
                 }
+                t.gotoPosition(p);
 
-                //assert identifier == "let"
+                this.expect(t, l, "Let");
 
                 var first = true;
 
-                while (tokenizer.peek() !== "" && tokenizer.peek() !== "}") {
-                    parserHelper.parseWhitespace(tokenizer);
+                while (t.peek() !== "" && t.peek() !== "}") {
+                    parserHelper.parseWhitespace(t);
                     if (!first) {
-                        if (!tokenizer.tryRead(","))
+                        if (!t.tryRead(","))
                             break;
-                        parserHelper.parseWhitespace(tokenizer);
+                        parserHelper.parseWhitespace(t);
                     } else
                         first = false;
 
-                    var identifier = parserHelper.parseIdentifier(tokenizer);
-                    symbols.push(identifier);
+                    var ident = parserHelper.parseIdentifier(t, false);
+                    parserHelper.parseWhitespace(t);
+
+                    var arity = null;
+                    if (t.tryRead("(")) {
+                        parserHelper.parseWhitespace(t);
+                        arity = t.readWhile(c => parserHelper.numbers.indexOf(c) !== -1);
+                        this.expect(t, l, ")");
+                    }
+
+                    symbols.push({ identifier: ident, arity: arity });
                 }
 
-                parserHelper.parseWhitespace(tokenizer);
-                tokenizer.tryRead("be");
-                parserHelper.parseWhitespace(tokenizer);
+                parserHelper.parseWhitespace(t);
+                this.expect(t, l, "be");
+                parserHelper.parseWhitespace(t);
 
-                var identifier: string = null;
+                var identifier: Proof.IdentifierElement = null;
+                var strIdentifier: string = null;
 
                 if (symbols.length === 1) {
-                    tokenizer.tryRead("a");
-                    parserHelper.parseWhitespace(tokenizer);
-                    identifier = parserHelper.parseIdentifier(tokenizer);
+                    t.tryRead("a");
+                    parserHelper.parseWhitespace(t);
+                    identifier = parserHelper.parseIdentifier(t);
+                    if (identifier !== null)
+                        strIdentifier = identifier.getIdentifier();
 
                 } else {
-                    identifier = parserHelper.parseIdentifier(tokenizer);
+                    identifier = parserHelper.parseIdentifier(t);
                     //remove the trailing "s"
-                    identifier = identifier.substr(0, identifier.length - 1);
+                    if (identifier !== null) {
+                        strIdentifier = identifier.getIdentifier();
+                        if (strIdentifier[strIdentifier.length - 1] === "s")
+                            strIdentifier = strIdentifier.substr(0, strIdentifier.length - 1);
+                    }
                 }
 
-                if (identifier === "formula")
-                    symbols.forEach(s => result.push(new Syntax.FormulaDeclaration(s)));
-                else if (identifier === "variable")
-                    symbols.forEach(s => result.push(new Syntax.VariableDeclaration(s)));
-                else if (identifier === "function")
-                    symbols.forEach(s => result.push(new Syntax.FunctionDeclaration(s, 1)));
-                else if (identifier === "predicate")
-                    symbols.forEach(s => result.push(new Syntax.PredicateDeclaration(s, 1)));
-                else if (identifier === "term")
-                    symbols.forEach(s => result.push(new Syntax.TermDeclaration(s)));
-                else
-                    break;
+                var declarations: { [id: string]: (s: { identifier: Proof.IdentifierElement; arity: number }) => Syntax.Declaration } = {
+                    "formula": s => new Syntax.FormulaDeclaration(s.identifier.getIdentifier()),
+                    "variable": s => new Syntax.VariableDeclaration(s.identifier.getIdentifier()),
+                    "function": s => {
+                        if (s.arity === null) {
+                            l.logError("The function '" + s.identifier.getIdentifier() + "' must specify how many arguments it take, e.g. '"
+                                + s.identifier.getIdentifier() + "(1)' for taking one argument", TextRegion.getRegionOf(s.identifier));
+                        }
+                        return new Syntax.FunctionDeclaration(s.identifier.getIdentifier(), s.arity);
+                    },
+                    "predicate": s => {
+                        if (s.arity === null) {
+                            l.logError("The predicate '" + s.identifier.getIdentifier() + "' must specify how many arguments it take, e.g. '"
+                                + s.identifier.getIdentifier() + "(1)' for taking one argument", TextRegion.getRegionOf(s.identifier));
+                        }
+                        return new Syntax.PredicateDeclaration(s.identifier.getIdentifier(), s.arity);
+                    },
+                    "term": s => new Syntax.TermDeclaration(s.identifier.getIdentifier())
+                };
 
-                parserHelper.parseWhitespace(tokenizer);
-                tokenizer.tryRead(".");
-                parserHelper.parseWhitespace(tokenizer);
+                if (strIdentifier === null) {
+                    l.logError("Type identifier expected type", t.getRegion(t.getPosition()));
+                }
+                else if (typeof declarations[strIdentifier] === "undefined") {
+                    l.logError("Unknown type", TextRegion.getRegionOf(identifier));
+                } else {
+                    symbols.forEach(s => {
+                        result.push(declarations[strIdentifier](s));
+                    });
+                }
+
+                parserHelper.parseWhitespace(t);
+                this.expect(t, l, ".");
+                parserHelper.parseWhitespace(t);
             }
 
             return result;
         }
 
 
-        private readNextSection(tokenizer: Tokenizer): string {
-            parserHelper.parseWhitespace(tokenizer);
-            var name = parserHelper.parseIdentifier(tokenizer);
-            tokenizer.tryRead(":");
+        private readNextSection(t: Tokenizer, l: ParserLogger): Proof.IdentifierElement {
+            parserHelper.parseWhitespace(t);
+            var name = parserHelper.parseIdentifier(t);
+            if (name !== null)
+                this.expect(t, l, ":");
 
             return name;
         }

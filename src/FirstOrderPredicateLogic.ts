@@ -1,8 +1,10 @@
 
-///<reference path="Helper/IEquatable.ts"/>
-///<reference path="Helper/Helper.ts"/>
-///<reference path="Helper/ArgumentExceptionHelper.ts"/>
-///<reference path="Helper/ArrayType.ts"/>
+///<reference path="Common/IEquatable.ts"/>
+///<reference path="Common/Helper.ts"/>
+///<reference path="Common/ArgumentExceptionHelper.ts"/>
+///<reference path="Common/ArrayType.ts"/>
+///<reference path="Common/Logger.ts"/>
+///<reference path="Common/Levenshtein.ts"/>
 
 ///<reference path="Syntax/Node.ts"/>
 ///<reference path="Syntax/NodeArray.ts"/>
@@ -25,11 +27,19 @@
 ///<reference path="Syntax/Formulas/SpecificOperations.ts"/>
 
 
+///<reference path="Proof/System/System.ts"/>
+
 ///<reference path="Proof/Proof.ts"/>
 ///<reference path="Proof/Document.ts"/>
-///<reference path="Proof/Conditions.ts"/>
+///<reference path="Proof/Conditions/Condition.ts"/>
+///<reference path="Proof/Conditions/AppliedCondition.ts"/>
+///<reference path="Proof/Conditions/ConditionContext.ts"/>
+///<reference path="Proof/Conditions/DoesNotContainFreeVariableCondition.ts"/>
+///<reference path="Proof/Conditions/IsCollisionFreeCondition.ts"/>
+///<reference path="Proof/Conditions/FreeVariableRestrictionCondition.ts"/>
+///<reference path="Proof/Conditions/IsClosedCondition.ts"/>
 
-
+///<reference path="Parser/Logger.ts"/>
 ///<reference path="Parser/TextRegion.ts"/>
 ///<reference path="Parser/Tokenizer.ts"/>
 ///<reference path="Parser/ParserContext.ts"/>

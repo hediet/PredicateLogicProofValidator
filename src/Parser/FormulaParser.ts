@@ -1,6 +1,5 @@
 ﻿module FirstOrderPredicateLogic.Parser {
 
-
     export class FormulaParser {
 
         private termParser: TermParser;
@@ -15,29 +14,45 @@
             return t.readWhile(c => " \t".indexOf(c) !== -1);
         }
 
-        public parseFormula(tokenizer: Tokenizer, context: IParserContext): Syntax.Formula {
-
-
-            // e.g. P(Term, ...), P(Term) -> (Q(Term) -> S), forall s: P(Term)
-
-            return this.parseFormulaIntern(tokenizer, context, 0);
+        private expect(t: Tokenizer, l: ParserLogger, text: string) {
+            if (!t.tryRead(text)) {
+                l.logError("Expected '" + text + "'", t.getRegion(t.getPosition()));
+            }
         }
 
-        private parseFormulaIntern(tokenizer: Tokenizer, context: IParserContext, requiredOperatorPriority: number): Syntax.Formula {
 
-            var result: Syntax.Formula = this.parseFormulaIntern2(tokenizer, context, requiredOperatorPriority);
+        public parseFormula(tokenizer: Tokenizer, context: IParserContext, logger: ParserLogger): Syntax.Formula {
+
+            var start = tokenizer.getPosition();
+
+            // e.g. P(Term, ...), P(Term) -> (Q(Term) -> S), forall s: P(Term)
+            try {
+                return this.parseBinaryFormulaIntern(tokenizer, context, logger, 0);
+            } catch (e) {
+                logger.logError("An exception occured: " + e, tokenizer.getRegion(start));
+                return null;
+            }
+        }
+
+        private parseBinaryFormulaIntern(t: Tokenizer, context: IParserContext, l: ParserLogger, requiredOperatorPriority: number): Syntax.Formula {
+
+            var result: Syntax.Formula = this.parseFormulaIntern(t, context, l, requiredOperatorPriority);
+
+            this.parseWhitespace(t);
+
+            var startPos = t.getPosition();
 
             while (true) {
 
-                this.parseWhitespace(tokenizer);
+                this.parseWhitespace(t);
 
-                var c = tokenizer.peek();
+                var c = t.peek();
 
                 if (c === ")" || c === "")
                     return result;
 
                 if (c === "[") {
-                    result = this.parseSubstitution(result, tokenizer, context);
+                    result = this.parseSubstitution(result, t, context, l);
                     continue;
                 }
 
@@ -47,15 +62,15 @@
                 for (var idx in this.operationFactories) {
                     var of = this.operationFactories[idx];
 
-                    if (of.getArity() === 2 && tokenizer.tryRead(of.getName(), false)) {
+                    if (of.getArity() === 2 && t.tryRead(of.getName(), false)) {
 
                         if (!(of.getPriority() > requiredOperatorPriority))
                             return result;
 
-                        tokenizer.tryRead(of.getName());
+                        t.tryRead(of.getName());
 
-                        this.parseWhitespace(tokenizer);
-                        var arg = this.parseFormulaIntern(tokenizer, context, of.getPriority());
+                        this.parseWhitespace(t);
+                        var arg = this.parseBinaryFormulaIntern(t, context, l, of.getPriority());
 
                         result = of.createInstance([result, arg]);
                         couldParse = true;
@@ -68,29 +83,33 @@
 
         }
 
-        private parseFormulaIntern2(tokenizer: Tokenizer, context: IParserContext, requiredOperatorPriority: number): Syntax.Formula {
+        private parseFormulaIntern(t: Tokenizer, context: IParserContext, l: ParserLogger, requiredOperatorPriority: number): Syntax.Formula {
 
-            this.parseWhitespace(tokenizer);
+            this.parseWhitespace(t);
 
-            var c = tokenizer.peek();
+            var c = t.peek();
 
             if (c == "(")
-                return this.parseParentheses(tokenizer, context);
+                return this.parseParentheses(t, context, l);
 
-            if (tokenizer.tryRead("forall")) {
+            var startPosition = t.getPosition();
 
-                var whitespace = this.parseWhitespace(tokenizer);
+            if (t.tryRead("forall")) {
 
-                var boundVariableName = parserHelper.parseIdentifier(tokenizer);
-                var boundVariable = context.getVariableDeclaration(boundVariableName);
+                var whitespace = this.parseWhitespace(t);
 
-                this.parseWhitespace(tokenizer);
-                tokenizer.tryRead(":");
+                var boundVariableName = parserHelper.parseIdentifier(t);
+                var boundVariable = context.getVariableDeclaration(boundVariableName.getIdentifier());
 
-                this.parseWhitespace(tokenizer);
-                var formula = this.parseFormulaIntern(tokenizer, context, Syntax.AllQuantor.getPriority());
+                this.parseWhitespace(t);
+                this.expect(t, l, ":");
 
-                return new Syntax.AllQuantor(boundVariable, formula);
+                this.parseWhitespace(t);
+                var formula = this.parseBinaryFormulaIntern(t, context, l, Syntax.AllQuantor.getPriority());
+
+                var allQuantor = new Syntax.AllQuantor(boundVariable, formula);
+                TextRegion.setRegionTo(allQuantor, t.getRegion(startPosition));
+                return allQuantor;
             }
 
 
@@ -98,93 +117,95 @@
             for (var idx in this.operationFactories) {
                 var of = this.operationFactories[idx];
 
-                if (of.getArity() === 1 && tokenizer.tryRead(of.getName())) {
+                if (of.getArity() === 1 && t.tryRead(of.getName())) {
 
-                    this.parseWhitespace(tokenizer);
-                    var arg = this.parseFormulaIntern(tokenizer, context, of.getPriority());
+                    this.parseWhitespace(t);
+                    var arg = this.parseBinaryFormulaIntern(t, context, l, of.getPriority());
 
                     return of.createInstance([arg]);
                 }
             }
 
-            var identifier = parserHelper.parseIdentifier(tokenizer);
+            var identifier = parserHelper.parseIdentifier(t);
 
-            if (identifier !== "") {
+            if (identifier !== null) {
 
-                var formulaDeclaration = context.getFormulaDeclaration(identifier);
+                var formulaDeclaration = context.getFormulaDeclaration(identifier.getIdentifier());
                 if (formulaDeclaration !== null) {
                     return new Syntax.FormulaRef(formulaDeclaration);
 
-                } else {
-                    var predicateDeclaration = context.getPredicateDeclaration(identifier);
+                } 
 
-                    return this.parsePredicate(predicateDeclaration, tokenizer, context);
-                }
+                var predicateDeclaration = context.getPredicateDeclaration(identifier.getIdentifier());
+
+                return this.parsePredicate(predicateDeclaration, t, context, l);
+                
             }
-
 
             throw "Cannot parse the expression";
         }
 
-        private parseSubstitution(formulaToSubstitute: Syntax.Formula, tokenizer: Tokenizer, context: IParserContext): Syntax.AppliedSubstitution {
+        private parseSubstitution(formulaToSubstitute: Syntax.Formula, t: Tokenizer,
+            context: IParserContext, l: ParserLogger): Syntax.AppliedSubstitution {
 
-            tokenizer.tryRead("[");
-            this.parseWhitespace(tokenizer);
+            this.expect(t, l, "[");
+            this.parseWhitespace(t);
 
-            var varToSubstituteName = parserHelper.parseIdentifier(tokenizer);
-            var varToSubstitute = context.getVariableDeclaration(varToSubstituteName);
+            var varToSubstituteName = parserHelper.parseIdentifier(t);
+            var varToSubstitute = context.getVariableDeclaration(varToSubstituteName.getIdentifier());
 
-            this.parseWhitespace(tokenizer);
-            tokenizer.tryRead("<-");
-            this.parseWhitespace(tokenizer);
+            this.parseWhitespace(t);
+            this.expect(t, l, "<-");
+            this.parseWhitespace(t);
 
-            var replacement = this.termParser.parseTerm(tokenizer, context);
+            var replacement = this.termParser.parseTerm(t, context, l);
 
-            this.parseWhitespace(tokenizer);
+            this.parseWhitespace(t);
 
-            tokenizer.tryRead("]");
+            this.expect(t, l, "]");
 
             return new Syntax.AppliedSubstitution(formulaToSubstitute,
                 new Syntax.VariableWithTermSubstitution(varToSubstitute, replacement));
         }
 
         private parsePredicate(predicateDeclaration: Syntax.PredicateDeclaration,
-            tokenizer: Tokenizer, context: IParserContext): Syntax.PredicateRef {
+            t: Tokenizer, context: IParserContext, l: ParserLogger): Syntax.PredicateRef {
 
-            if (!tokenizer.tryRead("(")) {
+            if (!t.tryRead("(")) {
                 return new Syntax.PredicateRef(predicateDeclaration, []);
             } else {
                 var arguments: Syntax.Term[] = [];
                 var first: boolean = true;
 
-                this.parseWhitespace(tokenizer);
+                this.parseWhitespace(t);
 
-                while (!tokenizer.tryRead(")") && tokenizer.peek() !== "") {
+                while (t.peek() !== ")" && t.peek() !== "") {
 
                     if (!first) {
-                        tokenizer.tryRead(",");
-                        this.parseWhitespace(tokenizer);
+                        if (!t.tryRead(","))
+                            break;
+                        this.parseWhitespace(t);
                     }
                     first = false;
 
-                    var term = this.termParser.parseTerm(tokenizer, context);
+                    var term = this.termParser.parseTerm(t, context, l);
                     arguments.push(term);
 
-                    this.parseWhitespace(tokenizer);
-
+                    this.parseWhitespace(t);
                 }
+                this.expect(t, l, ")");
 
                 return new Syntax.PredicateRef(predicateDeclaration, arguments);
             }
         }
 
-        private parseParentheses(tokenizer: Tokenizer, context: IParserContext): Syntax.Formula {
+        private parseParentheses(t: Tokenizer, context: IParserContext, l: ParserLogger): Syntax.Formula {
 
-            tokenizer.tryRead("(");
+            this.expect(t, l, "(");
 
-            var result = this.parseFormula(tokenizer, context);
+            var result = this.parseFormula(t, context, l);
 
-            tokenizer.tryRead(")");
+            this.expect(t, l, ")");
 
             return result;
         }

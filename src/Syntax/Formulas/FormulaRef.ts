@@ -18,14 +18,9 @@
 
         public isSubstitutionCollisionFree(substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
 
-            if (!this.containsUnboundVariable(substitution.getVariableToSubstitute(), context))
-                return true;
-
             var result = context.formulaIsSubstitutionCollisionFree(this.formulaDeclaration, substitution, context);
-
             if (result === null)
-                throw "It is not specified, whether " + this + " is collision free.";
-
+                throw "It is not specified whether " + this + substitution + " is collision free.";
             return result;
         }
 

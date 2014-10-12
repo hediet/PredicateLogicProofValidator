@@ -14,19 +14,30 @@
         }
     }
 
+    export class IdentifierElement {
+        constructor(private identifier: string) {
+            Common.ArgumentExceptionHelper.ensureTypeOf(identifier, "string", "name");
+        }
+
+        public getIdentifier() {
+            return this.identifier;
+        }
+    }
+
+
     export class Description {
 
-        private name: string;
+        private name: IdentifierElement;
 
-        constructor(name: string) {
+        constructor(name: IdentifierElement) {
             this.name = name;
         }
 
-        public getName(): string {
+        public getName(): IdentifierElement {
             return this.name;
         }
 
-        public getFormulaBuilder(): ProofableFormulaBuilder {
+        public getFormulaBuilder(logger: Logger): ProofableFormulaBuilder {
             throw "abstract";
         }
 
@@ -36,12 +47,8 @@
     }
 
     export class AbstractAxiomDescription extends Description {
-        constructor(name: string) {
+        constructor(name: IdentifierElement) {
             super(name);
-        }
-
-        public getFormulaBuilder(): ProofableFormulaBuilder {
-            throw "abstract";
         }
     }
 
@@ -50,11 +57,11 @@
         private formulaBuilder: ProofableFormulaBuilder;
 
         constructor(formulaBuilder: ProofableFormulaBuilder) {
-            super(formulaBuilder.getName());
+            super(new IdentifierElement(formulaBuilder.getName()));
             this.formulaBuilder = formulaBuilder;
         }
 
-        public getFormulaBuilder(): ProofableFormulaBuilder {
+        public getFormulaBuilder(l: Logger): ProofableFormulaBuilder {
             return this.formulaBuilder;
         }
     }
@@ -65,7 +72,7 @@
         private assertion: Syntax.Formula;
         private conditions: AppliedCondition[];
 
-        constructor(name: string, symbols: Syntax.Declaration[], assertion: Syntax.Formula, conditions: AppliedCondition[]) {
+        constructor(name: IdentifierElement, symbols: Syntax.Declaration[], assertion: Syntax.Formula, conditions: AppliedCondition[]) {
             super(name);
             this.symbols = symbols;
             this.assertion = assertion;
@@ -84,17 +91,28 @@
             return this.assertion;
         }
 
-        public getFormulaBuilder(): ProofableFormulaBuilder {
-            return new Axiom(this.getName(), this.getSymbols(), this.getAssertion(), this.getConditions());
+        public getFormulaBuilder(l: Logger): ProofableFormulaBuilder {
+
+            if (this.getName() === null) {
+                l.logError("Axiom must have a name", this);
+                return null;
+            }
+
+            if (this.getAssertion() === null) {
+                l.logError("Axiom must define an assertion", this);
+                return null;
+            }
+
+            return new Axiom(this.getName().getIdentifier(), this.getSymbols(), this.getAssertion(), this.getConditions());
         }
     }
 
     export class AbstractRuleDescription extends Description {
-        constructor(name: string) {
+        constructor(name: IdentifierElement) {
             super(name);
         }
 
-        public getFormulaBuilder(): Rule {
+        public getFormulaBuilder(l: Logger): Rule {
             throw "abstract";
         }
     }
@@ -103,11 +121,11 @@
         private formulaBuilder: Rule;
 
         constructor(formulaBuilder: Rule) {
-            super(formulaBuilder.getName());
+            super(new IdentifierElement(formulaBuilder.getName()));
             this.formulaBuilder = formulaBuilder;
         }
 
-        public getFormulaBuilder(): Rule {
+        public getFormulaBuilder(l: Logger): Rule {
             return this.formulaBuilder;
         }
     }
@@ -119,7 +137,7 @@
         private conclusion: Syntax.Formula;
         private conditions: AppliedCondition[];
 
-        constructor(name: string, symbols: Syntax.Declaration[],
+        constructor(name: IdentifierElement, symbols: Syntax.Declaration[],
             assumptions: Syntax.Formula[], conclusion: Syntax.Formula, conditions: AppliedCondition[]) {
             super(name);
             this.symbols = symbols;
@@ -144,8 +162,19 @@
             return this.conclusion;
         }
 
-        public getFormulaBuilder(): Rule {
-            return new Rule(this.getName(), this.getSymbols(), this.getConclusion(), this.getAssumptions(), this.getConditions());
+        public getFormulaBuilder(l: Logger): Rule {
+
+            if (this.getName() === null) {
+                l.logError("Rule must have a name", this);
+                return null;
+            }
+
+            if (this.getConclusion() === null) {
+                l.logError("Rule must have a conclusion", this);
+                return null;
+            }
+
+            return new Rule(this.getName().getIdentifier(), this.getSymbols(), this.getConclusion(), this.getAssumptions(), this.getConditions());
         }
     }
 
@@ -156,7 +185,7 @@
         private assertion: Syntax.Formula;
         private conditions: Proof.AppliedCondition[];
 
-        constructor(name: string, symbols: Syntax.Declaration[],
+        constructor(name: IdentifierElement, symbols: Syntax.Declaration[],
             assertion: Syntax.Formula, proofSteps: ProofStep[], conditions: Proof.AppliedCondition[]) {
             super(name);
             this.symbols = symbols;
@@ -181,41 +210,52 @@
             return this.proofSteps;
         }
 
-        public getFormulaBuilder(): ProofableFormulaBuilder {
-            return new Axiom(this.getName(), this.getSymbols(), this.getAssertion(), this.conditions);
+        public getFormulaBuilder(l: Logger): ProofableFormulaBuilder {
+
+            if (this.getName() === null) {
+                l.logError("Theorem has no name", this);
+                return null;
+            }
+
+            if (this.getAssertion() === null) {
+                l.logError("Theorem defines no assertion", this);
+                return null;
+            }
+
+            return new Axiom(this.getName().getIdentifier(), this.getSymbols(), this.getAssertion(), this.conditions);
         }
     }
 
 
     export class StepRef {
-        private referencedStep: string;
+        private referencedStep: IdentifierElement;
 
-        constructor(referencedStep: string) {
+        constructor(referencedStep: IdentifierElement) {
             this.referencedStep = referencedStep;
         }
 
-        public getReferencedStep(): string {
+        public getReferencedStep(): IdentifierElement {
             return this.referencedStep;
         }
     }
 
     export class ProofStep {
 
-        private stepIdentifier: string;
-        private operation: string;
+        private stepIdentifier: IdentifierElement;
+        private operation: IdentifierElement;
         private arguments: any[];
 
-        constructor(stepIdentifier: string, operation: string, args: any[]) {
+        constructor(stepIdentifier: IdentifierElement, operation: IdentifierElement, args: any[]) {
             this.stepIdentifier = stepIdentifier;
             this.operation = operation;
             this.arguments = args;
         }
 
-        public getStepIdentifier(): string {
+        public getStepIdentifier(): IdentifierElement {
             return this.stepIdentifier;
         }
 
-        public getOperation(): string {
+        public getOperation(): IdentifierElement {
             return this.operation;
         }
 
