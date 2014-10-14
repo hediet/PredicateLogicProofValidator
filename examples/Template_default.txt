@@ -1,0 +1,679 @@
+﻿
+GlobalSymbols
+{
+	Let eq(2) be a predicate.
+}
+
+Axiom A1
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assertion:
+        |- phi -> (psi -> phi)
+}
+
+Axiom A2
+{
+    Symbols:
+        Let phi, psi, chi be formulas.
+
+    Assertion:
+        |- (phi -> (psi -> chi)) -> ((phi -> psi) -> (phi -> chi))
+}
+
+Axiom A3
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assertion:
+        |- (!phi -> !psi) -> (psi -> phi)
+}  
+
+Axiom A4
+{
+    Symbols:
+        Let xi be a variable.
+        Let phi be a formula.
+        Let sigma be a term.
+
+	Conditions:
+		(phi[xi <- sigma]) is collision free.
+
+    Assertion:
+        |- forall xi: phi -> phi[xi <- sigma]
+}
+
+Axiom A5
+{
+    Symbols:
+        Let xi be a variable.
+        Let phi, psi be formulas.
+
+	Conditions:
+		<xi> is not free in (phi).
+
+    Assertion:
+        |- forall xi: (phi -> psi) -> (phi -> forall xi: psi)
+}
+
+Axiom A6
+{
+	Symbols: 
+    	Let xi be a variable.
+    
+    Assertion:
+    	|- eq(xi, xi)
+}
+
+Axiom A7
+{
+	Symbols:
+    	Let xi, zeta be variables.
+        Let phi be a formula.
+    
+    Conditions:
+    	(phi[zeta <- xi]) is collision free.
+    
+    Assertion:
+    	|- eq(xi, zeta) -> (phi[zeta <- xi] -> phi)
+    
+}
+
+Rule MP
+{
+    Symbols:
+        Let phi, psi be formulas.
+
+    Assumptions:
+        |- phi
+        |- phi -> psi
+
+    Conclusion:
+        |- psi
+}
+
+Rule G
+{
+    Symbols:
+        Let phi be a formula.
+        Let xi be a variable.
+
+    Assumptions:
+        |- phi
+
+    Conclusion:
+        |- forall xi: phi
+}
+
+
+Hypothesis
+
+Deduction
+
+Theorem T1
+{
+    Symbols:
+        Let phi be a formula.
+    
+	Assertion:
+		|- phi -> phi
+
+    Proof:
+        # 1. A2(phi, phi -> phi, phi)
+        # 2. A1(phi, phi -> phi)
+        # 3. MP(@2, @1)
+        # 4. A1(phi, phi)
+        # 5. MP(@4, @3)
+}
+
+Theorem T2
+{
+	Symbols:
+    	Let phi, psi, chi be formulas.
+        
+    Conditions:
+		(phi) is closed.
+        (psi) is closed.
+        (chi) is closed.
+        
+    Assertion:
+    	|- (phi -> psi) -> ((psi -> chi) -> (phi -> chi))
+        
+    Proof:
+    	# 1. Hypothesis(phi)
+        # 2. Hypothesis(phi -> psi)
+        # 3. MP(@1, @2)
+        # 4. Hypothesis(psi -> chi)
+        # 5. MP(@3, @4)
+        # 6. Deduction(@5, phi)
+        # 7. Deduction(@6, psi -> chi)
+        # 8. Deduction(@7, phi -> psi)
+}
+
+
+Theorem T3
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+      
+    Assertion:
+    	|- phi -> ((phi -> psi) -> psi)
+        
+    Proof:
+    	# 1. Hypothesis(phi)
+        # 2. Hypothesis(phi -> psi)
+        # 3. MP(@1, @2)
+        # 4. Deduction(@3, phi -> psi)
+        # 5. Deduction(@4, phi)
+}
+
+Theorem T4
+{ 
+	Symbols:
+    	Let phi be a formula.
+         
+    Conditions:
+    	(phi) is closed.
+      
+    Assertion:
+    	|- !!phi  -> phi
+        
+    Proof:
+    	# 1. A1(!!phi, !!!!phi)
+        # 2. Hypothesis(!!phi)
+        # 3. MP(@2, @1)
+        # 4. A3(!!!phi, !phi)
+        # 5. MP(@3, @4)
+        # 6. A3(phi, !!phi)
+        # 7. MP(@5, @6)
+        # 8. MP(@2, @7)
+        # 9. Deduction(@8, !!phi)
+}
+
+Theorem T5
+{
+	Symbols:
+    	Let phi be a formula.
+        
+    Conditions:
+    	(phi) is closed.
+        
+    Assertion:
+    	|- phi -> !!phi
+        
+    Proof:
+    	# 1. A3(!!phi, phi)
+        # 2. T4(!phi)
+        # 3. MP(@2, @1)
+}
+
+
+Theorem T4a
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+	Assertion:
+    	|- (!!phi -> psi) -> (phi -> psi)
+        
+    Proof:
+    	# 1. T5(phi)
+        # 2. T2(phi, !!phi, psi)
+        # 3. MP(@1, @2)
+        
+}
+
+Theorem T6
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi -> psi) -> (!psi -> !phi)
+        
+    Proof:
+    	# 1. A3(!phi, !psi)
+        # 2. Hypothesis(phi -> psi)
+        # 3. Hypothesis(!!phi)
+        # 4. T4(phi)
+        # 5. MP(@3, @4)
+        # 6. MP(@5, @2)
+        # 7. T5(psi)
+        # 8. MP(@6, @7)
+        # 9. Deduction(@8, !!phi)
+        # 10. Deduction(@9, phi -> psi)
+        # 11. MP(@2, @10)
+        # 12. MP(@11, @1)
+        # 13. Deduction(@12, phi -> psi)
+}
+
+
+Theorem T16
+{
+    Symbols:
+		Let phi be formula.
+
+    Conditions:
+    	Only {<xi>, <zeta>} are free in (phi).
+
+	Assertion:
+    	|- forall xi: forall zeta: phi -> forall zeta: forall xi: phi
+
+    Proof:
+        # 1. Hypothesis(forall xi: forall zeta: phi)
+        # 2. A4(<xi>, forall zeta: phi, [xi])
+        # 3. MP(@1, @2)
+        # 4. A4(<zeta>, phi, [zeta])
+        # 5. MP(@3, @4)
+        # 6. G(@5, <xi>)
+        # 7. G(@6, <zeta>)
+        # 8. Deduction(@7, forall xi: forall zeta: phi)
+}
+
+Theorem T17
+{
+    Symbols:
+		Let phi, psi be formulas.
+
+	Conditions:
+    	Only {<xi>} are free in (phi).
+        Only {<xi>} are free in (psi).
+
+	Assertion:
+    	|- forall xi: (phi -> psi) -> (forall xi: phi -> forall xi: psi)
+
+    Proof:
+        # 1. Hypothesis(forall xi: (phi -> psi))
+        # 2. A4(<xi>, phi -> psi, [xi])
+        # 3. MP(@1, @2)
+        # 4. Hypothesis(forall xi: phi)
+        # 5. A4(<xi>, phi, [xi])
+        # 6. MP(@4, @5)
+        # 7. MP(@6, @3)
+        # 8. G(@7, <xi>)
+        # 9. Deduction(@8, forall xi: phi)
+        # 10. Deduction(@9, forall xi: (phi -> psi))
+}
+
+Theorem T18
+{
+    Symbols:
+		Let phi be a formula.
+
+	Conditions:
+    	Only {<xi>, <zeta>} are free in (phi).
+		(phi[zeta <- xi]) is collision free.
+
+	Assertion:
+    	|- forall xi: forall zeta: phi -> forall xi: phi[zeta <- xi]
+
+    Proof:
+        # 1. Hypothesis(forall xi: forall zeta: phi)
+        # 2. A4(<xi>, forall zeta: phi, [xi])
+        # 3. MP(@1, @2)
+        # 4. A4(<zeta>, phi, [xi])
+        # 5. MP(@3, @4)
+        # 6. G(@5, <xi>)
+        # 7. Deduction(@6, forall xi: forall zeta: phi)
+}
+
+Theorem T10a1
+{
+	Symbols:
+    	Let phi, psi, chi be formulas.
+    
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        (chi) is closed.
+    
+    Assertion:
+    	|- (phi -> (psi -> chi)) -> (psi -> (phi -> chi))
+    
+ 	Proof:
+    	# 1. Hypothesis(phi -> (psi -> chi))
+        # 2. Hypothesis(psi)
+        # 3. Hypothesis(phi)
+        # 4. MP(@3, @1)
+        # 5. MP(@2, @4)
+        # 6. Deduction(@5, phi)
+        # 7. Deduction(@6, psi)
+        # 8. Deduction(@7, phi -> (psi -> chi))
+}
+
+
+Theorem T20a
+{
+	Symbols:
+    	Let phi, psi, chi be formulas.
+    
+    Assertion:
+    	|- (phi -> (psi -> chi)) -> (psi -> (phi -> chi))
+    
+ 	Proof:
+ # 0. T1(psi)
+ # 1. A1(psi -> psi, phi -> (psi -> chi))
+ # 2. MP(@0, @1)
+ # 3. A1(psi, phi)
+ # 4. A1(psi -> (phi -> psi), phi -> (psi -> chi))
+ # 5. MP(@3, @4)
+ # 6. A1(psi -> (phi -> psi), psi)
+ # 7. A1(psi -> (phi -> psi) -> (psi -> (psi -> (phi -> psi))), phi -> (psi -> chi))
+ # 8. MP(@6, @7)
+ # 9. A2(phi -> (psi -> chi), psi -> (phi -> psi), psi -> (psi -> (phi -> psi)))
+ # 10. MP(@8, @9)
+ # 11. MP(@5, @10)
+ # 12. A2(psi, psi, phi -> psi)
+ # 13. A1(psi -> (psi -> (phi -> psi)) -> (psi -> psi -> (psi -> (phi -> psi))), phi -> (psi -> chi))
+ # 14. MP(@12, @13)
+ # 15. A2(phi -> (psi -> chi), psi -> (psi -> (phi -> psi)), psi -> psi -> (psi -> (phi -> psi)))
+ # 16. MP(@14, @15)
+ # 17. MP(@11, @16)
+ # 18. A2(phi -> (psi -> chi), psi -> psi, psi -> (phi -> psi))
+ # 19. MP(@17, @18)
+ # 20. MP(@2, @19)
+ # 21. T1(phi)
+ # 22. A1(phi -> phi, phi -> (psi -> chi))
+ # 23. MP(@21, @22)
+ # 24. A1(phi -> phi, psi)
+ # 25. A1(phi -> phi -> (psi -> (phi -> phi)), phi -> (psi -> chi))
+ # 26. MP(@24, @25)
+ # 27. A2(phi -> (psi -> chi), phi -> phi, psi -> (phi -> phi))
+ # 28. MP(@26, @27)
+ # 29. MP(@23, @28)
+ # 30. T1(phi -> (psi -> chi))
+ # 31. A1(phi -> (psi -> chi), psi)
+ # 32. A1(phi -> (psi -> chi) -> (psi -> (phi -> (psi -> chi))), phi -> (psi -> chi))
+ # 33. MP(@31, @32)
+ # 34. A2(phi -> (psi -> chi), phi -> (psi -> chi), psi -> (phi -> (psi -> chi)))
+ # 35. MP(@33, @34)
+ # 36. MP(@30, @35)
+ # 37. A1(phi -> (psi -> chi), phi)
+ # 38. A1(phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi))), phi -> (psi -> chi))
+ # 39. MP(@37, @38)
+ # 40. A1(phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi))), psi)
+ # 41. A1(phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi))) -> (psi -> (phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi))))), phi -> (psi -> chi))
+ # 42. MP(@40, @41)
+ # 43. A2(phi -> (psi -> chi), phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi))), psi -> (phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi)))))
+ # 44. MP(@42, @43)
+ # 45. MP(@39, @44)
+ # 46. A2(psi, phi -> (psi -> chi), phi -> (phi -> (psi -> chi)))
+ # 47. A1(psi -> (phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi)))) -> (psi -> (phi -> (psi -> chi)) -> (psi -> (phi -> (phi -> (psi -> chi))))), phi -> (psi -> chi))
+ # 48. MP(@46, @47)
+ # 49. A2(phi -> (psi -> chi), psi -> (phi -> (psi -> chi) -> (phi -> (phi -> (psi -> chi)))), psi -> (phi -> (psi -> chi)) -> (psi -> (phi -> (phi -> (psi -> chi)))))
+ # 50. MP(@48, @49)
+ # 51. MP(@45, @50)
+ # 52. A2(phi -> (psi -> chi), psi -> (phi -> (psi -> chi)), psi -> (phi -> (phi -> (psi -> chi))))
+ # 53. MP(@51, @52)
+ # 54. MP(@36, @53)
+ # 55. A2(phi, phi, psi -> chi)
+ # 56. A1(phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi))), phi -> (psi -> chi))
+ # 57. MP(@55, @56)
+ # 58. A1(phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi))), psi)
+ # 59. A1(phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi))) -> (psi -> (phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi))))), phi -> (psi -> chi))
+ # 60. MP(@58, @59)
+ # 61. A2(phi -> (psi -> chi), phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi))), psi -> (phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi)))))
+ # 62. MP(@60, @61)
+ # 63. MP(@57, @62)
+ # 64. A2(psi, phi -> (phi -> (psi -> chi)), phi -> phi -> (phi -> (psi -> chi)))
+ # 65. A1(psi -> (phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi)))) -> (psi -> (phi -> (phi -> (psi -> chi))) -> (psi -> (phi -> phi -> (phi -> (psi -> chi))))), phi -> (psi -> chi))
+ # 66. MP(@64, @65)
+ # 67. A2(phi -> (psi -> chi), psi -> (phi -> (phi -> (psi -> chi)) -> (phi -> phi -> (phi -> (psi -> chi)))), psi -> (phi -> (phi -> (psi -> chi))) -> (psi -> (phi -> phi -> (phi -> (psi -> chi)))))
+ # 68. MP(@66, @67)
+ # 69. MP(@63, @68)
+ # 70. A2(phi -> (psi -> chi), psi -> (phi -> (phi -> (psi -> chi))), psi -> (phi -> phi -> (phi -> (psi -> chi))))
+ # 71. MP(@69, @70)
+ # 72. MP(@54, @71)
+ # 73. A2(psi, phi -> phi, phi -> (psi -> chi))
+ # 74. A1(psi -> (phi -> phi -> (phi -> (psi -> chi))) -> (psi -> (phi -> phi) -> (psi -> (phi -> (psi -> chi)))), phi -> (psi -> chi))
+ # 75. MP(@73, @74)
+ # 76. A2(phi -> (psi -> chi), psi -> (phi -> phi -> (phi -> (psi -> chi))), psi -> (phi -> phi) -> (psi -> (phi -> (psi -> chi))))
+ # 77. MP(@75, @76)
+ # 78. MP(@72, @77)
+ # 79. A2(phi -> (psi -> chi), psi -> (phi -> phi), psi -> (phi -> (psi -> chi)))
+ # 80. MP(@78, @79)
+ # 81. MP(@29, @80)
+ # 82. A2(phi, psi, chi)
+ # 83. A1(phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi)), phi -> (psi -> chi))
+ # 84. MP(@82, @83)
+ # 85. A1(phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi)), psi)
+ # 86. A1(phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi)) -> (psi -> (phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi)))), phi -> (psi -> chi))
+ # 87. MP(@85, @86)
+ # 88. A2(phi -> (psi -> chi), phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi)), psi -> (phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi))))
+ # 89. MP(@87, @88)
+ # 90. MP(@84, @89)
+ # 91. A2(psi, phi -> (psi -> chi), phi -> psi -> (phi -> chi))
+ # 92. A1(psi -> (phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi))) -> (psi -> (phi -> (psi -> chi)) -> (psi -> (phi -> psi -> (phi -> chi)))), phi -> (psi -> chi))
+ # 93. MP(@91, @92)
+ # 94. A2(phi -> (psi -> chi), psi -> (phi -> (psi -> chi) -> (phi -> psi -> (phi -> chi))), psi -> (phi -> (psi -> chi)) -> (psi -> (phi -> psi -> (phi -> chi))))
+ # 95. MP(@93, @94)
+ # 96. MP(@90, @95)
+ # 97. A2(phi -> (psi -> chi), psi -> (phi -> (psi -> chi)), psi -> (phi -> psi -> (phi -> chi)))
+ # 98. MP(@96, @97)
+ # 99. MP(@81, @98)
+ # 100. A2(psi, phi -> psi, phi -> chi)
+ # 101. A1(psi -> (phi -> psi -> (phi -> chi)) -> (psi -> (phi -> psi) -> (psi -> (phi -> chi))), phi -> (psi -> chi))
+ # 102. MP(@100, @101)
+ # 103. A2(phi -> (psi -> chi), psi -> (phi -> psi -> (phi -> chi)), psi -> (phi -> psi) -> (psi -> (phi -> chi)))
+ # 104. MP(@102, @103)
+ # 105. MP(@99, @104)
+ # 106. A2(phi -> (psi -> chi), psi -> (phi -> psi), psi -> (phi -> chi))
+ # 107. MP(@105, @106)
+ # 108. MP(@20, @107)
+}
+
+
+Theorem T19
+{
+	Symbols:
+    	Let sigma be a term.
+        Let zeta be a variable.
+         
+    Assertion:
+    	|- eq(sigma, sigma)
+        
+    Proof:
+    	# 1. A6(<zeta>)
+        # 2. G(@1, <zeta>)
+        # 3. A4(<zeta>, eq(zeta, zeta), [sigma])
+        # 4. MP(@2, @3)
+}
+
+Theorem T20
+{
+	Symbols:
+    	Let sigma, tau be terms.
+        Let xi, zeta be variables.
+        
+    Assertion:
+    	|- eq(sigma, tau) -> eq(tau, sigma)
+        
+    Proof:
+    	# 1. A7(<xi>, <zeta>, eq(zeta, xi))
+        # 2. T20a(eq(xi, zeta), eq(xi, xi), eq(zeta, xi))
+        # 3. MP(@1, @2)
+        # 4. A6(<xi>)
+        # 5. MP(@4, @3)
+        # 6. G(@5, <xi>)
+        # 7. A4(<xi>, eq(xi, zeta) -> eq(zeta, xi), [sigma])
+        # 8. MP(@6, @7)
+        # 9. G(@8, <zeta>)
+        # 10. A4(<zeta>, eq(sigma, zeta) -> eq(zeta, sigma), [tau])
+        # 11. MP(@9, @10)
+}
+
+Axiom DefEq1
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+        
+    Assertion:
+    	|- (phi <-> psi) -> !((phi -> psi) -> !(psi -> phi))
+}
+
+Axiom DefEq2
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+        
+    Assertion:
+    	|- !((phi -> psi) -> !(psi -> phi)) -> (phi <-> psi)
+}
+
+Theorem TEqSym
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi <-> psi) -> (psi <-> phi)
+    
+    Proof:
+    	# 1. T1(((psi -> phi) -> !(phi -> psi)))
+		# 2. Hypothesis(psi -> phi -> !(phi -> psi))
+        # 3. T6(psi -> phi, !(phi -> psi))
+        # 4. MP(@2, @3)
+        # 5. T5(phi -> psi)
+        # 6. T2(phi -> psi, !!(phi -> psi), !(psi -> phi))
+        # 7. MP(@5, @6)
+        # 8. MP(@4, @7)
+        # 9. Deduction(@8, psi -> phi -> !(phi -> psi))
+        # 10. T6(psi -> phi -> !(phi -> psi), 
+        		(phi -> psi -> !(psi -> phi)))
+        # 11. MP(@9, @10)
+        # 12. DefEq1(phi, psi)
+        # 13. DefEq2(psi, phi)
+        # 14. T2(phi <-> psi, !(phi -> psi -> !(psi -> phi)), 
+        				!(psi -> phi -> !(phi -> psi)))
+        # 15. MP(@12, @14)
+        # 16. MP(@11, @15)
+        # 17. T2(phi <-> psi, !(psi -> phi -> !(phi -> psi)),
+             	psi <-> phi)
+        # 18. MP(@16, @17)
+        # 19. MP(@13, @18)
+}
+
+
+Theorem TEqImp1
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi <-> psi) -> (psi -> phi)
+        
+    Proof:
+    	# 1. A1(!(psi -> phi), (phi -> psi))
+        # 2. T6(!(psi -> phi), (phi -> psi -> !(psi -> phi)))
+        # 3. MP(@1, @2)
+        # 4. Hypothesis(!(phi -> psi -> !(psi -> phi)))
+        # 5. MP(@4, @3)
+        # 6. T4(psi -> phi, psi -> phi)
+        # 7. MP(@5, @6)
+        # 8. Deduction(@7, !(phi -> psi -> !(psi -> phi)))
+        # 9. DefEq1(phi, psi)
+        # 10. T2(phi <-> psi, 
+        	!(phi -> psi -> !(psi -> phi)), psi -> phi)
+        # 11. MP(@9, @10)
+        # 12. MP(@8, @11)
+}
+
+
+Theorem TEqImp2
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi <-> psi) -> (phi -> psi)
+        
+    Proof:
+    	# 1. TEqSym(phi, psi)
+        # 2. Hypothesis(phi <-> psi)
+        # 2. MP(@2, @1)
+        # 3. TEqImp1(psi, phi)
+        # 4. MP(@2, @3)
+        # 5. Deduction(@4, phi <-> psi)
+}
+
+
+Axiom DefAnd
+{
+	Symbols:
+    	Let phi, psi be formulas.
+    
+    Assertion:
+    	|- (phi & psi) <-> !(phi -> !psi)
+}
+
+
+Theorem TAndSym1
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi & psi) -> (psi & phi)
+
+	Proof:
+    	# 1. DefAnd(phi, psi)
+        # 1a. TEqImp2(phi & psi, !(phi -> !psi))
+        # 1b. MP(@1, @1a)
+        # 2. Hypothesis(phi & psi)
+        # 3. MP(@2, @1b)
+        # 4. Hypothesis(psi -> !phi)
+        # 5. T6(psi, !phi)
+        # 6. MP(@4, @5)
+        # 7. T4a(phi, !psi)
+        # 8. MP(@6, @7)
+        # 9. Deduction(@8, psi -> !phi)
+        # 10. T6(psi -> !phi, phi -> !psi)
+        # 11. MP(@9, @10)
+        # 12. T2(phi & psi, !(phi -> !psi), 
+        		!(psi -> !phi))
+        # 13. MP(@1b, @12)
+        # 14. MP(@11, @13)
+        # 15. MP(@2, @14)
+        # 16. TEqImp1(psi & phi, !(psi -> !phi))
+        # 17. DefAnd(psi, phi)
+        # 18. MP(@17, @16)
+        # 19. T2(phi & psi, !(psi -> !phi), psi & phi)
+        # 20. MP(@14, @19)
+        # 21. MP(@18, @20)
+}
+
+
+
+

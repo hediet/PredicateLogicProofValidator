@@ -24,8 +24,10 @@
             throw "This method is abstract";
         }
 
-        public equals(other: Term): boolean {
-            throw "This method is abstract";
+        public equals(other: Term) {
+            var s = new EqualitySubstitutionCollector();
+            this.resubstitute(other, s);
+            return s.getAreEqual(); 
         }
     }
 }

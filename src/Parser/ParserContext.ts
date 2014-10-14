@@ -21,9 +21,11 @@
         private declaredVariables: { [id: string]: Syntax.VariableDeclaration } = {};
         private declaredTerms: { [id: string]: Syntax.TermDeclaration } = {};
 
-        constructor(declarations: Syntax.Declaration[]) {
+        constructor(globalDeclarations: Syntax.Declaration[], declarations: Syntax.Declaration[]) {
 
-            declarations.forEach(d => {
+            var newDecls = globalDeclarations.concat(declarations);
+
+            newDecls.forEach(d => {
                 if (d instanceof Syntax.FunctionDeclaration)
                     this.declaredFunctions[d.getName()] = <Syntax.FunctionDeclaration>d;
                 else if (d instanceof Syntax.PredicateDeclaration)

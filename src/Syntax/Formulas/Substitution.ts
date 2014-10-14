@@ -18,7 +18,7 @@
             throw "abstract";
         }
 
-        public static fromValues(declarations: Declaration[], elementsToInsert: any[]): Substitution[] {
+        public static fromValues(declarations: Declaration[], elementsToInsert: Syntax.Node[]): Substitution[] {
             return declarations.map((d, idx) => d.createSubstitution(elementsToInsert[idx]));
         }
     }

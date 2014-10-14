@@ -181,12 +181,12 @@
     export class TheoremDescription extends Description {
 
         private symbols: Syntax.Declaration[];
-        private proofSteps: ProofStep[];
+        private proofSteps: DocumentStep[];
         private assertion: Syntax.Formula;
         private conditions: Proof.AppliedCondition[];
 
         constructor(name: IdentifierElement, symbols: Syntax.Declaration[],
-            assertion: Syntax.Formula, proofSteps: ProofStep[], conditions: Proof.AppliedCondition[]) {
+            assertion: Syntax.Formula, proofSteps: DocumentStep[], conditions: Proof.AppliedCondition[]) {
             super(name);
             this.symbols = symbols;
             this.assertion = assertion;
@@ -206,7 +206,7 @@
             return this.assertion;
         }
 
-        public getProofSteps(): ProofStep[] {
+        public getProofSteps(): DocumentStep[] {
             return this.proofSteps;
         }
 
@@ -239,7 +239,7 @@
         }
     }
 
-    export class ProofStep {
+    export class DocumentStep {
 
         private stepIdentifier: IdentifierElement;
         private operation: IdentifierElement;

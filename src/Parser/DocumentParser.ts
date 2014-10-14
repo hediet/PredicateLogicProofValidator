@@ -24,17 +24,20 @@
             Common.ArgumentExceptionHelper.ensureTypeOf(tokenizer, Tokenizer, "tokenizer");
 
             var descriptions: Proof.Description[] = [];
+            var globalSymbols: Syntax.Declaration[] = [];
 
             parserHelper.parseWhitespace(tokenizer);
+
+            var first = true;
 
             while (tokenizer.peek() !== "") {
                 var start = tokenizer.getPosition();
                 var identifier = parserHelper.parseIdentifier(tokenizer);
 
                 var availableDescriptions: { [id: string]: () => Proof.Description } = {
-                    "Axiom": () => this.parseAxiom(tokenizer, logger),
-                    "Rule": () => this.parseRule(tokenizer, logger),
-                    "Theorem": () => this.parseTheorem(tokenizer, logger),
+                    "Axiom": () => this.parseAxiom(tokenizer, logger, globalSymbols),
+                    "Rule": () => this.parseRule(tokenizer, logger, globalSymbols),
+                    "Theorem": () => this.parseTheorem(tokenizer, logger, globalSymbols),
                     "Hypothesis": () => new Proof.CustomAxiomDescription(new Proof.HypothesisAxiom()),
                     "Deduction": () => new Proof.CustomRuleDescription(new Proof.DeductionRule())
                 };
@@ -43,13 +46,25 @@
 
                 if (typeof parseFunction === "undefined") {
 
-                    var butGot: string;
-                    if (identifier === null)
-                        butGot = tokenizer.readWhile(c => (parserHelper.whitespace.indexOf(c) === -1) && (parserHelper.letters.indexOf(c) === -1));
-                    else
-                        butGot = identifier.getIdentifier();
+                    if (identifier !== null && identifier.getIdentifier() === "GlobalSymbols") {
+                        if (!first)
+                            logger.logError("Global symbols must be defined first", TextRegion.getRegionOf(identifier));
+                        else {
+                            parserHelper.parseWhitespace(tokenizer);
+                            this.expect(tokenizer, logger, "{");
+                            globalSymbols = this.parseSymbols(tokenizer, logger, []);
+                            parserHelper.parseWhitespace(tokenizer);
+                            this.expect(tokenizer, logger, "}");
+                        }
+                    } else {
+                        var butGot: string;
+                        if (identifier === null)
+                            butGot = tokenizer.readWhile(c => (parserHelper.whitespace.indexOf(c) === -1) && (parserHelper.letters.indexOf(c) === -1));
+                        else
+                            butGot = identifier.getIdentifier();
 
-                    logger.logError("Expected a type identifier, but got '" + butGot + "'", tokenizer.getRegion(start));
+                        logger.logError("Expected a type identifier, but got '" + butGot + "'", tokenizer.getRegion(start));
+                    }
                 } else {
                     var description = parseFunction();
                     TextRegion.setRegionTo(description, tokenizer.getRegion(start));
@@ -57,6 +72,8 @@
                 }
 
                 parserHelper.parseWhitespace(tokenizer);
+
+                first = false;
             }
 
             return new Proof.Document(descriptions);
@@ -107,7 +124,7 @@
             return arr;
         }
 
-        private parseAxiom(t: Tokenizer, l: ParserLogger): Proof.AxiomDescription {
+        private parseAxiom(t: Tokenizer, l: ParserLogger, globalSymbols: Syntax.Declaration[]): Proof.AxiomDescription {
 
             parserHelper.parseWhitespace(t);
 
@@ -124,7 +141,7 @@
 
             var availableSections: { [id: string]: (t: TextRegion) => void } = {
                 "Symbols": (sectionRegion) => {
-                    declarations = this.parseSymbols(t, l);
+                    declarations = this.parseSymbols(t, l, globalSymbols);
                     if (conditions !== null || assertion !== null) {
                         l.logError("Symbols must be defined first", sectionRegion);
                     }
@@ -132,11 +149,11 @@
                 "Assertion": () => {
                     parserHelper.parseWhitespace(t);
                     t.tryRead("|-");
-                    var context = new Parser.ParserContext(declarations);
+                    var context = new Parser.ParserContext(globalSymbols, declarations);
                     assertion = this.formulaParser.parseFormula(t, context, l);
                 },
                 "Conditions": (sectionRegion) => {
-                    var context = new Parser.ParserContext(declarations);
+                    var context = new Parser.ParserContext(globalSymbols, declarations);
                     conditions = this.parseConditions(t, context, l);
                     if (assertion !== null) {
                         l.logError("Conditions must be defined before the assertion", sectionRegion);
@@ -151,7 +168,7 @@
         }
 
 
-        private parseRule(t: Tokenizer, l: ParserLogger): Proof.RuleDescription {
+        private parseRule(t: Tokenizer, l: ParserLogger, globalSymbols: Syntax.Declaration[]): Proof.RuleDescription {
             parserHelper.parseWhitespace(t);
 
             var declarations: Syntax.Declaration[] = null;
@@ -168,17 +185,17 @@
 
             var availableSections: { [id: string]: (region: TextRegion) => void } = {
                 "Symbols": (sectionRegion) => {
-                    declarations = this.parseSymbols(t, l);
+                    declarations = this.parseSymbols(t, l, globalSymbols);
                     if (conditions !== null || conclusion !== null || assumptions !== null) {
-                        l.logError("Symbols must be defined first", TextRegion.getRegionOf(sectionRegion));
+                        l.logError("Symbols must be defined first", sectionRegion);
                     }
                 },
                 "Conditions": (sectionRegion) => {
-                    var context = new Parser.ParserContext(declarations);
+                    var context = new Parser.ParserContext(globalSymbols, declarations);
                     conditions = this.parseConditions(t, context, l);
                     if (conclusion !== null && assumptions !== null) {
                         l.logError("Conditions must be defined before assumptions or the conclusion",
-                            TextRegion.getRegionOf(sectionRegion));
+                            sectionRegion);
                     }
                 },
                 "Assumptions": (sectionRegion) => {
@@ -189,7 +206,7 @@
                     while (t.tryRead("|-")) {
 
                         parserHelper.parseWhitespace(t);
-                        var context = new Parser.ParserContext(declarations);
+                        var context = new Parser.ParserContext(globalSymbols, declarations);
                         var assumption = this.formulaParser.parseFormula(t, context, l);
                         assumptions.push(assumption);
 
@@ -197,13 +214,13 @@
                     }
                     if (conclusion !== null) {
                         l.logError("Assumptions must be defined before the conclusion",
-                            TextRegion.getRegionOf(sectionRegion));
+                            sectionRegion);
                     }
                 },
                 "Conclusion": () => {
                     parserHelper.parseWhitespace(t);
                     this.expect(t, l, "|-");
-                    var context = new Parser.ParserContext(declarations);
+                    var context = new Parser.ParserContext(globalSymbols, declarations);
                     conclusion = this.formulaParser.parseFormula(t, context, l);
                 }
             };
@@ -215,14 +232,14 @@
                 conclusion, this.emptyArrayIfNull(conditions));
         }
 
-        private parseTheorem(t: Tokenizer, l: ParserLogger): Proof.TheoremDescription {
+        private parseTheorem(t: Tokenizer, l: ParserLogger, globalSymbols: Syntax.Declaration[]): Proof.TheoremDescription {
 
             parserHelper.parseWhitespace(t);
 
             var name: Proof.IdentifierElement = null;
             var declarations: Syntax.Declaration[] = null;
             var assertion: Syntax.Formula = null;
-            var steps: Proof.ProofStep[] = null;
+            var steps: Proof.DocumentStep[] = null;
             var conditions: Proof.AppliedCondition[] = null;
 
             if (t.peek() !== "{") {
@@ -232,28 +249,27 @@
 
             var availableSections: { [id: string]: (region: TextRegion) => void } = {
                 "Symbols": (sectionRegion) => {
-                    declarations = this.parseSymbols(t, l);
+                    declarations = this.parseSymbols(t, l, globalSymbols);
                     if (conditions !== null || steps !== null || assertion !== null) {
-                        l.logError("Symbols must be defined first", TextRegion.getRegionOf(sectionRegion));
+                        l.logError("Symbols must be defined first", sectionRegion);
                     }
                 },
                 "Conditions": (sectionRegion) => {
-                    var context = new Parser.ParserContext(declarations);
+                    var context = new Parser.ParserContext(globalSymbols, declarations);
                     conditions = this.parseConditions(t, context, l);
                     if (steps !== null && assertion !== null) {
                         l.logError("Conditions must be defined before the assertions or the proof",
-                            TextRegion.getRegionOf(sectionRegion));
+                            sectionRegion);
                     }
                 },
                 "Assertion": (sectionRegion) => {
                     parserHelper.parseWhitespace(t);
                     this.expect(t, l, "|-");
-                    var context = new Parser.ParserContext(declarations);
+                    var context = new Parser.ParserContext(globalSymbols, declarations);
                     assertion = this.formulaParser.parseFormula(t, context, l);
 
                     if (steps !== null) {
-                        l.logError("Assertion must be defined before the proof",
-                            TextRegion.getRegionOf(sectionRegion));
+                        l.logError("Assertion must be defined before the proof", sectionRegion);
                     }
                 },
                 "Proof": () => {
@@ -263,7 +279,7 @@
 
                     while (t.peek() !== "") {
 
-                        var context = new Parser.ParserContext(declarations);
+                        var context = new Parser.ParserContext(globalSymbols, declarations);
                         var step = this.parseProofStep(t, context, l);
 
                         if (step === null)
@@ -281,7 +297,7 @@
         }
 
 
-        private parseProofStep(t: Tokenizer, context: IParserContext, l: ParserLogger): Proof.ProofStep {
+        private parseProofStep(t: Tokenizer, context: IParserContext, l: ParserLogger): Proof.DocumentStep {
 
             parserHelper.parseWhitespace(t);
 
@@ -339,7 +355,7 @@
                 this.expect(t, l, ")");
             }
 
-            var step = new Proof.ProofStep(stepIdent, operation, args);
+            var step = new Proof.DocumentStep(stepIdent, operation, args);
             TextRegion.setRegionTo(step, t.getRegion(start));
 
             return step;
@@ -509,7 +525,7 @@
             return this.formulaParser.parseFormula(t, context, l);
         }
 
-        private parseSymbols(t: Tokenizer, l: ParserLogger): Syntax.Declaration[] {
+        private parseSymbols(t: Tokenizer, l: ParserLogger, globalSymbols: Syntax.Declaration[]): Syntax.Declaration[] {
 
             parserHelper.parseWhitespace(t);
 
@@ -525,6 +541,11 @@
                     t.gotoPosition(p);
                     break;
                 }
+                if (ident === null) {
+                    l.logError("Expected 'Let', but got nothing.", t.getRegion(t.getPosition()));
+                    break;
+                }
+
                 t.gotoPosition(p);
 
                 this.expect(t, l, "Let");
@@ -543,10 +564,10 @@
                     var ident = parserHelper.parseIdentifier(t, false);
                     parserHelper.parseWhitespace(t);
 
-                    var arity = null;
+                    var arity: number = null;
                     if (t.tryRead("(")) {
                         parserHelper.parseWhitespace(t);
-                        arity = t.readWhile(c => parserHelper.numbers.indexOf(c) !== -1);
+                        arity = parseInt(t.readWhile(c => parserHelper.numbers.indexOf(c) !== -1));
                         this.expect(t, l, ")");
                     }
 
@@ -604,7 +625,9 @@
                     l.logError("Unknown type", TextRegion.getRegionOf(identifier));
                 } else {
                     symbols.forEach(s => {
-                        result.push(declarations[strIdentifier](s));
+                        var decl = declarations[strIdentifier](s);
+                        TextRegion.setRegionTo(decl, TextRegion.getRegionOf(s.identifier));
+                        result.push(decl);
                     });
                 }
 
@@ -613,7 +636,16 @@
                 parserHelper.parseWhitespace(t);
             }
 
-            return result;
+            var actualResult: Syntax.Declaration[] = [];
+             
+            result.forEach(d => {
+                if (globalSymbols.some(s => s.equals(d))) {
+                    l.logError("'" + d.getName() + "' was already declared", TextRegion.getRegionOf(d));
+                } else
+                    actualResult.push(d);
+            });
+
+            return actualResult;
         }
 
 

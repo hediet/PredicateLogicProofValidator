@@ -4,7 +4,8 @@
         "jquery": "../lib/jquery/index",
         "FirstOrderPredicateLogic": "../dist/FirstOrderPredicateLogic",
         "Codemirror": "../lib/codemirror/codemirror",
-        "CodemirrorLint": "http://codemirror.net/addon/lint/lint"
+        "CodemirrorLint": "http://codemirror.net/addon/lint/lint",
+        "JQueryUI": "https://code.jquery.com/ui/1.11.1/jquery-ui.min"
     },
 
     shim: {
@@ -19,4 +20,4 @@
     },
 });
 
-require(["app"], function() {});
+require(["app", "text!Template_peano.txt", "text!Template_default.txt"], function () { });

@@ -2,11 +2,9 @@
 
     export class System {
 
-        private formulaBuilders: FormulaBuilder[];
+        private formulaBuilders: { [id: string]: FormulaBuilder } = { };
 
         constructor(document: Document, logger: Logger) {
-
-            var formulaBuilders: { [id: string]: FormulaBuilder } = {};
 
             document.getDescriptions().forEach(d => {
 
@@ -16,13 +14,13 @@
                     (<any>d).__system_formulaBuilder = formulaBuilder;
 
                     if (formulaBuilder !== null) {
-                        formulaBuilders[d.getName().getIdentifier()] = formulaBuilder;
+                        this.formulaBuilders[d.getName().getIdentifier()] = formulaBuilder;
                     }
                 } else if (d instanceof AbstractRuleDescription) {
                     var rule = d.getFormulaBuilder(logger);
                     (<any>d).__system_formulaBuilder = rule;
                     if (rule !== null) {
-                        formulaBuilders[d.getName().getIdentifier()] = rule;
+                        this.formulaBuilders[d.getName().getIdentifier()] = rule;
                     }
                 } else if (d instanceof TheoremDescription) {
 
@@ -34,7 +32,7 @@
 
                     var fb = td.getFormulaBuilder(logger);
                     if (fb !== null)
-                        formulaBuilders[d.getName().getIdentifier()] = fb;
+                        this.formulaBuilders[d.getName().getIdentifier()] = fb;
 
                     td.getProofSteps().forEach(step => {
                         try {
@@ -45,7 +43,7 @@
                                 return;
                             }
 
-                            var referencedOperation = formulaBuilders[step.getOperation().getIdentifier()];
+                        var referencedOperation = this.formulaBuilders[step.getOperation().getIdentifier()];
 
 
                             if (referencedOperation instanceof ProofableFormulaBuilder) {
@@ -101,15 +99,15 @@
         }
 
 
-        public getFormulaBuilders(): FormulaBuilder[] {
-            return this.formulaBuilders;
+        public getFormulaBuilderByName(name: string): FormulaBuilder {
+            return this.formulaBuilders[name];
         }
 
         public getFormulaBuilder(description: Description) {
             return (<any>description).__system_formulaBuilder;
         }
 
-        public getStep(step: ProofStep): Step {
+        public getStep(step: DocumentStep): Step {
 
             if (typeof (<any>step).__system_step === "undefined")
                 return null;

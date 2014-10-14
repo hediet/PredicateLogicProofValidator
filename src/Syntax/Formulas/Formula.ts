@@ -15,7 +15,7 @@ module FirstOrderPredicateLogic.Syntax {
     }
 
 
-    class EqualitySubstitutionCollector {
+    export class EqualitySubstitutionCollector {
         private areEqual: boolean = true;
 
         public getAreEqual(): boolean {

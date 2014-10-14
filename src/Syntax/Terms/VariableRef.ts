@@ -20,6 +20,18 @@
             return this.variableDeclaration;
         }
 
+        public substitute(substitutions: Substitution[]): Term {
+            return new VariableRef(this.variableDeclaration.substitute(substitutions));
+        }
+
+        public resubstitute(concreteFormula: Term, collector: ISubstitutionCollector) {
+            if (!(concreteFormula instanceof VariableRef))
+                collector.addIncompatibleNodes(this, concreteFormula);
+            else 
+                collector.addSubstitution(new VariableSubstition(this.getVariableDeclaration(),
+                    (<VariableRef>concreteFormula).getVariableDeclaration()));
+        }
+
         public containsVariable(variable: VariableDeclaration): boolean {
             return variable.equals(this.variableDeclaration);
         }
@@ -33,13 +45,6 @@
 
         public toString() {
             return this.variableDeclaration.getName();
-        }
-
-        public equals(other: Term): boolean {
-            if (!(other instanceof VariableRef))
-                return false;
-            var otherVariableRef = <VariableRef>other;
-            return this.variableDeclaration.equals(otherVariableRef.getVariableDeclaration());
         }
     }
 }

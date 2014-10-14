@@ -132,6 +132,14 @@
         public getHypotheses(): Syntax.Formula[] {
             throw "abstract";
         }
+
+        public getArguments(): Syntax.Substitution[] {
+            throw "abstract";
+        }
+
+        public getContext(): Syntax.ConditionContext {
+            throw "abstract";
+        }
     }
 
     export class ProofableFormulaBuilderStep extends Step {
@@ -151,6 +159,10 @@
             });
 
             this.context = context;
+        }
+
+        public getContext(): Syntax.ConditionContext {
+            return this.context;
         }
 
         public getArguments(): Syntax.Substitution[] {
@@ -177,6 +189,7 @@
         private args: Syntax.Substitution[];
         private assumptions: Step[];
         private hypotheses: Syntax.Formula[];
+        private context: Syntax.ConditionContext;
 
         constructor(rule: Rule, assumptions: Step[], args: Syntax.Substitution[], context: Syntax.ConditionContext) {
             super();
@@ -225,10 +238,19 @@
             });
 
             this.args = newArgs;
+            this.context = context;
 
 
             var hypotheses = Common.uniqueJoin(assumptions, step => step.getHypotheses(), f => f.toString());
             this.hypotheses = this.rule.getHypotheses(hypotheses, newArgs, context);
+        }
+
+        public getContext(): Syntax.ConditionContext {
+            return this.context;
+        }
+
+        public getArguments(): Syntax.Substitution[] {
+            return this.args;
         }
 
         public getRule(): Rule {

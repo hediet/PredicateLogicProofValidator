@@ -1,4 +1,13 @@
 ﻿
+GlobalSymbols
+{
+	Let eq(2) be a predicate.
+    Let s(1) be a function.
+    Let z(0) be a function.
+    Let add(2) be a function.
+    Let mul(2) be a function.
+}
+
 Axiom A1
 {
     Symbols:
@@ -78,6 +87,94 @@ Rule G
     Conclusion:
         |- forall xi: phi
 }
+
+
+Axiom S1
+{
+    Symbols:
+        Let sigma, tau, rho be terms.
+
+    Assertion:
+        |- eq(sigma, tau) -> (eq(sigma, rho) -> eq(tau, rho))
+}
+
+Axiom S2
+{
+    Symbols:
+        Let sigma, tau be terms.
+
+    Assertion:
+        |- eq(sigma, tau) -> eq(s(sigma), s(tau))
+}
+
+
+Axiom S3
+{
+    Symbols:
+        Let sigma be a term.
+
+    Assertion:
+        |- !eq(z(), s(sigma))
+}
+
+
+Axiom S4
+{
+    Symbols:
+        Let sigma, tau be terms.
+
+    Assertion:
+        |- eq(s(sigma), s(tau)) -> eq(sigma, tau)
+}
+
+
+Axiom S5
+{
+    Symbols:
+        Let sigma be a term.
+
+    Assertion:
+        |- eq(add(sigma, z()), sigma)
+}
+
+Axiom S6
+{
+    Symbols:
+        Let sigma, tau be terms.
+
+    Assertion:
+        |- eq(add(sigma, s(tau)), s(add(sigma, tau)))
+}
+
+
+Axiom S7
+{
+    Symbols:
+        Let sigma be a term.
+
+    Assertion:
+        |- eq(mul(sigma, z()), z())
+}
+
+Axiom S8
+{
+    Symbols:
+        Let sigma, tau be terms.
+
+    Assertion:
+        |- eq(mul(sigma, s(tau)), add(mul(sigma, tau), sigma))
+}
+
+Axiom S9
+{
+    Symbols:
+    	Let phi be a formula.
+        Let x be a variable.
+
+    Assertion:
+        |- phi[x <- z()] -> (forall x: (phi -> phi[x <- s(x)]) -> forall x: phi)
+}
+
 
 
 Hypothesis
@@ -168,7 +265,6 @@ Theorem T4
         # 9. Deduction(@8, !!phi)
 }
 
-
 Theorem T5
 {
 	Symbols:
@@ -186,6 +282,25 @@ Theorem T5
         # 3. MP(@2, @1)
 }
 
+
+Theorem T4a
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+	Assertion:
+    	|- (!!phi -> psi) -> (phi -> psi)
+        
+    Proof:
+    	# 1. T5(phi)
+        # 2. T2(phi, !!phi, psi)
+        # 3. MP(@1, @2)
+        
+}
 
 Theorem T6
 {
@@ -205,7 +320,7 @@ Theorem T6
         # 3. Hypothesis(!!phi)
         # 4. T4(phi)
         # 5. MP(@3, @4)
-        # 6. MP(@5, @2)
+        # 6. MP(@5, @2)	
         # 7. T5(psi)
         # 8. MP(@6, @7)
         # 9. Deduction(@8, !!phi)
@@ -214,74 +329,3 @@ Theorem T6
         # 12. MP(@11, @1)
         # 13. Deduction(@12, phi -> psi)
 }
-
-
-Theorem T16
-{
-    Symbols:
-		Let phi be formula.
-
-    Conditions:
-    	Only {<xi>, <zeta>} are free in (phi).
-
-	Assertion:
-    	|- forall xi: forall zeta: phi -> forall zeta: forall xi: phi
-
-    Proof:
-        # 1. Hypothesis(forall xi: forall zeta: phi)
-        # 2. A4(<xi>, forall zeta: phi, [xi])
-        # 3. MP(@1, @2)
-        # 4. A4(<zeta>, phi, [zeta])
-        # 5. MP(@3, @4)
-        # 6. G(@5, <xi>)
-        # 7. G(@6, <zeta>)
-        # 8. Deduction(@7, forall xi: forall zeta: phi)
-}
-
-Theorem T17
-{
-    Symbols:
-		Let phi, psi be formulas.
-
-	Conditions:
-    	Only {<xi>} are free in (phi).
-        Only {<xi>} are free in (psi).
-
-	Assertion:
-    	|- forall xi: (phi -> psi) -> (forall xi: phi -> forall xi: psi)
-
-    Proof:
-        # 1. Hypothesis(forall xi: (phi -> psi))
-        # 2. A4(<xi>, phi -> psi, [xi])
-        # 3. MP(@1, @2)
-        # 4. Hypothesis(forall xi: phi)
-        # 5. A4(<xi>, phi, [xi])
-        # 6. MP(@4, @5)
-        # 7. MP(@6, @3)
-        # 8. G(@7, <xi>)
-        # 9. Deduction(@8, forall xi: phi)
-        # 10. Deduction(@9, forall xi: (phi -> psi))
-}
-
-Theorem T18
-{
-    Symbols:
-		Let phi be a formula.
-
-	Conditions:
-    	Only {<xi>, <zeta>} are free in (phi).
-		(phi[zeta <- xi]) is collision free.
-
-	Assertion:
-    	|- forall xi: forall zeta: phi -> forall xi: phi[zeta <- xi]
-
-    Proof:
-        # 1. Hypothesis(forall xi: forall zeta: phi)
-        # 2. A4(<xi>, forall zeta: phi, [xi])
-        # 3. MP(@1, @2)
-        # 4. A4(<zeta>, phi, [xi])
-        # 5. MP(@3, @4)
-        # 6. G(@5, <xi>)
-        # 7. Deduction(@6, forall xi: forall zeta: phi)
-}
-
