@@ -214,7 +214,29 @@ Theorem T5
 }
 
 
-Theorem T4a
+Theorem TRemDoubleNegInConcl
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+    
+    Assertion:
+    	|- (phi -> !!psi) ->(phi -> psi)
+        
+    Proof:
+    	# 1. Hypothesis(phi)
+        # 2. Hypothesis(phi -> !!psi)
+        # 3. MP(@1, @2)
+        # 4. T4(psi)
+        # 5. MP(@3, @4)
+        # 6. Deduction(@5, phi)
+        # 7. Deduction(@6, phi -> !!psi)
+}
+
+Theorem TRemDoubleNegInPrem
 {
 	Symbols:
     	Let phi, psi be formulas.
@@ -232,6 +254,7 @@ Theorem T4a
         # 3. MP(@1, @2)
         
 }
+
 
 Theorem T6
 {
@@ -516,25 +539,139 @@ Theorem T20
         # 11. MP(@9, @10)
 }
 
-Axiom DefEq1
+
+
+
+
+
+
+Axiom DefEq
 {
 	Symbols:
     	Let phi, psi be formulas.
         
+	Assertion:
+    	|- !(((phi <-> psi) -> !((phi -> psi) -> !(psi -> phi))) -> !(!((phi -> psi) -> !(psi -> phi)) -> (phi <-> psi)))
+}
+
+Axiom DefAnd
+{
+	Symbols:
+    	Let phi, psi be formulas.
+    
+    Assertion:
+    	|- (phi & psi) <-> !(phi -> !psi)
+}
+
+Axiom DefOr
+{
+	Symbols:
+    	Let phi, psi be formulas.
+    
+    Assertion:
+    	|- (phi | psi) <-> (!phi -> psi)
+}
+
+
+
+
+
+
+Theorem TAandBimpAa
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+    
+    Assertion:
+    	|- !(phi -> !psi) -> phi
+    
+    Proof:
+    	# 1. A1(phi, psi)
+        # 2. Hypothesis(phi)
+        # 3. MP(@2, @1)
+        # 4. T6(psi, phi)
+        # 5. MP(@3, @4)
+        # 6. Deduction(@5, phi)
+        # 7. T20a(phi, !phi, !psi)
+        # 8. MP(@6, @7)
+        # 9. T6(!phi, phi -> !psi)
+        # 10. MP(@8, @9)
+        # 11. TRemDoubleNegInConcl(
+        		!(phi -> !psi), phi)
+        # 12. MP(@10, @11)
+}
+
+Theorem TAandBimpBa
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+    
+    Assertion:
+    	|- !(phi -> !psi) -> psi
+    
+    Proof:
+    	# 1. A1(!psi, phi)
+        # 2. T6(!psi, (phi -> !psi))
+        # 3. MP(@1, @2)
+        # 4. TRemDoubleNegInConcl(
+        	!(phi -> !psi), psi)
+        # 5. MP(@3, @4)
+}
+
+
+Theorem TEq1
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
         
     Assertion:
     	|- (phi <-> psi) -> !((phi -> psi) -> !(psi -> phi))
+        
+    Proof:
+    	# 1. DefEq(phi, psi)
+        # 2. TAandBimpAa(
+        	(phi <-> psi) -> !((phi -> psi) -> !(psi -> phi)),
+        	!((phi -> psi) -> !(psi -> phi)) -> (phi <-> psi))
+        # 3. MP(@1, @2)
+        
 }
 
-Axiom DefEq2
+Theorem TEq2
 {
 	Symbols:
     	Let phi, psi be formulas.
+        
+    Conditions:
+        (phi) is closed.
+        (psi) is closed.
         
         
     Assertion:
     	|- !((phi -> psi) -> !(psi -> phi)) -> (phi <-> psi)
+        
+    Proof:
+    	# 1. DefEq(phi, psi)
+        # 2. TAandBimpBa(
+        	(phi <-> psi) -> !((phi -> psi) -> !(psi -> phi)),
+        	!((phi -> psi) -> !(psi -> phi)) -> (phi <-> psi))
+        # 3. MP(@1, @2)
+        
 }
+
+
 
 Theorem TEqSym
 {
@@ -561,8 +698,8 @@ Theorem TEqSym
         # 10. T6(psi -> phi -> !(phi -> psi), 
         		(phi -> psi -> !(psi -> phi)))
         # 11. MP(@9, @10)
-        # 12. DefEq1(phi, psi)
-        # 13. DefEq2(psi, phi)
+        # 12. TEq1(phi, psi)
+        # 13. TEq2(psi, phi)
         # 14. T2(phi <-> psi, !(phi -> psi -> !(psi -> phi)), 
         				!(psi -> phi -> !(phi -> psi)))
         # 15. MP(@12, @14)
@@ -595,7 +732,7 @@ Theorem TEqImp1
         # 6. T4(psi -> phi, psi -> phi)
         # 7. MP(@5, @6)
         # 8. Deduction(@7, !(phi -> psi -> !(psi -> phi)))
-        # 9. DefEq1(phi, psi)
+        # 9. TEq1(phi, psi)
         # 10. T2(phi <-> psi, 
         	!(phi -> psi -> !(psi -> phi)), psi -> phi)
         # 11. MP(@9, @10)
@@ -625,13 +762,122 @@ Theorem TEqImp2
 }
 
 
-Axiom DefAnd
+Theorem TAndByImp1
 {
 	Symbols:
     	Let phi, psi be formulas.
-    
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
     Assertion:
-    	|- (phi & psi) <-> !(phi -> !psi)
+    	|- phi -> (psi -> !(phi -> !psi))
+        
+    Proof:
+    	# 1. T3(phi, !psi)
+        # 2. Hypothesis(phi)
+        # 3. MP(@2, @1)
+        # 4. T6(phi -> !psi, !psi)
+        # 5. MP(@3, @4)
+        # 6. TRemDoubleNegInPrem(
+        	psi, !(phi -> !psi))
+        # 7. MP(@5, @6)
+        # 8. Deduction(@7, phi)
+}
+
+Theorem TAndByImp
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- phi -> (psi -> phi & psi)
+        
+    Proof:
+    	# 1. TAndByImp1(phi, psi)
+        # 2. Hypothesis(phi)
+        # 3. Hypothesis(psi)
+        # 4. MP(@2, @1)
+        # 5. MP(@3, @4)
+        # 6. DefAnd(phi, psi)
+        # 7. TEqImp1(phi & psi, !(phi -> !psi))
+        # 8. MP(@6, @7)
+        # 9. MP(@5, @8)
+        # 10. Deduction(@9, psi)
+        # 11. Deduction(@10, phi)
+}
+
+Theorem TImpByAnd1
+{
+	Symbols:
+    	Let phi, psi, chi be formulas.
+        
+	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        (chi) is closed.
+        
+    Assertion:
+    	|- (phi & psi -> chi) -> (phi -> (psi -> chi))
+        
+    Proof:
+    	# 1. Hypothesis(phi & psi -> chi)
+        # 2. TAndByImp(phi, psi)
+        # 3. Hypothesis(phi)
+        # 4. Hypothesis(psi)
+        # 5. MP(@3, @2)
+        # 6. MP(@4, @5)
+        # 7. MP(@6, @1)
+        # 8. Deduction(@7, psi)
+        # 9. Deduction(@8, phi)
+        # 10. Deduction(@9, phi & psi -> chi)
+}
+
+Theorem TImpByAnd2
+{
+	Symbols:
+    	Let phi, psi, chi be formulas.
+        
+	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        (chi) is closed.
+        
+    Assertion:
+    	|- (phi -> (psi -> chi)) -> (phi & psi -> chi)
+        
+    Proof:
+    	# 1. 
+}
+
+Theorem TEqByTwoImp
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi -> psi) & (psi -> phi) -> (phi <-> psi)
+        
+    Proof:
+    	# 1. DefAnd(phi -> psi, psi -> phi)
+        # 2. TEqImp2((phi -> psi) & (psi -> phi),
+        	!((phi -> psi) -> !(psi -> phi)))
+        # 3. MP(@1, @2)
+        # 4. TEq2(phi, psi)
+        # 5. T2((phi -> psi) & (psi -> phi),
+        	!(phi -> psi -> !(psi -> phi)), (phi <-> psi))
+        # 6. MP(@3, @5)
+        # 7. MP(@4, @6)
+        
 }
 
 
@@ -656,7 +902,7 @@ Theorem TAndSym1
         # 4. Hypothesis(psi -> !phi)
         # 5. T6(psi, !phi)
         # 6. MP(@4, @5)
-        # 7. T4a(phi, !psi)
+        # 7. TRemDoubleNegInPrem(phi, !psi)
         # 8. MP(@6, @7)
         # 9. Deduction(@8, psi -> !phi)
         # 10. T6(psi -> !phi, phi -> !psi)
@@ -674,6 +920,100 @@ Theorem TAndSym1
         # 21. MP(@18, @20)
 }
 
+Theorem TAndSym
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+   	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- (phi & psi) <-> (psi & phi)
+        
+        
+    Proof:
+    	# 1. TAndSym1(phi, psi)
+        # 2. TAndSym1(psi, phi)
+        # 3. TAndByImp(@1, @2)
+        # 4. MP(@1, @3)
+        # 5. MP(@2, @4)
+        # 6. TEqByTwoImp(phi & psi, psi & phi)
+        # 7. MP(@5, @6)
+}
+
+
+Theorem TEqRefl
+{
+	Symbols:
+    	Let phi, psi be formulas.
+        
+    Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        
+    Assertion:
+    	|- phi <-> phi
+        
+    Proof:
+    	# 1. T1(phi)
+        # 2. TEqByTwoImp(phi, phi)
+        # 3. TAndByImp(@1, @1)
+        # 4. MP(@1, @3)
+        # 5. MP(@1, @4)
+        # 6. MP(@5, @2)
+}
+
+Theorem T213
+{
+	Symbols:
+    	Let R(2) be a predicate.
+        
+    Assertion:
+    	|- ((forall x: R(x, x)) & (forall x: forall z: forall y: (R(x, y) -> (R(x, z) -> R(y, z))))) -> (forall x: forall y: (R(x, y) -> R(y, x)))
+
+	Proof:
+    	# 1. Hypothesis(forall x: R(x, x))
+		# 2. Hypothesis(forall x: forall z: forall y: (R(x, y) -> (R(x, z) -> R(y, z))))
+        # 3. A4(<x>, forall z: forall y: (R(x, y) -> (R(x, z) -> R(y, z))), [x])
+        # 4. MP(@2, @3)
+        # 5. A4(<z>, forall y: (R(x, y) -> (R(x, z) -> R(y, z))), [x])
+        # 6. MP(@4, @5)
+        # 7. A4(<y>, (R(x, y) -> (R(x, x) -> R(y, x))), [y])
+        # 8. MP(@6, @7)
+        # 9. T20a(R(x, y), R(x, x), R(y, x))
+        # 10. MP(@8, @9)
+        # 11. A4(<x>, R(x, x), [x])
+        # 12. MP(@1, @11)
+        # 13. MP(@12, @10)
+        # 14. G(@13, <y>)
+        # 15. G(@14, <x>)
+        # 16. Deduction(@15, forall x: forall z: forall y: (R(x, y) -> (R(x, z) -> R(y, z))))
+        # 17. Deduction(@16, forall x: R(x, x))
+        # 18. TImpByAnd2(forall x: R(x, x), 
+        	forall x: forall z: forall y: (R(x, y) -> (R(x, z) -> R(y, z))),
+            forall x: forall y: (R(x, y) -> R(y, x)))
+        # 19. MP(@17, @18)
+}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

@@ -329,3 +329,197 @@ Theorem T6
         # 12. MP(@11, @1)
         # 13. Deduction(@12, phi -> psi)
 }
+
+
+Theorem TSwapPremise
+{
+	Symbols:
+    	Let phi, psi, chi be formulas.
+
+	Conditions:
+    	(phi) is closed.
+        (psi) is closed.
+        (chi) is closed.
+
+    Assertion:
+    	|- (phi -> (psi -> chi)) -> (psi -> (phi -> chi))
+    
+ 	Proof:
+    	# 1. Hypothesis(phi -> (psi -> chi))
+        # 2. Hypothesis(psi)
+        # 3. Hypothesis(phi)
+        # 4. MP(@3, @1)
+        # 5. MP(@2, @4)
+        # 6. Deduction(@5, phi)
+        # 7. Deduction(@6, psi)
+        # 8. Deduction(@7, phi -> (psi -> chi))
+}
+
+
+Theorem PA1
+{
+	Symbols:
+    	Let sigma be a term.
+        
+    Assertion:
+        |- eq(sigma, sigma)
+        
+    Proof:
+    	# 1. S5([sigma])
+        # 2. S1([add(sigma, z())], [sigma], [sigma])
+        # 3. MP(@1, @2)
+        # 4. MP(@1, @3)
+}
+
+
+
+
+Theorem PA2
+{
+	Symbols:
+    	Let sigma, tau be terms.
+        
+    Assertion:
+        |- eq(sigma, tau) -> eq(tau, sigma)
+        
+    Proof:
+    	# 1. S1([sigma], [tau], [sigma])
+        # 2. TSwapPremise(eq(sigma, tau), 
+        		eq(sigma, sigma), eq(tau, sigma))
+        # 3. MP(@1, @2)
+        # 4. PA1([sigma])
+        # 5. MP(@4, @3)
+}
+
+
+
+Theorem PA3
+{
+	Symbols:
+    	Let sigma, tau, rho be terms.
+        
+    Assertion:
+        |- eq(sigma, tau) -> (eq(tau, rho) -> eq(sigma, rho))
+        
+    Proof:
+    	# 1. S1([tau], [sigma], [rho])
+        # 2. PA2([sigma], [tau])
+        # 3. T2(eq(sigma, tau), 
+        	eq(tau, sigma), eq(tau, rho) -> eq(sigma, rho))
+        # 4. MP(@2, @3)
+        # 5. MP(@1, @4)
+}
+
+
+Theorem PA4
+{
+	Symbols:
+    	Let sigma, tau, rho be terms.
+        
+    Assertion:
+        |- eq(sigma, tau) -> (eq(rho, tau) -> eq(sigma, rho))
+        
+    Proof:
+       # 0. T1(eq(sigma, tau))
+       # 1. PA3([sigma], [tau], [rho])
+       # 2. A1(eq(sigma, tau) -> (eq(tau, rho) -> eq(sigma, rho)), eq(sigma, tau))
+       # 3. MP(@1, @2)
+       # 4. A2(eq(sigma, tau), eq(sigma, tau), eq(tau, rho) -> eq(sigma, rho))
+       # 5. MP(@3, @4)
+       # 6. MP(@0, @5)
+       # 7. PA2([rho], [tau])
+       # 8. A1(eq(rho, tau) -> eq(tau, rho), eq(sigma, tau))
+       # 9. MP(@7, @8)
+       # 10. T2(eq(rho, tau), eq(tau, rho), eq(sigma, rho))
+       # 11. A1(eq(rho, tau) -> eq(tau, rho) -> (eq(tau, rho) -> eq(sigma, rho) -> (eq(rho, tau) -> eq(sigma, rho))), eq(sigma, tau))
+       # 12. MP(@10, @11)
+       # 13. A2(eq(sigma, tau), eq(rho, tau) -> eq(tau, rho), eq(tau, rho) -> eq(sigma, rho) -> (eq(rho, tau) -> eq(sigma, rho)))
+       # 14. MP(@12, @13)
+       # 15. MP(@9, @14)
+       # 16. A2(eq(sigma, tau), eq(tau, rho) -> eq(sigma, rho), eq(rho, tau) -> eq(sigma, rho))
+       # 17. MP(@15, @16)
+       # 18. MP(@6, @17)
+}
+
+
+
+Theorem PA5
+{
+	Symbols:
+    	Let sigma, tau be terms.
+        
+    Assertion:
+          |- forall x: (eq(sigma, tau) -> eq(add(sigma, x), add(tau, x)))
+        
+    Proof:
+    	
+}
+
+
+
+Theorem PA6
+{
+        
+    Assertion:
+          |- forall x: (eq(x, add(z(), x)))
+        
+    Proof:
+    	
+}
+
+
+Theorem PA7
+{
+	Symbols:
+    	Let sigma be a term.
+        
+    Assertion:
+          |- eq(add(sigma, s(z())), s(sigma))
+        
+    Proof:
+    	
+}
+
+
+Theorem PA8
+{
+	Symbols:
+    	Let sigma be a term.
+        
+    Assertion:
+          |- eq(mul(sigma, s(z())), sigma)
+        
+    Proof:
+    	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
