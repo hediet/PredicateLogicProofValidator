@@ -1,6 +1,5 @@
 
-///<reference path="../lib/DefinitelyTyped/hashmap/hashmap.d.ts"/>
-
+///<reference path="../typings/hashmap/hashmap.d.ts"/>
 
 
 /// <reference path="Common/ArgumentExceptionHelper.ts" />           

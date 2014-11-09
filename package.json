@@ -11,6 +11,7 @@
     "grunt-bower-task": "*",
     "grunt-contrib-connect": "*",
     "grunt-contrib-watch": "*",
+    "grunt-tsd": "^0.1.0",
     "grunt-typescript": "*",
     "typescript": "*"
   },

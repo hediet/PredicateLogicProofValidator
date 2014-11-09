@@ -1,9 +1,9 @@
 ﻿
-///<reference path="../lib/DefinitelyTyped/requirejs/require.d.ts"/>
-///<reference path="../lib/DefinitelyTyped/codemirror/codemirror.d.ts"/>
-///<reference path="../lib/DefinitelyTyped/jquery/jquery.d.ts"/>
-///<reference path="../lib/DefinitelyTyped/jqueryui/jqueryui.d.ts"/>
-///<reference path="../lib/DefinitelyTyped/hashmap/hashmap.d.ts"/>
+///<reference path="../typings/requirejs/require.d.ts"/>
+///<reference path="../typings/codemirror/codemirror.d.ts"/>
+///<reference path="../typings/jquery/jquery.d.ts"/>
+///<reference path="../typings/jqueryui/jqueryui.d.ts"/>
+///<reference path="../typings/hashmap/hashmap.d.ts"/>
 
 declare var text: string;
 

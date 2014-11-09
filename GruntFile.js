@@ -3,6 +3,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-bower-task');
+    grunt.loadNpmTasks('grunt-tsd');
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -36,6 +37,14 @@ module.exports = function (grunt) {
                 }
             }
         },
+        tsd: {
+            refresh: {
+                options: {
+                    command: 'reinstall',
+                    config: 'tsd.json',
+                }
+            }
+        },
         watch: {
             src: {
                 files: 'src/**/*.ts',
@@ -48,8 +57,8 @@ module.exports = function (grunt) {
         }
     });
  
-    grunt.registerTask('dev', ["bower", "typescript", 'connect', 'watch']);
+    grunt.registerTask('dev', ["bower", "tsd", "typescript", 'connect', 'watch']);
 
 
-    grunt.registerTask('default', ["bower", "typescript"]);
+    grunt.registerTask('default', ["bower", "tsd", "typescript"]);
 }

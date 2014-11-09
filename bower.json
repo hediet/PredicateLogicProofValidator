@@ -14,9 +14,6 @@
     "codemirror": "http://codemirror.net/codemirror.zip",
     "codemirror-lint": "http://codemirror.net/addon/lint/lint.js",
     "codemirror-simple": "http://codemirror.net/addon/mode/simple.js",
-
-    "DefinitelyTyped": "https://github.com/borisyankov/DefinitelyTyped/archive/b9b6d6b3d5b69349c014f564895cdf6d585ae09b.zip",
-
     "jquery": "http://code.jquery.com/jquery-2.1.1.js",
     "jqueryui": "https://code.jquery.com/ui/1.11.1/jquery-ui.min.js",
     "jqueryui-css": "https://code.jquery.com/ui/1.11.1/themes/black-tie/jquery-ui.css",
