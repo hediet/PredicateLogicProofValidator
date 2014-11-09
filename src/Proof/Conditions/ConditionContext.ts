@@ -56,6 +56,23 @@
 
         public formulaContainsUnboundVariable(declaration: FormulaDeclaration, variable: VariableDeclaration): boolean {
 
+
+            var result = null;
+
+            this.conditions.forEach(c => {
+                if (c.getCondition() instanceof DoesNotContainFreeVariableCondition) {
+
+                    var variableArg = <VariableDeclaration>c.getArguments()[0];
+                    var formulaArg = <FormulaRef>c.getArguments()[1];
+
+                    if (declaration.equals(formulaArg.getFormulaDeclaration()) && variableArg.equals(variable))
+                        result = false;
+                }
+            });
+
+            if (result !== null)
+                return result;
+
             var unboundVariables = this.formulaGetUnboundVariables(declaration);
             if (unboundVariables !== null) {
                 return unboundVariables.some(v => v.equals(variable));

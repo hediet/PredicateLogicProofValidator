@@ -116,7 +116,7 @@ module App {
 
 
             this.editor.addKeyMap({
-                "Ctrl-Q"(cm: CodeMirror.Editor) { this.showStepWithoutDeductionTheorem(); }
+                "Ctrl-Q": (cm: CodeMirror.Editor) => this.showStepWithoutDeductionTheorem()
             });
 
 
