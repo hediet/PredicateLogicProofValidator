@@ -16,6 +16,10 @@
             return [this.variableDeclaration];
         }
 
+        public getVariables(): VariableDeclaration[] {
+            return [this.variableDeclaration];
+        }
+
         public getVariableDeclaration(): VariableDeclaration {
             return this.variableDeclaration;
         }
@@ -41,6 +45,10 @@
             return Common.firstOrDefault(substitutions, this,
                 subst => subst.getVariableToSubstitute().equals(this.variableDeclaration)
                     ? subst.getTermToInsert() : null);
+        }
+
+        public processAppliedSubstitutions(): Term {
+            return this;
         }
 
         public toString() {

@@ -17,10 +17,18 @@
             throw "This method is abstract";
         }
 
+        public getVariables(context: ConditionContext): VariableDeclaration[] {
+            throw "This method is abstract";
+        }
+
         /**
          * Collects the substitutions so that this.substitute(substitutions) equals specialFormula.
          */
         public resubstitute(specialFormula: Term, substService: ISubstitutionCollector) {
+            throw "This method is abstract";
+        }
+
+        public processAppliedSubstitutions(context: ConditionContext): Term {
             throw "This method is abstract";
         }
 

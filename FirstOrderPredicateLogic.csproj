@@ -59,8 +59,13 @@
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="examples\app.ts" />
+    <TypeScriptCompile Include="examples\CodeMirrorMode.ts" />
     <TypeScriptCompile Include="examples\definitions.d.ts" />
     <TypeScriptCompile Include="examples\EndOfLineWidgetManager.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions\DoesNotContainVariableCondition.ts" />
+    <TypeScriptCompile Include="src\Proof\DeductionTheorem.ts" />
+    <TypeScriptCompile Include="src\Proof\FormulaBuilder.ts" />
+    <TypeScriptCompile Include="src\Proof\HypothesisRemover.ts" />
     <TypeScriptCompile Include="src\Common\ArgumentExceptionHelper.ts" />
     <TypeScriptCompile Include="src\Common\Levenshtein.ts" />
     <TypeScriptCompile Include="src\Common\Logger.ts" />
@@ -75,6 +80,7 @@
     <TypeScriptCompile Include="src\Parser\TermParser.ts" />
     <TypeScriptCompile Include="src\Parser\TextRegion.ts" />
     <TypeScriptCompile Include="src\Parser\Tokenizer.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions\IsNotFreeInHypothesisCondition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\IsClosedCondition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\FreeVariableRestrictionCondition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\DoesNotContainFreeVariableCondition.ts" />
@@ -83,8 +89,14 @@
     <TypeScriptCompile Include="src\Proof\Conditions\AppliedCondition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\ConditionContext.ts" />
     <TypeScriptCompile Include="src\Proof\Document.ts" />
-    <TypeScriptCompile Include="src\Proof\Proof.ts" />
-    <TypeScriptCompile Include="src\Proof\System\System.ts" />
+    <TypeScriptCompile Include="src\Proof\SubstitutionCollector.ts" />
+    <TypeScriptCompile Include="src\Proof\ProofValidation.ts" />
+    <TypeScriptCompile Include="src\Proof\Step.ts" />
+    <TypeScriptCompile Include="src\References.ts">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>References.tt</DependentUpon>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\Syntax\Formulas\AllQuantor.ts" />
     <TypeScriptCompile Include="src\Syntax\Formulas\Formula.ts" />
     <TypeScriptCompile Include="src\Common\Helper.ts" />
@@ -97,6 +109,7 @@
     <TypeScriptCompile Include="src\Syntax\Formulas\OperationFactory.ts" />
     <TypeScriptCompile Include="src\Syntax\Declarations.ts" />
     <TypeScriptCompile Include="src\Syntax\NodeArray.ts" />
+    <TypeScriptCompile Include="src\Syntax\Terms\AppliedTermSubstitution.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\TermRef.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\VariableRef.ts" />
     <TypeScriptCompile Include="src\Syntax\Terms\FunctionRef.ts" />
@@ -112,7 +125,6 @@
     <Content Include="examples\resources\success.png" />
     <Content Include="examples\startup.js" />
     <Content Include="examples\index.html" />
-    <Content Include="examples\proof-mode.js" />
     <Content Include="examples\Template_default.txt" />
     <Content Include="examples\sampleProof.txt" />
     <Content Include="GruntFile.js" />
@@ -121,6 +133,14 @@
     <Content Include="bower.json" />
     <Content Include="package.json" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="src\References.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>References.ts</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
   <Import Project="$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(VSToolsPath)\TypeScript\Microsoft.TypeScript.targets')" />
 </Project>

@@ -1,25 +1,27 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>TypeScript HTML App</title>
-    
-        <link rel="stylesheet" href="../lib/codemirror/codemirror.css">
-        <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/black-tie/jquery-ui.css" />
-        <link rel="stylesheet" href="app.css" type="text/css" />
+<head>
+    <meta charset="utf-8" />
+    <title>TypeScript HTML App</title>
+
+    <link rel="stylesheet" href="../lib/codemirror/codemirror.css" />
+    <link rel="stylesheet" href="../lib/jqueryui-css/index.css" />
+    <link rel="stylesheet" href="app.css" type="text/css" />
 
 
-        <script data-main="startup" src="../lib/require/index.js"></script>
-    </head>
+    <script data-main="startup" src="../lib/require/index.js"></script>
+</head>
 <body>
     <h2>First Order Predicate Logic</h2>
-    
-    <div id="dialog-message" title="Download complete">
+    Press Ctrl+Q with the cursor above a deduction step to show a proof without the deduction theorem.
+    <br />
+    <a href="index.html?template=peano">Peano-Template</a>
+
+    <div id="dialog-message" title="Proof without deduction theorem">
         <textarea id="dialog-code"></textarea>
     </div>
 
-    <textarea id="code">
-    </textarea>
+    <textarea id="code"></textarea>
 </body>
 </html>

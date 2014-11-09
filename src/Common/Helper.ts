@@ -1,10 +1,11 @@
 ﻿module FirstOrderPredicateLogic.Common {
 
     export function unique<T, U>(a: T[], selector: (t: T) => U = (i => i)) {
-        var prims = { "boolean": {}, "number": {}, "string": {} }, objs: U[] = [];
-
+        var prims: any = { "boolean": {}, "number": {}, "string": {} };
+        var objs: U[] = [];
+        
         return a.filter(item => {
-            var i = selector(item);
+            var i: any = selector(item);
             var type = typeof i;
             if (type in prims)
                 return prims[type].hasOwnProperty(i) ? false : (prims[type][i] = true);
@@ -33,5 +34,9 @@
         extractor: (s: TSource) => TResult[], keySelector: (t: TResult) => TKey): TResult[]{
 
         return source.reduce<TResult[]>((prev, current) => unique(prev.concat(extractor(current)), keySelector), []);
+    }
+
+    export function cloneArray<T>(args: T[]): T[] {
+        return args.slice(0);
     }
 }

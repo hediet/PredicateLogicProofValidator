@@ -80,6 +80,9 @@ Rule G
     Symbols:
         Let phi be a formula.
         Let xi be a variable.
+        
+    Conditions:
+    	<xi> is not free in hypothesis.
 
     Assumptions:
         |- phi
@@ -202,11 +205,6 @@ Theorem T2
 	Symbols:
     	Let phi, psi, chi be formulas.
         
-    Conditions:
-		(phi) is closed.
-        (psi) is closed.
-        (chi) is closed.
-        
     Assertion:
     	|- (phi -> psi) -> ((psi -> chi) -> (phi -> chi))
         
@@ -226,10 +224,6 @@ Theorem T3
 {
 	Symbols:
     	Let phi, psi be formulas.
-        
-    Conditions:
-    	(phi) is closed.
-        (psi) is closed.
       
     Assertion:
     	|- phi -> ((phi -> psi) -> psi)
@@ -246,9 +240,6 @@ Theorem T4
 { 
 	Symbols:
     	Let phi be a formula.
-         
-    Conditions:
-    	(phi) is closed.
       
     Assertion:
     	|- !!phi  -> phi
@@ -268,10 +259,7 @@ Theorem T4
 Theorem T5
 {
 	Symbols:
-    	Let phi be a formula.
-        
-    Conditions:
-    	(phi) is closed.
+    	Let phi be a formula. 
         
     Assertion:
     	|- phi -> !!phi
@@ -288,10 +276,6 @@ Theorem T4a
 	Symbols:
     	Let phi, psi be formulas.
         
-    Conditions:
-    	(phi) is closed.
-        (psi) is closed.
-        
 	Assertion:
     	|- (!!phi -> psi) -> (phi -> psi)
         
@@ -306,10 +290,6 @@ Theorem T6
 {
 	Symbols:
     	Let phi, psi be formulas.
-        
-    Conditions:
-    	(phi) is closed.
-        (psi) is closed.
         
     Assertion:
     	|- (phi -> psi) -> (!psi -> !phi)
@@ -335,11 +315,6 @@ Theorem TSwapPremise
 {
 	Symbols:
     	Let phi, psi, chi be formulas.
-
-	Conditions:
-    	(phi) is closed.
-        (psi) is closed.
-        (chi) is closed.
 
     Assertion:
     	|- (phi -> (psi -> chi)) -> (psi -> (phi -> chi))
@@ -420,27 +395,15 @@ Theorem PA4
         |- eq(sigma, tau) -> (eq(rho, tau) -> eq(sigma, rho))
         
     Proof:
-       # 0. T1(eq(sigma, tau))
        # 1. PA3([sigma], [tau], [rho])
-       # 2. A1(eq(sigma, tau) -> (eq(tau, rho) -> eq(sigma, rho)), eq(sigma, tau))
-       # 3. MP(@1, @2)
-       # 4. A2(eq(sigma, tau), eq(sigma, tau), eq(tau, rho) -> eq(sigma, rho))
-       # 5. MP(@3, @4)
-       # 6. MP(@0, @5)
-       # 7. PA2([rho], [tau])
-       # 8. A1(eq(rho, tau) -> eq(tau, rho), eq(sigma, tau))
-       # 9. MP(@7, @8)
-       # 10. T2(eq(rho, tau), eq(tau, rho), eq(sigma, rho))
-       # 11. A1(eq(rho, tau) -> eq(tau, rho) -> (eq(tau, rho) -> eq(sigma, rho) -> (eq(rho, tau) -> eq(sigma, rho))), eq(sigma, tau))
-       # 12. MP(@10, @11)
-       # 13. A2(eq(sigma, tau), eq(rho, tau) -> eq(tau, rho), eq(tau, rho) -> eq(sigma, rho) -> (eq(rho, tau) -> eq(sigma, rho)))
-       # 14. MP(@12, @13)
-       # 15. MP(@9, @14)
-       # 16. A2(eq(sigma, tau), eq(tau, rho) -> eq(sigma, rho), eq(rho, tau) -> eq(sigma, rho))
-       # 17. MP(@15, @16)
-       # 18. MP(@6, @17)
+       # 2. Hypothesis(eq(sigma, tau))
+       # 3. MP(@2, @1)
+       # 4. PA2([rho], [tau])
+       # 5. T2(eq(rho, tau), eq(tau, rho), eq(sigma, rho))
+       # 6. MP(@4, @5)
+       # 7. MP(@3, @6)
+       # 8. Deduction(@7, eq(sigma, tau))
 }
-
 
 
 Theorem PA5
@@ -449,10 +412,63 @@ Theorem PA5
     	Let sigma, tau be terms.
         
     Assertion:
-          |- forall x: (eq(sigma, tau) -> eq(add(sigma, x), add(tau, x)))
-        
+        |- forall x: (eq(sigma, tau) -> eq(add(sigma, x), add(tau, x)))
+    
+    Conditions:
+    	<x> is not in [sigma].
+        <x> is not in [tau].
+    
+    
     Proof:
-    	
+    	// Induktionsanfang:
+        
+    	# a1. S5([sigma])
+        # a2. PA2([add(sigma, z())], [sigma])
+        # a3. MP(@a1, @a2)
+        # a4. S1([sigma], [add(sigma, z())], [tau])
+        # a5. MP(@a3, @a4)
+        
+    	# a6. PA4([add(tau, z())], [tau], [add(sigma, z())])
+        # a7. S5([tau])
+        # a8. MP(@a7, @a6)
+        # a9. Hypothesis(eq(sigma, tau))
+        # a10. MP(@a9, @a5)
+        # a11. MP(@a10, @a8)
+        # a12. PA2([add(tau, z())], [add(sigma, z())])
+        # a13. MP(@a11, @a12)
+        # a14. Deduction(@a13, eq(sigma, tau))
+        
+        
+        // Induktionsschluss:
+        
+        # b1. Hypothesis(eq(sigma, tau) -> eq(add(sigma, x), add(tau, x)))
+        # b2. S2([add(sigma, x)], [add(tau, x)])
+        # b3. Hypothesis(eq(add(sigma, x), add(tau, x)))
+        # b4. MP(@b3, @b2)
+        # b5. S6([sigma], [x])
+        # b6. PA3([add(sigma, s(x))], [s(add(sigma, x))], [s(add(tau, x))])
+        # b7. MP(@b5, @b6)
+        # b8. MP(@b4, @b7)
+        # b9. S6([tau], [x])
+        # b10. PA2([add(tau, s(x))], [s(add(tau, x))])
+        # b11. MP(@b9, @b10)
+        # b12. PA3([add(sigma, s(x))], [s(add(tau, x))], [add(tau, s(x))])
+        # b13. MP(@b8, @b12)
+        # b14. MP(@b11, @b13)
+        # b15. Deduction(@b14, eq(add(sigma, x), add(tau, x)))
+        # b16. T2(eq(sigma, tau), eq(add(sigma, x), add(tau, x)),
+        		eq(add(sigma, s(x)), add(tau, s(x))))
+        # b17. MP(@b1, @b16)
+        # b18. MP(@b15, @b17)
+        # b19. Deduction(@b18, 
+        		eq(sigma, tau) -> eq(add(sigma, x), add(tau, x)))
+        # b20. G(@b19, <x>)
+        
+        // Vollständige Induktion
+        
+        # c1. S9(eq(sigma, tau) -> eq(add(sigma, x), add(tau, x)), <x>)
+        # c2. MP(@a14, @c1)
+        # c3. MP(@b20, @c2)        
 }
 
 
@@ -464,7 +480,29 @@ Theorem PA6
           |- forall x: (eq(x, add(z(), x)))
         
     Proof:
-    	
+    	// Induktionsanfang:
+        
+        # a1. S5([z()])
+        # a2. PA2([add(z(), z())], [z()])
+        # a3. MP(@a1, @a2)
+        
+        // Induktionsschritt:
+        
+        # b1. Hypothesis(eq(x, add(z(), x)))
+        # b2. S2([x], [add(z(), x)])
+        # b3. MP(@b1, @b2)
+        # b4. S6([z()], [x])
+        # b5. PA4([s(x)], [s(add(z(), x))], [add(z(), s(x))])
+        # b6. MP(@b3, @b5)
+        # b7. MP(@b4, @b6)
+        # b8. Deduction(@b7, eq(x, add(z(), x)))
+        # b9. G(@b8, <x>)
+        
+        // Vollständige Induktion:
+        
+        # c1. S9(eq(x, add(z(), x)), <x>)
+        # c2. MP(@a3, @c1)
+        # c3. MP(@b9, @c2)
 }
 
 
@@ -492,34 +530,5 @@ Theorem PA8
     Proof:
     	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

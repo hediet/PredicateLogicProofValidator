@@ -1,4 +1,5 @@
 ﻿module FirstOrderPredicateLogic.Proof {
+    import ConditionContext = Syntax.ConditionContext;
 
     export class Condition {
         public getName(): string {
@@ -13,7 +14,7 @@
             throw "abstract";
         }
 
-        public check(args: Syntax.Node[], context: Syntax.ConditionContext): boolean {
+        public check(args: Syntax.Node[], context: ConditionContext): boolean {
             throw "abstract";
         }
         
@@ -22,7 +23,9 @@
                 IsCollisionFreeCondition.getInstance(),
                 DoesNotContainFreeVariableCondition.getInstance(),
                 FreeVariableRestrictionCondition.getInstance(),
-                IsClosedCondition.getInstance()
+                IsClosedCondition.getInstance(),
+                IsNotFreeInHypothesisCondition.getInstance(),
+                DoesNotContainVariableCondition.getInstance()
             ];
         }
     }

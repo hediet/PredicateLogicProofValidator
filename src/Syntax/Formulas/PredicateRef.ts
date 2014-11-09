@@ -45,8 +45,10 @@ module FirstOrderPredicateLogic.Syntax {
 
         public resubstitute(concreteFormula: Formula, collector: ISubstitutionCollector): void {
 
-            if (!(concreteFormula instanceof PredicateRef))
+            if (!(concreteFormula instanceof PredicateRef)) {
                 collector.addIncompatibleNodes(this, concreteFormula);
+                return;
+            }
 
             var conretePredicateRef = <PredicateRef>concreteFormula;
 
@@ -58,19 +60,38 @@ module FirstOrderPredicateLogic.Syntax {
             });
         }
 
-        public processAppliedSubstitutions(): Formula {
-            return this;
+        public processAppliedSubstitutions(context: ConditionContext): Formula {
+            return new PredicateRef(this.predicateDeclaration, this.args.map(arg => arg.processAppliedSubstitutions(context)));
         }
 
-        public getUnboundVariables(): VariableDeclaration[] {
-            return this.getDeclarations().filter(d => d instanceof VariableDeclaration).map(d => <VariableDeclaration>d);
+        public getUnboundVariables(context: ConditionContext): VariableDeclaration[] {
+            return Common.uniqueJoin(this.args, arg => arg.getVariables(context), r => r.getName());
         }
+
+        public containsUnboundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+            return this.args.some(a => a.containsVariable(variable, context));
+        }
+
+        public containsBoundVariable(variable: VariableDeclaration, context: ConditionContext): boolean {
+            return this.containsUnboundVariable(variable, context);
+        }
+
 
         public getDeclarations(): Declaration[] {
-            return Common.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
+            var result = Common.uniqueJoin(this.args, arg => arg.getDeclarations(), r => r.getName());
+            result.push(this.predicateDeclaration);
+            return Common.unique(result, r => r.getName());
         }
 
         public toString(args: IFormulaToStringArgs = defaultFormulaToStringArgs): string {
+
+            var name = this.predicateDeclaration.getName();
+
+            if (this.args.length === 2) {
+                if (name === "eq")
+                    return this.args[0].toString() + " = " + this.args[1].toString();
+            }
+                
             var argsStr = this.args.map(arg => arg.toString()).join(", ");
 
             return this.predicateDeclaration.getName() + ((argsStr !== "") ? "(" + argsStr + ")" : "");

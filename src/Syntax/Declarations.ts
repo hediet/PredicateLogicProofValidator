@@ -1,4 +1,5 @@
 ﻿module FirstOrderPredicateLogic.Syntax {
+    import firstOrDefault = Common.firstOrDefault;
 
     export class Declaration extends Node {
         private name: string;
@@ -17,7 +18,7 @@
         
         public equals(other: Declaration): boolean {
 
-            if (!(typeof this === typeof other))
+            if (!(this.constructor === other.constructor))
                 return false;
 
             return this.name === other.getName();
@@ -131,7 +132,7 @@
         }
 
         public substitute(substitutions: Substitution[]): Formula {
-            return Common.firstOrDefault(substitutions, new FormulaRef(this),
+            return firstOrDefault(substitutions, new FormulaRef(this),
                 s => s.getDeclarationToSubstitute().equals(this) ? <Formula>s.getElementToInsert() : null);
         }
     }

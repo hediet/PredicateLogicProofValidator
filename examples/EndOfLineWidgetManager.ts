@@ -8,6 +8,7 @@ export class EndOfLineWidget {
     }
 
     public lastCoords: any;
+    public newCoords: any;
 }
 
 export class WidgetAlignmentBlock {
@@ -19,21 +20,18 @@ export class WidgetAlignmentBlock {
 export class EndOfLineWidgetManager {
 
     private widgets: EndOfLineWidget[] = [];
-    private id: number = 0;
+    private id = 0;
 
     constructor(private editor: CodeMirror.Editor) {
 
-        var waiting;
-        this.editor.on("change", () => this.update());
+        this.editor.on("change", (instance, changeObj) => this.update(changeObj));
     }
 
-    private update() {
+    private update(changeObj: { from: CodeMirror.Position; to: CodeMirror.Position} = null) {
 
         var alignmentBlockWidths: { [id: number]: number } = {};
         
         this.widgets.forEach(w => {
-
-
             var info = this.editor.lineInfo(w.lineHandle);
             if (info === null)
                 return;
@@ -43,7 +41,7 @@ export class EndOfLineWidgetManager {
 
             var coords = this.editor.charCoords({ line: line, ch: column }, "local");
             coords.right += 80;
-            w.lastCoords = coords;
+            w.newCoords = coords;
 
             if (w.alignmentBlock === null)
                 return;
@@ -55,10 +53,19 @@ export class EndOfLineWidgetManager {
         });
 
         this.widgets.forEach(w => {
-            var coords = w.lastCoords;
+
+            var coords = w.newCoords;
+
 
             if (typeof alignmentBlockWidths[w.alignmentBlock.id] !== "undefined")
                 coords.right = alignmentBlockWidths[w.alignmentBlock.id];
+
+            if (w.lastCoords != null)
+                if (coords.right === w.lastCoords.right && coords.top === w.lastCoords.top)
+                    return;
+
+            w.lastCoords = w.newCoords;
+
 
             w.node.style.left = coords.right + "px";
             w.node.style.top = coords.top + "px";

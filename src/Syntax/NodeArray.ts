@@ -1,4 +1,5 @@
 ﻿ module FirstOrderPredicateLogic.Syntax {
+     import ArgumentExceptionHelper = Common.ArgumentExceptionHelper;
 
      export class NodeArray extends Node {
 
@@ -6,6 +7,8 @@
 
          constructor(items: Node[]) {
              super();
+
+             ArgumentExceptionHelper.ensureArrayTypeOf(items, Node, "items");
 
              this.items = items;
          }

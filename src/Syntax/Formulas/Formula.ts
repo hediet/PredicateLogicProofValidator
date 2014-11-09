@@ -50,6 +50,10 @@ module FirstOrderPredicateLogic.Syntax {
             substitution: VariableWithTermSubstitution, context: ConditionContext): boolean {
             throw "This method is abstract";
         }
+
+        public termContainsVariable(declaration: TermDeclaration, variable: VariableDeclaration): boolean {
+            throw "This method is abstract";
+        }
     }
 
     export class Formula extends Node {

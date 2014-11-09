@@ -12,8 +12,11 @@
 
                  var identifier = parserHelper.parseIdentifier(t);
 
-                 if (identifier === null)
+                 if (identifier === null) {
                      t.read(); // to prevent endless loops
+                     logger.logError("Identifier cannot be empty ", t.getRegion(start));
+                     return null;
+                 }
 
                  var funcDecl = context.getFunctionDeclaration(identifier.getIdentifier());
 

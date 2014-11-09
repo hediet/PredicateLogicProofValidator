@@ -1,401 +1,347 @@
 ﻿
 ///<reference path="definitions.d.ts"/>
 
-
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-var template = getParameterByName("template");
-if (!template)
-    template = "default";
-
-var defaultText = require("text!Template_" + template + ".txt");
 import $ = require("jquery");
 import jQueryUi = require("JQueryUI");
 import CodeMirror = require("Codemirror");
 import CodeMirrorLint = require("CodemirrorLint");
+import CodeMirrorSimple = require("CodemirrorSimple");
 import FirstOrderPredicateLogic = require("FirstOrderPredicateLogic");
-
-import s = FirstOrderPredicateLogic.Syntax;
-import p = FirstOrderPredicateLogic.Parser;
-import pr = FirstOrderPredicateLogic.Proof;
-import common = FirstOrderPredicateLogic.Common;
-
-import EndOfLineWidgetManager = require("EndOfLineWidgetManager");
-
-var cl = CodeMirrorLint; // to force typescript to generate the require statement
-var jQueryUiInstance = jQueryUi;
-
-class CodeMirrorLintElement {
-    public from: CodeMirror.Position;
-    public to: CodeMirror.Position;
+import EndOfLineWidgetManagerModule = require("EndOfLineWidgetManager");
+import HashMap = require("HashMap");
+import CodeMirrorMode = require("CodeMirrorMode");
 
 
-    constructor(region: p.TextRegion, public message: string, public severity: string) {
-        this.from = {
-            line: region.getStartLine(),
-            ch: region.getStartColumn()
-        };
-        this.to = {
-            line: region.getEndLine(),
-            ch: region.getEndColumn()
-        };
+// to force typescript to generate the require statement
+var d = [CodeMirrorLint, CodeMirrorSimple, jQueryUi ]; 
+
+module App {
+
+    import HypothesisRemover = FirstOrderPredicateLogic.Proof.HypothesisRemover;
+    import FormulaParser = FirstOrderPredicateLogic.Parser.FormulaParser;
+    import TermParser = FirstOrderPredicateLogic.Parser.TermParser;
+    import DocumentParser = FirstOrderPredicateLogic.Parser.DocumentParser;
+    import Condition = FirstOrderPredicateLogic.Proof.Condition;
+    import DocumentStep = FirstOrderPredicateLogic.Proof.DocumentStep;
+    import TheoremDescription = FirstOrderPredicateLogic.Proof.TheoremDescription;
+    import Step = FirstOrderPredicateLogic.Proof.Step;
+    import RuleStep = FirstOrderPredicateLogic.Proof.RuleStep;
+    import ProofableFormulaBuilderStep = FirstOrderPredicateLogic.Proof.ProofableFormulaBuilderStep;
+    import TextRegion = FirstOrderPredicateLogic.Parser.TextRegion;
+    import ProofValidation = FirstOrderPredicateLogic.Proof.ProofValidation;
+    import Operation = FirstOrderPredicateLogic.Syntax.Operation;
+    import TextPoint = FirstOrderPredicateLogic.Parser.TextPoint;
+    import Common = FirstOrderPredicateLogic.Common;
+    import Substitution = FirstOrderPredicateLogic.Syntax.Substitution;
+    import Rule = FirstOrderPredicateLogic.Proof.Rule;
+    import ParserLogger = FirstOrderPredicateLogic.Parser.ParserLogger;
+    import EndOfLineWidgetManager = EndOfLineWidgetManagerModule.EndOfLineWidgetManager;
+    import EndOfLineWidget = EndOfLineWidgetManagerModule.EndOfLineWidget;
+    import WidgetAlignmentBlock = EndOfLineWidgetManagerModule.WidgetAlignmentBlock;
+
+    class CodeMirrorLintElement {
+        public from: CodeMirror.Position;
+        public to: CodeMirror.Position;
+
+
+        constructor(region: TextRegion, public message: string, public severity: string) {
+            this.from = {
+                line: region.getStartLine(),
+                ch: region.getStartColumn()
+            };
+            this.to = {
+                line: region.getEndLine(),
+                ch: region.getEndColumn()
+            };
+        }
     }
-}
 
+    export class App {
 
-class HypothesisRemover {
-    
-    constructor(private ax1: pr.Axiom, private ax2: pr.Axiom, private ruleMp: pr.Rule, private tImpSym: pr.Theorem) {
-        
-    }
+        private editor: CodeMirror.Editor;
+        private widgetManager: EndOfLineWidgetManager;
+        private endOfLineWidgets: EndOfLineWidget[] = [];
+        private lineWidgets: CodeMirror.LineWidget[] = [];
+        private documentParser: DocumentParser;
+        private currentLintElements: CodeMirrorLintElement[] = [];
+        private lastSystem: ProofValidation;
+        private lastDocument: FirstOrderPredicateLogic.Proof.Document;
 
-    public removeHypothesis(step: pr.Step, hypothesis: s.Formula, context: s.ConditionContext): pr.Step {
+        private dialog: JQuery;
 
-        if (step instanceof pr.ProofableFormulaBuilderStep) {
-            var p = <pr.ProofableFormulaBuilderStep>step;
+        constructor() {
 
-            if (p.getProofableFormulaBuilder() instanceof pr.HypothesisAxiom) {
-                var h = (<s.FormulaSubstitution>p.getArguments()[0]).getElementToInsert();
+            var termParser = new TermParser();
+            var formulaParser = new FormulaParser(termParser, Operation.getAvailableOperations());
 
-                if (hypothesis.equals(h)) {
-                    return new pr.ProofableFormulaBuilderStep(this.tImpSym,
-                        s.Substitution.fromValues(this.tImpSym.getParameters(), [h, h]), context);
+            this.documentParser = new DocumentParser(formulaParser, termParser, Condition.getAvailableConditions());
+
+            this.dialog = ($("#dialog-message")).dialog({
+                width: 1000,
+                height: 500,
+                autoOpen: false,
+                modal: true,
+                buttons: {
+                    Ok() {
+                        $(this).dialog("close");
+                    }
                 }
-            }
-
-            var s1 = new pr.ProofableFormulaBuilderStep(this.ax1,
-                s.Substitution.fromValues(this.ax1.getParameters(), [p.getDeductedFormula(), hypothesis]), context);
-
-            var s2 = new pr.RuleStep(this.ruleMp, [p, s1], [], context);
-
-            return s2;
-        }
-        else if (step instanceof pr.RuleStep) {
-            var r = <pr.RuleStep>step;
-
-            if (r.getRule() === this.ruleMp) {
-
-                var premise = r.getAssumptions()[0];
-                var implication = r.getAssumptions()[1];
-                var newPremise = this.removeHypothesis(premise, hypothesis, context);
-                var newImplication = this.removeHypothesis(implication, hypothesis, context);
-
-                var impl = <s.Implication>implication.getDeductedFormula();
-
-                var s1 = new pr.ProofableFormulaBuilderStep(this.ax2,
-                    s.Substitution.fromValues(this.ax2.getParameters(),
-                        [hypothesis, premise.getDeductedFormula(), impl.getArguments()[1]]), context);
-                var s2 = new pr.RuleStep(this.ruleMp, [newImplication, s1], [], context);
-                var s3 = new pr.RuleStep(this.ruleMp, [newPremise, s2], [], context);
-
-                return s3;
-            } else if (r.getRule() instanceof pr.DeductionRule) {
-                
-                var assumption = r.getAssumptions()[0];
-                var subHypothesis = (<s.FormulaSubstitution>r.getArguments()[1]).getElementToInsert();
-
-                var s4 = this.removeHypothesis(assumption, subHypothesis, context);
-                return this.removeHypothesis(s4, hypothesis, context);
-            }
-
-            throw "Rule " + r.getRule().getName() + " is not supported.";
-        }
-
-        return step;
-    }
-
-    public removeAllHypotheses(step: pr.Step, context: s.ConditionContext): pr.Step {
-
-        if (step instanceof pr.ProofableFormulaBuilderStep) {
-            return step;
-        }
-        else if (step instanceof pr.RuleStep) {
-            var r = <pr.RuleStep>step;
-
-            if (r.getRule() instanceof pr.DeductionRule) {
-
-                var assumption = r.getAssumptions()[0];
-                var hypothesis = (<s.FormulaSubstitution>r.getArguments()[1]).getElementToInsert();
-                var newStep = this.removeHypothesis(assumption, hypothesis, context);
-
-                return newStep;
-            }
-
-            return null; //todo
-        }
-
-        return step;
-    }
-}
-
-class App {
-
-    private editor: CodeMirror.Editor;
-    private widgetManager: EndOfLineWidgetManager.EndOfLineWidgetManager;
-    private endOfLineWidgets: EndOfLineWidgetManager.EndOfLineWidget[] = [];
-    private lineWidgets: CodeMirror.LineWidget[] = [];
-    private documentParser: p.DocumentParser;
-    private currentLintElements: CodeMirrorLintElement[] = [];
-    private lastSystem: pr.System;
-    private lastDocument: pr.Document;
-
-    private dialog: jQueryUi.JQuery;
-
-    constructor() {
-
-        $("#code").text(defaultText);
-
-        var termParser = new p.TermParser();
-        var formulaParser = new p.FormulaParser(termParser, s.Operation.getAvailableOperations());
-
-        this.documentParser = new p.DocumentParser(formulaParser, termParser, pr.Condition.getAvailableConditions());
-
-        var dialog = (<jQueryUi.JQuery><any>$("#dialog-message")).dialog({
-            width: 1000,
-            height: 500,
-            autoOpen: false,
-            modal: true,
-            buttons: {
-                Ok: function() {
-                    (<jQueryUi.JQuery><any>$(this)).dialog("close");
-                }
-            }
-        });
-    
-
-        this.dialog = dialog;
-
-        
-        this.editor = CodeMirror.fromTextArea(<HTMLTextAreaElement>document.getElementById("code"), {
-            lineNumbers: true,
-            styleActiveLine: true,
-            matchBrackets: true,
-            viewportMargin: Infinity,
-            gutters: ["CodeMirror-lint-markers"],
-            lint: () => this.currentLintElements
-        });
-
-        this.widgetManager = new EndOfLineWidgetManager.EndOfLineWidgetManager(this.editor);
-
-        setTimeout(() => this.editorChanged(), 10);
-
-        var waiting;
-        this.editor.on("change", () => {
-            clearTimeout(waiting);
-            waiting = setTimeout(() => this.editor.operation(() => this.editorChanged()), 400);
-        });
-
-        this.editor.addKeyMap({
-            "Ctrl-Q": (cm: CodeMirror.Editor) => {
-                console.log("pressed");
-
-                if (this.lastDocument == null || this.lastSystem == null)
-                    return;
-
-                var step = this.getStepAtCursor();
-                if (step == null)
-                    return;
-
-                var realStep = this.lastSystem.getStep(step);
-                var r = (name: string) => this.lastSystem.getFormulaBuilderByName(name);
-                var remover = new HypothesisRemover(<pr.Axiom>r("A1"), <pr.Axiom>r("A2"), <pr.Rule>r("MP"), <pr.Theorem>r("T1"));
-
-                realStep = remover.removeAllHypotheses(realStep, realStep.getContext());
-                this.showStepWithoutDeductionTheorem(realStep);
-            }
-        });
-    }
-
-    private getStepAtCursor(): pr.DocumentStep {
-        var c = this.editor.getDoc().getCursor();
-        var point = new p.TextPoint(c.line, c.ch);
-
-        return common.firstOrDefault(this.lastDocument.getDescriptions(), null, d => {
-
-            if (p.TextRegion.getRegionOf(d).contains(point)) {
-
-                if (d instanceof pr.TheoremDescription) {
-                    var td = <pr.TheoremDescription>d;
-                    return common.firstOrDefault(td.getProofSteps(), null, step => {
-
-                        if (p.TextRegion.getRegionOf(step).contains(point)) {
-                            return step;
-                        }
-
-                        return null;
-                    });
-                }
-            }
-
-            return null;
-        });
-    }
-
-
-    private renderStep(step: pr.Step, proof: string[]): number {
-        
-        if (step instanceof pr.RuleStep) {
-            var ruleStep = <pr.RuleStep>step;
-
-            var assumptions = ruleStep.getAssumptions().map(a => this.renderStep(a, proof));
-
-            var args: s.Substitution[] = [];
-
-            ruleStep.getRule().getNecessaryParameters().forEach(param => {
-                var arg = common.firstOrDefault(ruleStep.getArguments(), null,
-                    a => a.getDeclarationToSubstitute().equals(param) ? a : null);
-                args.push(arg);
             });
 
-            var stepId = proof.length;
+            CodeMirrorMode.CodeMirrorMode.install();
 
-            var elements = assumptions.map(a => "@" + a).concat(args.map(a => a.getElementToInsert().toString()));
 
-            var stepStr = " # " + stepId + ". " + ruleStep.getRule().getName() + "(" + elements.join(", ") + ")";
-            proof.push(stepStr);
-            return stepId;
+            this.editor = CodeMirror.fromTextArea(<HTMLTextAreaElement>$("#code").get(0), {
+                mode: "proof",
+                lineNumbers: true,
+                styleActiveLine: true,
+                matchBrackets: true,
+                viewportMargin: Infinity,
+                gutters: ["CodeMirror-lint-markers"],
+                lint: {
+                    delay: 650,
+                    getAnnotations: () => this.currentLintElements
+                }
+            });
+
+            this.widgetManager = new EndOfLineWidgetManager(this.editor);
+
+
+            var waiting;
+            this.editor.on("change", () => {
+                clearTimeout(waiting);
+                waiting = setTimeout(() => this.editor.operation(() => this.editorChanged()), 600);
+            });
+
+
+
+            this.editor.addKeyMap({
+                "Ctrl-Q"(cm: CodeMirror.Editor) { this.showStepWithoutDeductionTheorem(); }
+            });
+
+
+            var template = this.getParameterByName("template");
+            if (!template)
+                template = "default";
+
+            var templateFile = "Template_" + template + ".txt";
+
+            $.get(templateFile, data => {
+                this.editor.getDoc().setValue(data);
+            });
         }
-        else if (step instanceof pr.ProofableFormulaBuilderStep) {
-            var pStep = <pr.ProofableFormulaBuilderStep>step;
 
-            var stepId = proof.length;
-
-            var stepStr = " # " + stepId + ". " + pStep.getProofableFormulaBuilder().getName() + "("
-                + pStep.getArguments().map(a => a.getElementToInsert().toString()).join(", ") + ")";
-            proof.push(stepStr);
-            return stepId;
+        private getParameterByName(name: string): string {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
         }
-        throw "Unsupported step";
-    }
 
 
-    private showStepWithoutDeductionTheorem(step: pr.Step) {
-        this.dialog.dialog("open");
 
-        var proof: string[] = [];
+        private getStepAtCursor(): DocumentStep {
+            var c = this.editor.getDoc().getCursor();
+            var point = new TextPoint(c.line, c.ch);
 
-        this.renderStep(step, proof);
+            return Common.firstOrDefault(this.lastDocument.getDescriptions(), null, d => {
 
+                if (TextRegion.getRegionOf(d).contains(point)) {
 
-        var str = proof.join("\n");
+                    if (d instanceof TheoremDescription) {
+                        var td = <TheoremDescription>d;
+                        return Common.firstOrDefault(td.getProofSteps(), null, step => {
 
-        $("#dialog-code").val(str);
-    }
+                            if (TextRegion.getRegionOf(step).contains(point)) {
+                                return step;
+                            }
 
-    private editorChanged() {
+                            return null;
+                        });
+                    }
+                }
 
-        for (var i = 0; i < this.endOfLineWidgets.length; ++i)
-            this.widgetManager.removeLineWidget(this.endOfLineWidgets[i]);
-
-        for (var i = 0; i < this.lineWidgets.length; ++i)
-            this.lineWidgets[i].clear();
-
-        this.endOfLineWidgets.length = 0;
-        this.lineWidgets.length = 0;
-
-        var textRegionLogger = new p.ParserLogger();
-
-        var result = this.documentParser.parseStr(this.editor.getDoc().getValue(), textRegionLogger);
-        this.lastDocument = result;
-
-        var logger = new FirstOrderPredicateLogic.Logger();
+                return null;
+            });
+        }
 
 
-        var system = new pr.System(result, logger);
-        this.lastSystem = system;
+        private renderStep(step: Step, proof: string[], hashmap: HashMap<Step, number>): number {
 
-        result.getDescriptions().forEach(d => {
-
-            if (d instanceof pr.TheoremDescription) {
-                var td = <pr.TheoremDescription>d;
-
-                this.processTheoremDescription(system, td);
+            if (hashmap.has(step)) {
+                return hashmap.get(step);
             }
-        });
 
+            if (step instanceof RuleStep) {
+                var ruleStep = <RuleStep>step;
 
-        this.currentLintElements.length = 0;
-        textRegionLogger.getMessages().forEach(msg => {
-            this.currentLintElements.push(new CodeMirrorLintElement(msg.getTextRegion(), msg.getText(), msg.getSeverity()));
-        });
+                var assumptionIds = ruleStep.getAssumptions().map(a => this.renderStep(a, proof, hashmap));
 
-        logger.getMessages().forEach(msg => {
+                var args: Substitution[] = [];
 
-            var region: p.TextRegion;
+                ruleStep.getRule().getNecessaryParameters().forEach(param => {
+                    var arg = Common.firstOrDefault(ruleStep.getArguments(), null,
+                        a => a.getDeclarationToSubstitute().equals(param) ? a : null);
+                    args.push(arg);
+                });
 
-            if (p.TextRegion.hasRegion(msg.getElement())) {
-                region = p.TextRegion.getRegionOf(msg.getElement());
-            } else
-                region = new p.TextRegion(1, 1, 1, 1);
+                var stepId = proof.length;
 
-            this.currentLintElements.push(new CodeMirrorLintElement(region, msg.getText(), msg.getSeverity()));
-        });
+                var elements = assumptionIds.map(id => "@" + id).concat(args.map(a => a.getElementToInsert().toString()));
 
-    }
+                var stepStr = " # " + stepId + ". " + ruleStep.getRule().getName() + "(" + elements.join(", ") + ")";
+                proof.push(stepStr);
+                hashmap.set(step, stepId);
+                return stepId;
+            }
+            else if (step instanceof ProofableFormulaBuilderStep) {
+                var pStep = <ProofableFormulaBuilderStep>step;
 
-    private processTheoremDescription(system: pr.System, theorem: pr.TheoremDescription) {
-        var text = "";
-        if (system.getIsProven(theorem)) {
-            status = "proof-status-proven";
-            text = "This theorem is proved";
-        } else {
-            status = "proof-status-invalid";
-            text = "This theorem is not proved";
+                var stepId = proof.length;
+
+                var stepStr = " # " + stepId + ". " + pStep.getProofableFormulaBuilder().getName() + "("
+                    + pStep.getArguments().map(a => a.getElementToInsert().toString()).join(", ") + ")";
+                proof.push(stepStr);
+                return stepId;
+            }
+            throw "Unsupported step";
         }
 
-        var pos = p.TextRegion.getRegionOf(theorem);
-        var line = pos.getStartLine();
-        var msg = document.createElement("div");
-        msg.innerHTML = text;
-        msg.className = "proof-status " + status;
-        this.lineWidgets.push(this.editor.addLineWidget(line, msg, {
-            coverGutter: false,
-            noHScroll: true,
-            above: true,
-            showIfHidden: false
-        }));
 
-        var currentBlock = this.widgetManager.addAlignmentBlock();
+        private showStepWithoutDeductionTheorem() {
+            if (this.lastDocument == null || this.lastSystem == null)
+                return;
 
-        theorem.getProofSteps().forEach(step => {
-                this.processStep(system, step, currentBlock);
-        });
-    }
+            var step = this.getStepAtCursor();
+            if (step == null)
+                return;
 
-    private processStep(system: pr.System, step: pr.DocumentStep, currentBlock: EndOfLineWidgetManager.WidgetAlignmentBlock) {
+            var realStep = this.lastSystem.getStep(step);
+            var r = (name: string) => this.lastSystem.getFormulaBuilderByName(name);
+            var remover = new HypothesisRemover(r("A1"), r("A2"), <Rule>r("MP"), r("T1"));
 
-        var realStep = system.getStep(step);
+            realStep = remover.removeAllHypotheses(realStep, realStep.getContext());
 
-        if (realStep === null)
-            return;
+            var proof: string[] = [];
 
-        var hypotheses = "";
-        if (realStep.getHypotheses().length > 0) {
-            hypotheses = "{ " + realStep.getHypotheses().map(h => h.toString({
-                forceParenthesis: false,
-                parentOperatorPriority: 0,
-                useUnicode: true
-            })).join(", ") + " } ";
+            this.renderStep(realStep, proof, new HashMap<Step, number>());
+
+            var str = proof.join("\n");
+
+            this.dialog.dialog("open")
+                .find("#dialog-code").val(str);
         }
-        var text = realStep.getDeductedFormula().toString({
-            forceParenthesis: false, parentOperatorPriority: 0, useUnicode: true
-        });
-        var pos = p.TextRegion.getRegionOf(step);
-        var line = pos.getStartLine();
-        var msg = document.createElement("div");
 
-        msg.innerHTML = '<span class="hypotheses">' + hypotheses + "</span>⊢ " + text;
-        msg.className = "proof-step-formula";
+        private editorChanged() {
 
-        var widget = this.widgetManager.addLineWidget(line, msg, currentBlock);
-        this.endOfLineWidgets.push(widget);
+            for (var i = 0; i < this.endOfLineWidgets.length; ++i)
+                this.widgetManager.removeLineWidget(this.endOfLineWidgets[i]);
+
+            this.endOfLineWidgets.length = 0;
+
+            for (var i = 0; i < this.lineWidgets.length; ++i)
+                this.lineWidgets[i].clear();
+            this.lineWidgets.length = 0;
+
+
+            var textRegionLogger = new ParserLogger();
+            var result = this.documentParser.parseStr(this.editor.getDoc().getValue(), textRegionLogger);
+            this.lastDocument = result;
+
+            var logger = new FirstOrderPredicateLogic.Logger();
+
+
+            var system = new ProofValidation(result, logger);
+            this.lastSystem = system;
+
+            result.getDescriptions().forEach(d => {
+
+                if (d instanceof TheoremDescription) {
+                    var td = <TheoremDescription>d;
+
+                    this.processTheoremDescription(system, td);
+                }
+            });
+
+
+            this.currentLintElements.length = 0;
+            textRegionLogger.getMessages().forEach(msg => {
+                this.currentLintElements.push(new CodeMirrorLintElement(msg.getTextRegion(), msg.getText(), msg.getSeverity()));
+            });
+
+            logger.getMessages().forEach(msg => {
+
+                var region: TextRegion;
+
+                if (TextRegion.hasRegion(msg.getElement())) {
+                    region = TextRegion.getRegionOf(msg.getElement());
+                } else
+                    region = new TextRegion(1, 1, 1, 1);
+
+                this.currentLintElements.push(new CodeMirrorLintElement(region, msg.getText(), msg.getSeverity()));
+            });
+
+        }
+
+        private processTheoremDescription(system: ProofValidation, theorem: TheoremDescription) {
+            var text: string;
+            var status: string;
+            if (system.getIsProven(theorem)) {
+                status = "proof-status-proven";
+                text = "This theorem is proved";
+            } else {
+                status = "proof-status-invalid";
+                text = "This theorem is not proved";
+            }
+
+            var pos = TextRegion.getRegionOf(theorem);
+            var line = pos.getStartLine();
+            var msg = document.createElement("div");
+            msg.innerHTML = text;
+            msg.className = "proof-status " + status;
+            this.lineWidgets.push(this.editor.addLineWidget(line, msg, {
+                coverGutter: false,
+                noHScroll: true,
+                above: true,
+                showIfHidden: false
+            }));
+
+            var currentBlock = this.widgetManager.addAlignmentBlock();
+
+            theorem.getProofSteps().forEach(step => this.processProofStep(system, step, currentBlock));
+        }
+
+        private processProofStep(system: ProofValidation, step: DocumentStep, currentBlock: WidgetAlignmentBlock) {
+
+            var realStep = system.getStep(step);
+
+            if (realStep === null)
+                return;
+
+            var hypotheses = "";
+            if (realStep.getHypotheses().length > 0) {
+                hypotheses = "{ " + realStep.getHypotheses().map(h => h.toString({
+                    forceParenthesis: false,
+                    parentOperatorPriority: 0,
+                    useUnicode: true
+                })).join(", ") + " } ";
+            }
+            var text = realStep.getDeductedFormula().toString({
+                forceParenthesis: false, parentOperatorPriority: 0, useUnicode: true
+            });
+            var pos = TextRegion.getRegionOf(step);
+            var line = pos.getStartLine();
+            var msg = document.createElement("div");
+
+            msg.innerHTML = '<span class="hypotheses">' + hypotheses + "</span>⊢ " + text;
+            msg.className = "proof-step-formula";
+
+            var widget = this.widgetManager.addLineWidget(line, msg, currentBlock);
+            this.endOfLineWidgets.push(widget);
+        }
     }
 }
 
 
-new App();
+
+new App.App();

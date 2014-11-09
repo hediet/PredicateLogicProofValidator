@@ -25,8 +25,14 @@
         }
 
         public substituteUnboundVariables(substitutions: VariableWithTermSubstitution[], context: ConditionContext): Formula {
-            //todo
-            return substitutions.reduce<Formula>((last, s) => new AppliedSubstitution(last, s), this);
+            var newSubsts = substitutions.filter(subst => {
+                //result can be null
+                if (context.formulaContainsUnboundVariable(this.formulaDeclaration, subst.getVariableToSubstitute()) === false)
+                    return false;
+                return true;
+            });
+
+            return newSubsts.reduce<Formula>((last, s) => new AppliedSubstitution(last, s), this);
         }
 
         public substitute(substitutions: Substitution[]): Formula {

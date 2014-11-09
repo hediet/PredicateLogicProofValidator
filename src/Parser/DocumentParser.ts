@@ -92,6 +92,8 @@
 
             parserHelper.parseWhitespace(t);
 
+            var parsedSections: {[id: string]: boolean} = {};
+
             while (t.peek() !== "" && t.peek() !== "}") {
 
                 var s = this.readNextSection(t, l);
@@ -108,10 +110,15 @@
 
                 if (typeof sectionParseFunction === "undefined") {
                     l.logError("Unknown section '" + s.getIdentifier() + "'", TextRegion.getRegionOf(s));
-                }
-                else
-                    sectionParseFunction(TextRegion.getRegionOf(s));
+                } else {
+                    if (parsedSections[s.getIdentifier()] === true) {
+                        l.logError("Section '" + s.getIdentifier() + "' is defined twice", TextRegion.getRegionOf(s));
+                    } else {
+                        parsedSections[s.getIdentifier()] = true;
 
+                        sectionParseFunction(TextRegion.getRegionOf(s));
+                    }
+                }
                 parserHelper.parseWhitespace(t);
             }
 

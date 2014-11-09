@@ -153,9 +153,7 @@ module FirstOrderPredicateLogic.Syntax {
                 if (!this.formulaToSubstitute.containsUnboundVariable(this.substitution.getVariableToSubstitute(), context))
                     return unboundVariables;
 
-                var termVariables = this.substitution.getTermToInsert().getDeclarations()
-                    .filter(d => d instanceof VariableDeclaration)
-                    .map(d => <VariableDeclaration>d);
+                var termVariables = this.substitution.getTermToInsert().getVariables(context);
 
                 unboundVariables = unboundVariables.filter(v => !v.equals(this.substitution.getVariableToSubstitute())).concat(termVariables);
                 return Common.unique(unboundVariables, v => v.getName());

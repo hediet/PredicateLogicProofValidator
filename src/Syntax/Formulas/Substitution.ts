@@ -45,7 +45,7 @@
 
         public equals(other: Substitution): boolean {
 
-            if (!(typeof this === typeof other))
+            if (!(this.constructor === other.constructor))
                 return false;
 
             if (!this.declarationToSubstitute.equals(other.getDeclarationToSubstitute()))

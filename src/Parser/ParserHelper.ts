@@ -9,7 +9,13 @@
 
          public parseWhitespace(tokenizer: Tokenizer): string {
 
-             return tokenizer.readWhile(c => this.whitespace.indexOf(c) !== -1);
+                 return tokenizer.readWhile(c => {
+                     if (tokenizer.tryRead("//")) {
+                         tokenizer.readWhile(c => c !== "\n");
+                         return true;
+                     }
+                     return this.whitespace.indexOf(c) !== -1;
+                 });
          }
 
          public parseIdentifier(tokenizer: Tokenizer, restrictFirstLetter: boolean = true): Proof.IdentifierElement {
