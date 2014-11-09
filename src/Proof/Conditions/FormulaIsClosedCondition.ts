@@ -1,26 +1,28 @@
 ﻿ module FirstOrderPredicateLogic.Proof {
  
-     export class IsNotFreeInHypothesisCondition implements Condition {
+    export class FormulaIsClosedCondition implements Condition {
 
         public static getInstance() {
-            return new IsNotFreeInHypothesisCondition();
+            return new FormulaIsClosedCondition();
         }
 
         public getName(): string {
-            return "IsNotFreeInHypothesis";
+            return "Formula is closed";
         }
 
         public getTemplate(): string {
-            return "? is not free in hypothesis";
+            return "? is closed";
         }
 
         public getParameterTypes(): any[] {
-            return [Syntax.VariableDeclaration];
+            return [Syntax.Formula];
         }
 
         public check(args: Syntax.Node[], context: Syntax.ConditionContext): boolean {
 
-            return true; //cannot checked here, instead in the rule
+            var formula = <Syntax.Formula>args[0];
+
+            return formula.getUnboundVariables(context).length === 0;
         }
     }
 

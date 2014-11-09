@@ -117,7 +117,7 @@ module FirstOrderPredicateLogic.Proof {
             this.args = newArgs;
 
             rule.getConditions().forEach(c => {
-                if (c.getCondition() instanceof IsNotFreeInHypothesisCondition) {
+                if (c.getCondition() instanceof FirstOrderPredicateLogic.Proof.VariableIsNotFreeInHypothesisCondition) {
                     var variableParam = <Syntax.VariableDeclaration>c.getArguments()[0];
                     var variableArg = variableParam.substitute(this.args);
 

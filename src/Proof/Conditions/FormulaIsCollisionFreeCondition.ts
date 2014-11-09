@@ -1,13 +1,13 @@
 ﻿module FirstOrderPredicateLogic.Proof {
 
-     export class IsCollisionFreeCondition implements Condition {
+     export class FormulaIsCollisionFreeCondition implements Condition {
 
          public static getInstance() {
-             return new IsCollisionFreeCondition();
+             return new FormulaIsCollisionFreeCondition();
          }
 
          public getName(): string {
-             return "IsCollisionFree";
+             return "Formula is collision free";
          }
 
          public getTemplate(): string {

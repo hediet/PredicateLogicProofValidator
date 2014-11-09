@@ -45,12 +45,12 @@
 /// <reference path="Proof/Conditions/AppliedCondition.ts" />           
 /// <reference path="Proof/Conditions/Condition.ts" />           
 /// <reference path="Proof/Conditions/ConditionContext.ts" />           
-/// <reference path="Proof/Conditions/DoesNotContainFreeVariableCondition.ts" />           
+/// <reference path="Proof/Conditions/VariableIsNotFreeInFormulaCondition.ts" />           
 /// <reference path="Proof/Conditions/FreeVariableRestrictionCondition.ts" />           
-/// <reference path="Proof/Conditions/IsClosedCondition.ts" />           
-/// <reference path="Proof/Conditions/IsCollisionFreeCondition.ts" />           
-/// <reference path="Proof/Conditions/IsNotFreeInHypothesisCondition.ts" />  
-/// <reference path="Proof/Conditions/DoesNotContainVariableCondition.ts" />   
+/// <reference path="Proof/Conditions/FormulaIsClosedCondition.ts" />           
+/// <reference path="Proof/Conditions/FormulaIsCollisionFreeCondition.ts" />           
+/// <reference path="Proof/Conditions/VariableIsNotFreeInHypothesisCondition.ts" />  
+/// <reference path="Proof/Conditions/VariableIsNotInTermCondition.ts" />   
 
 /// <reference path="Proof/Step.ts" />           
 /// <reference path="Proof/SubstitutionCollector.ts" />    

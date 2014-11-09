@@ -43,7 +43,7 @@
 
             var isClosedCondition =
                 Common.firstOrDefault(this.getConditions(), null, c =>
-                    (c.getCondition() instanceof Proof.IsClosedCondition)
+                    (c.getCondition() instanceof Proof.FormulaIsClosedCondition)
                     && new Syntax.FormulaRef(declaration).equals(<Formula>c.getArguments()[0])
                     ? c : null);
 
@@ -60,7 +60,7 @@
             var result = null;
 
             this.conditions.forEach(c => {
-                if (c.getCondition() instanceof DoesNotContainFreeVariableCondition) {
+                if (c.getCondition() instanceof FirstOrderPredicateLogic.Proof.VariableIsNotFreeInFormulaCondition) {
 
                     var variableArg = <VariableDeclaration>c.getArguments()[0];
                     var formulaArg = <FormulaRef>c.getArguments()[1];
@@ -95,7 +95,7 @@
                 return true;
 
             this.conditions.forEach(c => {
-                if (c.getCondition() instanceof IsCollisionFreeCondition) {
+                if (c.getCondition() instanceof FirstOrderPredicateLogic.Proof.FormulaIsCollisionFreeCondition) {
 
                     var appliedSubstitution = <AppliedSubstitution>c.getArguments()[0];
                     if (appliedSubstitution.equals(new AppliedSubstitution(new FormulaRef(declaration), substitution)))
@@ -112,7 +112,7 @@
             var result = null;
 
             this.conditions.forEach(c => {
-                if (c.getCondition() instanceof DoesNotContainVariableCondition) {
+                if (c.getCondition() instanceof FirstOrderPredicateLogic.Proof.VariableIsNotInTermCondition) {
 
                     var variableArg = <VariableDeclaration>c.getArguments()[0];
                     var termArg = <TermRef>c.getArguments()[1];

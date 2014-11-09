@@ -1,13 +1,13 @@
 ﻿ module FirstOrderPredicateLogic.Proof {
  
-    export class DoesNotContainFreeVariableCondition implements Condition {
+    export class VariableIsNotFreeInFormulaCondition implements Condition {
 
         public static getInstance() {
-            return new DoesNotContainFreeVariableCondition();
+            return new VariableIsNotFreeInFormulaCondition();
         }
 
         public getName(): string {
-            return "DoesNotContainFreeVariable";
+            return "Variable Is Not Free In Formula";
         }
 
         public getTemplate(): string {

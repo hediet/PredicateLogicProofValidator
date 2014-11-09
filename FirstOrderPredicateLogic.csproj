@@ -62,7 +62,7 @@
     <TypeScriptCompile Include="examples\CodeMirrorMode.ts" />
     <TypeScriptCompile Include="examples\definitions.d.ts" />
     <TypeScriptCompile Include="examples\EndOfLineWidgetManager.ts" />
-    <TypeScriptCompile Include="src\Proof\Conditions\DoesNotContainVariableCondition.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions\VariableIsNotInTermCondition.ts" />
     <TypeScriptCompile Include="src\Proof\DeductionTheorem.ts" />
     <TypeScriptCompile Include="src\Proof\FormulaBuilder.ts" />
     <TypeScriptCompile Include="src\Proof\HypothesisRemover.ts" />
@@ -80,11 +80,11 @@
     <TypeScriptCompile Include="src\Parser\TermParser.ts" />
     <TypeScriptCompile Include="src\Parser\TextRegion.ts" />
     <TypeScriptCompile Include="src\Parser\Tokenizer.ts" />
-    <TypeScriptCompile Include="src\Proof\Conditions\IsNotFreeInHypothesisCondition.ts" />
-    <TypeScriptCompile Include="src\Proof\Conditions\IsClosedCondition.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions\VariableIsNotFreeInHypothesisCondition.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions\FormulaIsClosedCondition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\FreeVariableRestrictionCondition.ts" />
-    <TypeScriptCompile Include="src\Proof\Conditions\DoesNotContainFreeVariableCondition.ts" />
-    <TypeScriptCompile Include="src\Proof\Conditions\IsCollisionFreeCondition.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions\VariableIsNotFreeInFormulaCondition.ts" />
+    <TypeScriptCompile Include="src\Proof\Conditions\FormulaIsCollisionFreeCondition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\Condition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\AppliedCondition.ts" />
     <TypeScriptCompile Include="src\Proof\Conditions\ConditionContext.ts" />

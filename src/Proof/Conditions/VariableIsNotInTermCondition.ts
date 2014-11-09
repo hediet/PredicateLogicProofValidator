@@ -1,13 +1,13 @@
 ﻿ module FirstOrderPredicateLogic.Proof {
  
-    export class DoesNotContainVariableCondition implements Condition {
+    export class VariableIsNotInTermCondition implements Condition {
 
         public static getInstance() {
-            return new DoesNotContainVariableCondition();
+            return new VariableIsNotInTermCondition();
         }
 
         public getName(): string {
-            return "DoesNotContainVariable";
+            return "Variable Is Not In Term";
         }
 
         public getTemplate(): string {

@@ -20,12 +20,12 @@
         
         public static getAvailableConditions() {
             return [
-                IsCollisionFreeCondition.getInstance(),
-                DoesNotContainFreeVariableCondition.getInstance(),
+                FirstOrderPredicateLogic.Proof.FormulaIsCollisionFreeCondition.getInstance(),
+                FirstOrderPredicateLogic.Proof.VariableIsNotFreeInFormulaCondition.getInstance(),
                 FreeVariableRestrictionCondition.getInstance(),
-                IsClosedCondition.getInstance(),
-                IsNotFreeInHypothesisCondition.getInstance(),
-                DoesNotContainVariableCondition.getInstance()
+                FirstOrderPredicateLogic.Proof.FormulaIsClosedCondition.getInstance(),
+                FirstOrderPredicateLogic.Proof.VariableIsNotFreeInHypothesisCondition.getInstance(),
+                FirstOrderPredicateLogic.Proof.VariableIsNotInTermCondition.getInstance()
             ];
         }
     }
